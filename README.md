@@ -119,6 +119,34 @@ Workspace-specific commands:
 
 The repository also includes a GitHub Actions workflow in [.github/workflows/ci.yml](/Users/maksym/Documents/Programming/Projects/HTLBets/.github/workflows/ci.yml) that runs Prisma client generation, unit tests, both production builds, and a Docker image build on every push and pull request.
 
+## Portainer Deploy Hook
+
+If you deploy the stack through Portainer GitOps, the repository also includes [deploy-portainer.yml](/Users/maksym/Documents/Programming/Projects/HTLBets/.github/workflows/deploy-portainer.yml).
+
+It triggers the Portainer stack webhook:
+
+- automatically after the `CI` workflow finishes successfully for `main`
+- manually from GitHub Actions via `workflow_dispatch`
+
+Do not hardcode the webhook URL into the repository. Store it as a GitHub Actions secret:
+
+- secret name: `PORTAINER_WEBHOOK_URL`
+
+Using your provided Portainer endpoint, the secret value should be:
+
+```text
+https://portainer.s1m4.me/api/stacks/webhooks/77085793-7180-42d3-9726-d464b259bd6a
+```
+
+In GitHub:
+
+1. Open the repository.
+2. Go to `Settings -> Secrets and variables -> Actions`.
+3. Create a new repository secret named `PORTAINER_WEBHOOK_URL`.
+4. Paste the webhook URL as the secret value.
+
+After that, every green `CI` run for `main` will trigger Portainer to refresh the stack from Git.
+
 ## Database
 
 Prisma 7 reads the database URL from [server/prisma.config.ts](/Users/maksym/Documents/Programming/Projects/HTLBets/server/prisma.config.ts), not from `schema.prisma`.
@@ -186,6 +214,12 @@ Adjust at least these values before the first run:
 - `MAIL_PASS`
 - `MAIL_FROM`
 
+Optional published-port overrides:
+
+- `CLIENT_PUBLISHED_PORT=4200`
+- `SERVER_PUBLISHED_PORT=127.0.0.1:3000`
+- `POSTGRES_PUBLISHED_PORT=5432`
+
 Start the full stack:
 
 ```bash
@@ -209,6 +243,18 @@ Default container URLs:
 - Client: `http://localhost:4200`
 - API: `http://localhost:3000`
 - PostgreSQL: `localhost:5432`
+
+For VPS or reverse-proxy deployments, the safest default is to keep the API bound to loopback only:
+
+- `SERVER_PUBLISHED_PORT=127.0.0.1:3000`
+
+If port `3000` is already occupied on the host, change it to another value, for example:
+
+```bash
+SERVER_PUBLISHED_PORT=127.0.0.1:3001
+```
+
+If Nginx Proxy Manager or another reverse proxy only talks to the `client` container, the `server` port does not need to be publicly reachable at all.
 
 The API container runs `prisma migrate deploy` on startup, so the committed migration in [server/prisma/migrations/20260425120000_init/migration.sql](/Users/maksym/Documents/Programming/Projects/HTLBets/server/prisma/migrations/20260425120000_init/migration.sql) is applied automatically inside Docker.
 
