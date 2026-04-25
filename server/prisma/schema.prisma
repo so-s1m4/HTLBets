@@ -1,0 +1,70 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum GameType {
+  ROULETTE
+  BLACKJACK
+  POKER
+}
+
+enum GameSessionStatus {
+  IDLE
+  WAITING_ACTION
+  COMPLETED
+}
+
+model User {
+  id                String                  @id @default(cuid())
+  email             String                  @unique
+  username          String?
+  balance           Int                     @default(1000)
+  createdAt         DateTime                @default(now())
+  updatedAt         DateTime                @updatedAt
+  gameSessions      GameSession[]
+  gameHistory       GameHistory[]
+
+  @@index([email])
+}
+
+model EmailVerificationCode {
+  id        String   @id @default(cuid())
+  email     String
+  codeHash  String
+  expiresAt DateTime
+  used      Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([email, used, expiresAt])
+}
+
+model GameSession {
+  id         String            @id @default(cuid())
+  userId     String
+  user       User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  gameType   GameType
+  status     GameSessionStatus @default(IDLE)
+  currentBet Int               @default(0)
+  state      Json
+  createdAt  DateTime          @default(now())
+  updatedAt  DateTime          @updatedAt
+
+  @@index([userId, gameType, status])
+}
+
+model GameHistory {
+  id            String   @id @default(cuid())
+  userId        String
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  gameType      GameType
+  betAmount     Int
+  result        String
+  balanceChange Int
+  createdAt     DateTime @default(now())
+
+  @@index([userId, createdAt])
+}
