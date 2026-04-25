@@ -7,7 +7,7 @@ services:
       POSTGRES_USER: ${POSTGRES_USER:-postgres}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
     ports:
-      - '5432:5432'
+      - '${POSTGRES_PUBLISHED_PORT:-5432}:5432'
     volumes:
       - postgres-data:/var/lib/postgresql/data
     healthcheck:
@@ -42,7 +42,7 @@ services:
       MAIL_FROM: ${MAIL_FROM:-no-reply@htlstp.at}
       MAIL_DEBUG_BCC: ${MAIL_DEBUG_BCC:-}
     ports:
-      - '3000:3000'
+      - '${SERVER_PUBLISHED_PORT:-127.0.0.1:3000}:3000'
 
   client:
     build:
@@ -52,7 +52,7 @@ services:
     depends_on:
       - server
     ports:
-      - '4200:80'
+      - '${CLIENT_PUBLISHED_PORT:-4200}:80'
 
 volumes:
   postgres-data:
