@@ -1,0 +1,15 @@
+node_modules
+client/node_modules
+server/node_modules
+client/dist
+server/dist
+.angular
+coverage
+.git
+.github
+.DS_Store
+*.log
+server/.env
+client/.env
+.env
+.env.docker

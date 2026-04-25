@@ -1,0 +1,117 @@
+import { CommonModule } from '@angular/common';
+import { Component, Input, booleanAttribute } from '@angular/core';
+
+@Component({
+  selector: 'app-button',
+  standalone: true,
+  imports: [CommonModule],
+  template: `
+    <button
+      class="app-button"
+      [ngClass]="[variant, block ? 'block' : '']"
+      [attr.type]="type"
+      [disabled]="disabled"
+    >
+      <ng-content />
+    </button>
+  `,
+  styles: [`
+    .app-button {
+      position: relative;
+      isolation: isolate;
+      overflow: hidden;
+      width: auto;
+      min-height: 3.2rem;
+      padding: 0.88rem 1.08rem;
+      border-radius: 22px;
+      border: 1px solid rgba(149, 171, 211, 0.16);
+      font-weight: 600;
+      letter-spacing: -0.02em;
+      box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.05),
+        0 14px 28px rgba(4, 8, 20, 0.24);
+      transition:
+        transform 180ms ease,
+        border-color 180ms ease,
+        background 180ms ease,
+        box-shadow 180ms ease;
+      cursor: pointer;
+    }
+
+    .app-button::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.05), transparent 18%),
+        linear-gradient(135deg, rgba(255, 255, 255, 0.06), transparent 34%, transparent 68%, rgba(255, 255, 255, 0.02));
+      pointer-events: none;
+    }
+
+    .app-button::after {
+      content: '';
+      position: absolute;
+      inset: 1px;
+      border-radius: inherit;
+      background: linear-gradient(90deg, rgba(255, 255, 255, 0.03), transparent 24%, transparent 76%, rgba(255, 255, 255, 0.02));
+      opacity: 1;
+      pointer-events: none;
+    }
+
+    .app-button:disabled {
+      opacity: 0.55;
+      cursor: not-allowed;
+    }
+
+    .app-button.block {
+      width: 100%;
+    }
+
+    .app-button.primary {
+      background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.14), rgba(255, 255, 255, 0.02)),
+        linear-gradient(135deg, rgba(93, 168, 255, 0.98), rgba(125, 227, 255, 0.78) 62%, rgba(136, 123, 255, 0.76));
+      color: #07111e;
+      box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.24),
+        0 14px 34px rgba(93, 168, 255, 0.3),
+        0 0 24px rgba(93, 168, 255, 0.1);
+    }
+
+    .app-button.secondary {
+      background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0)),
+        linear-gradient(180deg, rgba(25, 36, 55, 0.98), rgba(13, 20, 31, 0.98));
+      border-color: rgba(149, 171, 211, 0.2);
+      color: var(--text);
+    }
+
+    .app-button.ghost {
+      background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0)),
+        linear-gradient(180deg, rgba(15, 21, 31, 0.92), rgba(9, 14, 22, 0.92));
+      border-color: rgba(149, 171, 211, 0.12);
+      color: rgba(245, 248, 255, 0.86);
+    }
+
+    @media (hover: hover) {
+      .app-button:hover:not(:disabled) {
+        transform: translateY(-2px) scale(1.01);
+        border-color: rgba(149, 171, 211, 0.24);
+        box-shadow:
+          inset 0 1px 0 rgba(255, 255, 255, 0.06),
+          0 18px 38px rgba(5, 9, 20, 0.34);
+      }
+    }
+
+    .app-button:active:not(:disabled) {
+      transform: scale(0.985);
+    }
+  `]
+})
+export class AppButtonComponent {
+  @Input() variant: 'primary' | 'secondary' | 'ghost' = 'primary';
+  @Input({ transform: booleanAttribute }) block = false;
+  @Input({ transform: booleanAttribute }) disabled = false;
+  @Input() type: 'button' | 'submit' = 'button';
+}

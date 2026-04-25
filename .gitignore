@@ -1,0 +1,11 @@
+node_modules
+dist
+.angular
+.env
+.env.local
+.env.production
+coverage
+client/public/app-config.js
+server/prisma/dev.db
+npm-debug.log*
+.env.docker
