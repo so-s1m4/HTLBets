@@ -13,3 +13,4 @@ server/.env
 client/.env
 .env
 .env.docker
+.idea
