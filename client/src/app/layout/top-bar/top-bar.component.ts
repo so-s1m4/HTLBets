@@ -20,7 +20,10 @@ import { AppBalanceBadgeComponent } from '../../shared/ui/app-balance-badge.comp
           </div>
         </div>
 
-        <app-balance-badge [balance]="auth.currentUser()?.balance || 0" />
+        <div class="top-bar__meta">
+          <span class="top-bar__user">{{ auth.currentUser()?.email || 'guest' }}</span>
+          <app-balance-badge [balance]="auth.currentUser()?.balance || 0" />
+        </div>
       </div>
     </header>
   `,
@@ -31,10 +34,11 @@ import { AppBalanceBadgeComponent } from '../../shared/ui/app-balance-badge.comp
       z-index: 10;
       width: min(100%, var(--content-width));
       margin: 0 auto;
-      padding: 1rem 1rem 0.4rem;
+      padding: 1rem var(--page-padding) 0.45rem;
     }
 
     .top-bar__inner {
+      position: relative;
       display: flex;
       align-items: center;
       justify-content: space-between;
@@ -46,6 +50,15 @@ import { AppBalanceBadgeComponent } from '../../shared/ui/app-balance-badge.comp
         linear-gradient(180deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0)),
         linear-gradient(180deg, rgba(15, 22, 34, 0.96), rgba(9, 14, 22, 0.98));
       box-shadow: var(--shadow-panel);
+      overflow: hidden;
+    }
+
+    .top-bar__inner::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      background: linear-gradient(90deg, rgba(93, 168, 255, 0.08), transparent 22%, transparent 72%, rgba(136, 123, 255, 0.06));
     }
 
     .top-bar__brand {
@@ -81,6 +94,30 @@ import { AppBalanceBadgeComponent } from '../../shared/ui/app-balance-badge.comp
       min-width: 0;
     }
 
+    .top-bar__meta {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+      min-width: 0;
+    }
+
+    .top-bar__user {
+      max-width: 16rem;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      padding: 0.56rem 0.8rem;
+      border-radius: 999px;
+      border: 1px solid rgba(149, 171, 211, 0.12);
+      background: rgba(255, 255, 255, 0.03);
+      color: var(--text-soft);
+      font-size: 0.78rem;
+      font-family: 'SF Mono', 'IBM Plex Mono', ui-monospace, monospace;
+      letter-spacing: 0.08em;
+    }
+
     .top-bar__copy strong,
     .top-bar__copy p {
       display: block;
@@ -102,6 +139,58 @@ import { AppBalanceBadgeComponent } from '../../shared/ui/app-balance-badge.comp
       letter-spacing: 0.18em;
       font-size: 0.68rem;
       font-family: 'SF Mono', 'IBM Plex Mono', ui-monospace, monospace;
+    }
+
+    @media (max-width: 840px) {
+      .top-bar__inner {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .top-bar__meta {
+        width: 100%;
+        justify-content: space-between;
+      }
+    }
+
+    @media (max-width: 640px) {
+      .top-bar {
+        padding-top: 0.8rem;
+      }
+
+      .top-bar__inner {
+        padding: 0.88rem 0.88rem 0.82rem;
+      }
+
+      .top-bar__copy p {
+        display: none;
+      }
+
+      .top-bar__user {
+        max-width: 100%;
+        flex: 1 1 100%;
+        order: 2;
+      }
+    }
+
+    @media (max-width: 440px) {
+      .top-bar__brand {
+        gap: 0.7rem;
+      }
+
+      .top-bar__mark {
+        width: 2.45rem;
+        height: 2.45rem;
+        border-radius: 16px;
+      }
+
+      .top-bar__copy strong {
+        font-size: 0.98rem;
+      }
+
+      .top-bar__eyebrow {
+        letter-spacing: 0.14em;
+      }
     }
   `]
 })

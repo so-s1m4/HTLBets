@@ -15,6 +15,13 @@ import { Component, EventEmitter, Input, Output } from '@angular/core';
             (click)="numberSelected.emit(0)"
           >
             0
+            @if (getAggregate('number', 0); as aggregate) {
+              <span class="roulette-board__chips">
+                @for (chip of buildChips(aggregate.totalAmount, aggregate.playerCount); track $index) {
+                  <span class="roulette-board__chip" [style.--chip-color]="chip"></span>
+                }
+              </span>
+            }
           </button>
 
           <div class="roulette-board__grid">
@@ -28,6 +35,13 @@ import { Component, EventEmitter, Input, Output } from '@angular/core';
                     (click)="numberSelected.emit(number)"
                   >
                     {{ number }}
+                    @if (getAggregate('number', number); as aggregate) {
+                      <span class="roulette-board__chips">
+                        @for (chip of buildChips(aggregate.totalAmount, aggregate.playerCount); track $index) {
+                          <span class="roulette-board__chip" [style.--chip-color]="chip"></span>
+                        }
+                      </span>
+                    }
                   </button>
                 }
               </div>
@@ -43,6 +57,13 @@ import { Component, EventEmitter, Input, Output } from '@angular/core';
           (click)="colorSelected.emit('red')"
         >
           Red
+          @if (getAggregate('color', 'red'); as aggregate) {
+            <span class="roulette-board__chips roulette-board__chips--choice">
+              @for (chip of buildChips(aggregate.totalAmount, aggregate.playerCount); track $index) {
+                <span class="roulette-board__chip" [style.--chip-color]="chip"></span>
+              }
+            </span>
+          }
         </button>
         <button
           class="roulette-board__choice black"
@@ -50,6 +71,13 @@ import { Component, EventEmitter, Input, Output } from '@angular/core';
           (click)="colorSelected.emit('black')"
         >
           Black
+          @if (getAggregate('color', 'black'); as aggregate) {
+            <span class="roulette-board__chips roulette-board__chips--choice">
+              @for (chip of buildChips(aggregate.totalAmount, aggregate.playerCount); track $index) {
+                <span class="roulette-board__chip" [style.--chip-color]="chip"></span>
+              }
+            </span>
+          }
         </button>
       </div>
     </div>
@@ -63,40 +91,47 @@ import { Component, EventEmitter, Input, Output } from '@angular/core';
     .roulette-board__surface {
       overflow-x: auto;
       padding-bottom: 0.25rem;
+      border-radius: 24px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0)),
+        rgba(8, 38, 35, 0.5);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
     }
 
     .roulette-board__layout {
-      min-width: 33rem;
+      min-width: 42rem;
       display: grid;
-      grid-template-columns: 3.5rem minmax(0, 1fr);
-      gap: 0.6rem;
+      grid-template-columns: 3.7rem minmax(0, 1fr);
+      gap: 0.5rem;
       align-items: stretch;
+      padding: 0.8rem;
     }
 
     .roulette-board__grid {
       display: grid;
       grid-template-columns: repeat(12, minmax(0, 1fr));
-      gap: 0.42rem;
+      gap: 0.32rem;
     }
 
     .roulette-board__column {
       display: grid;
       grid-template-rows: repeat(3, minmax(0, 1fr));
-      gap: 0.42rem;
+      gap: 0.32rem;
     }
 
     .roulette-board__colors {
       grid-template-columns: repeat(2, minmax(0, 1fr));
       display: grid;
-      gap: 0.7rem;
+      gap: 0.55rem;
     }
 
     .roulette-board__choice,
     .roulette-board__zero,
     .roulette-board__number {
       position: relative;
-      min-height: 3.15rem;
-      border-radius: 18px;
+      min-height: 2.75rem;
+      border-radius: 12px;
       border: 1px solid rgba(149, 171, 211, 0.12);
       color: var(--text);
       cursor: pointer;
@@ -105,6 +140,36 @@ import { Component, EventEmitter, Input, Output } from '@angular/core';
         inset 0 1px 0 rgba(255, 255, 255, 0.05),
         0 14px 24px rgba(5, 9, 20, 0.2);
       overflow: hidden;
+    }
+
+    .roulette-board__chips {
+      position: absolute;
+      left: 50%;
+      bottom: 0.18rem;
+      display: flex;
+      gap: 0.12rem;
+      transform: translateX(-50%);
+      pointer-events: none;
+    }
+
+    .roulette-board__chips--choice {
+      left: auto;
+      right: 0.38rem;
+      transform: none;
+    }
+
+    .roulette-board__chip {
+      --chip-color: #7de3ff;
+      width: 0.62rem;
+      height: 0.62rem;
+      border-radius: 50%;
+      background:
+        radial-gradient(circle at 35% 35%, rgba(255, 255, 255, 0.9), transparent 30%),
+        var(--chip-color);
+      border: 1px solid rgba(255, 255, 255, 0.34);
+      box-shadow:
+        0 0 0 1px rgba(0, 0, 0, 0.16),
+        0 3px 6px rgba(0, 0, 0, 0.26);
     }
 
     .roulette-board__choice::before,
@@ -159,11 +224,38 @@ import { Component, EventEmitter, Input, Output } from '@angular/core';
         transform: translateY(-2px);
       }
     }
+
+    @media (max-width: 640px) {
+      .roulette-board__layout {
+        min-width: 35.5rem;
+        grid-template-columns: 3.15rem minmax(0, 1fr);
+        padding: 0.65rem;
+      }
+
+      .roulette-board__grid,
+      .roulette-board__column {
+        gap: 0.24rem;
+      }
+
+      .roulette-board__choice,
+      .roulette-board__zero,
+      .roulette-board__number {
+        min-height: 2.5rem;
+        border-radius: 10px;
+        font-size: 0.82rem;
+      }
+    }
   `]
 })
 export class RouletteBoardComponent {
   @Input() selectedType: 'color' | 'number' = 'color';
   @Input() selectedValue: string | number = 'red';
+  @Input() aggregates: Array<{
+    selectionType: 'color' | 'number';
+    value: string | number;
+    totalAmount: number;
+    playerCount: number;
+  }> = [];
 
   @Output() readonly colorSelected = new EventEmitter<'red' | 'black'>();
   @Output() readonly numberSelected = new EventEmitter<number>();
@@ -176,5 +268,16 @@ export class RouletteBoardComponent {
 
   isRed(number: number): boolean {
     return [1, 3, 5, 7, 9, 12, 14, 16, 18, 19, 21, 23, 25, 27, 30, 32, 34, 36].includes(number);
+  }
+
+  getAggregate(selectionType: 'color' | 'number', value: string | number): { totalAmount: number; playerCount: number } | null {
+    return this.aggregates.find((entry) => entry.selectionType === selectionType && entry.value === value) || null;
+  }
+
+  buildChips(totalAmount: number, playerCount: number): string[] {
+    const chipPalette = ['#f4f7ff', '#ff6f91', '#5da8ff', '#ffd166', '#7de3ff'];
+    const chipCount = Math.min(5, Math.max(1, Math.ceil(playerCount)));
+
+    return Array.from({ length: chipCount }, (_, index) => chipPalette[(totalAmount + index) % chipPalette.length] || '#7de3ff');
   }
 }

@@ -58,6 +58,15 @@ import { Component, Input, booleanAttribute } from '@angular/core';
       pointer-events: none;
     }
 
+    .app-button span,
+    .app-button {
+      z-index: 0;
+    }
+
+    .app-button::before {
+      animation: button-sheen 4.8s ease-in-out infinite;
+    }
+
     .app-button:disabled {
       opacity: 0.55;
       cursor: not-allowed;
@@ -106,6 +115,18 @@ import { Component, Input, booleanAttribute } from '@angular/core';
 
     .app-button:active:not(:disabled) {
       transform: scale(0.985);
+    }
+
+    @keyframes button-sheen {
+      0%,
+      100% {
+        transform: translateX(-8%);
+        opacity: 0.78;
+      }
+      50% {
+        transform: translateX(8%);
+        opacity: 1;
+      }
     }
   `]
 })

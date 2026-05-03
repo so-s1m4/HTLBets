@@ -1,6 +1,10 @@
-import type { GameHistory, User } from '@prisma/client';
+import type { GameHistory, User } from '../../../generated/prisma';
 
-export type PublicUser = Pick<User, 'id' | 'email' | 'username' | 'balance' | 'createdAt' | 'updatedAt'>;
+import { isAdminEmail } from '../../utils/admin';
+
+export interface PublicUser extends Pick<User, 'id' | 'email' | 'username' | 'balance' | 'createdAt' | 'updatedAt'> {
+  isAdmin: boolean;
+}
 
 export interface PublicGameHistory extends Pick<GameHistory, 'id' | 'betAmount' | 'result' | 'balanceChange' | 'createdAt'> {
   gameType: GameHistory['gameType'];
@@ -11,6 +15,7 @@ export const toPublicUser = (user: User): PublicUser => ({
   email: user.email,
   username: user.username,
   balance: user.balance,
+  isAdmin: isAdminEmail(user.email),
   createdAt: user.createdAt,
   updatedAt: user.updatedAt
 });

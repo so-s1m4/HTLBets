@@ -1,6 +1,7 @@
 import { DatePipe } from '@angular/common';
 import { Component, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
+import { RouterLink } from '@angular/router';
 
 import { AuthService } from '../../../core/services/auth.service';
 import { GameSocketService } from '../../../core/services/game-socket.service';
@@ -21,7 +22,8 @@ import { ProfileSummaryComponent } from '../components/profile-summary.component
     CreditsPipe,
     DatePipe,
     GameLabelPipe,
-    ProfileSummaryComponent
+    ProfileSummaryComponent,
+    RouterLink
   ],
   template: `
     <div class="page-stack">
@@ -67,6 +69,12 @@ import { ProfileSummaryComponent } from '../components/profile-summary.component
         </div>
       </app-card>
 
+      @if (auth.currentUser()?.isAdmin) {
+        <a routerLink="/admin">
+          <app-button variant="secondary" block>Open admin panel</app-button>
+        </a>
+      }
+
       <app-button variant="ghost" block (click)="logout()">Logout</app-button>
     </div>
   `,
@@ -106,6 +114,18 @@ import { ProfileSummaryComponent } from '../components/profile-summary.component
       gap: 0.8rem;
       flex-wrap: wrap;
       justify-content: flex-end;
+    }
+
+    @media (max-width: 640px) {
+      .history-list__item {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+
+      .history-list__numbers {
+        width: 100%;
+        justify-content: space-between;
+      }
     }
   `]
 })

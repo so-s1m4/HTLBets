@@ -1,5 +1,6 @@
 import { Router } from 'express';
 
+import { adminMiddleware } from '../../middleware/admin.middleware';
 import { authMiddleware } from '../../middleware/auth.middleware';
 import { userService } from './user.service';
 
@@ -20,6 +21,33 @@ userRouter.get('/history', async (req, res, next) => {
   try {
     const history = await userService.getHistory(req.auth!.userId);
     res.status(200).json(history);
+  } catch (error) {
+    next(error);
+  }
+});
+
+userRouter.get('/admin/users', adminMiddleware, async (_req, res, next) => {
+  try {
+    const users = await userService.listUsers();
+    res.status(200).json(users);
+  } catch (error) {
+    next(error);
+  }
+});
+
+userRouter.get('/admin/users/:userId/history', adminMiddleware, async (req, res, next) => {
+  try {
+    const history = await userService.getUserHistory(String(req.params.userId));
+    res.status(200).json(history);
+  } catch (error) {
+    next(error);
+  }
+});
+
+userRouter.patch('/admin/users/:userId/balance', adminMiddleware, async (req, res, next) => {
+  try {
+    const user = await userService.setBalance(String(req.params.userId), req.body?.balance);
+    res.status(200).json(user);
   } catch (error) {
     next(error);
   }

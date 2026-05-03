@@ -10,6 +10,7 @@ import { AppCardComponent } from '../../../shared/ui/app-card.component';
     <section class="auth-panel">
       <app-card tone="accent">
         <div class="auth-panel__content">
+          <div class="auth-panel__grid" aria-hidden="true"></div>
           <div class="auth-panel__signal" aria-hidden="true">
             <span></span>
             <span></span>
@@ -38,6 +39,18 @@ import { AppCardComponent } from '../../../shared/ui/app-card.component';
       display: grid;
       gap: 1.25rem;
       min-height: 24rem;
+    }
+
+    .auth-panel__grid {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      background:
+        linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+      background-size: 28px 28px;
+      mask-image: linear-gradient(180deg, rgba(0, 0, 0, 0.45), transparent 72%);
+      opacity: 0.34;
     }
 
     .auth-panel__signal {

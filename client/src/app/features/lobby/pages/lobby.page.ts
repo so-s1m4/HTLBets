@@ -14,6 +14,7 @@ import { ComingSoonComponent } from '../components/coming-soon.component';
     <div class="page-stack">
       <app-card tone="accent">
         <div class="lobby-hero">
+          <div class="lobby-hero__grid" aria-hidden="true"></div>
           <div class="lobby-hero__orbs">
             <span></span>
             <span></span>
@@ -26,6 +27,14 @@ import { ComingSoonComponent } from '../components/coming-soon.component';
             <p class="status-copy">
               Mobile-first demo tables with strong hierarchy, solid depth, and server-authoritative rounds for roulette, blackjack, and poker.
             </p>
+          </div>
+
+          <div class="lobby-hero__ticker">
+            <span>Realtime tables</span>
+            <span>•</span>
+            <span>HTL-only access</span>
+            <span>•</span>
+            <span>Play money only</span>
           </div>
 
           <div class="lobby-hero__footer">
@@ -54,7 +63,7 @@ import { ComingSoonComponent } from '../components/coming-soon.component';
         </div>
       </app-card>
 
-      <div class="page-heading">
+      <div class="page-heading section-shell">
         <span class="page-heading__eyebrow">Game Lounge</span>
         <h2>Open a table</h2>
       </div>
@@ -79,6 +88,19 @@ import { ComingSoonComponent } from '../components/coming-soon.component';
       display: grid;
       gap: 1.1rem;
       isolation: isolate;
+      overflow: hidden;
+    }
+
+    .lobby-hero__grid {
+      position: absolute;
+      inset: 0;
+      background:
+        linear-gradient(rgba(255, 255, 255, 0.028) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.028) 1px, transparent 1px);
+      background-size: 32px 32px;
+      mask-image: linear-gradient(180deg, rgba(0, 0, 0, 0.55), transparent 78%);
+      opacity: 0.32;
+      pointer-events: none;
     }
 
     .lobby-hero__footer {
@@ -87,6 +109,16 @@ import { ComingSoonComponent } from '../components/coming-soon.component';
       align-items: center;
       gap: 0.75rem;
       flex-wrap: wrap;
+    }
+
+    .lobby-hero__ticker {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.55rem;
+      align-items: center;
+      color: var(--text-soft);
+      font-size: 0.84rem;
+      letter-spacing: 0.04em;
     }
 
     .lobby-hero__orbs {
@@ -107,6 +139,7 @@ import { ComingSoonComponent } from '../components/coming-soon.component';
       border-radius: 999px;
       border: 1px solid rgba(149, 171, 211, 0.12);
       background: linear-gradient(180deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0));
+      animation: lobby-orb-float 4.5s ease-in-out infinite alternate;
     }
 
     .lobby-hero__orbs span:nth-child(1) {
@@ -122,6 +155,64 @@ import { ComingSoonComponent } from '../components/coming-soon.component';
     .lobby-hero__orbs span:nth-child(3) {
       height: 2.7rem;
       background-color: rgba(136, 123, 255, 0.18);
+      animation-delay: 0.5s;
+    }
+
+    .lobby-hero__orbs span:nth-child(2) {
+      animation-delay: 0.25s;
+    }
+
+    @keyframes lobby-orb-float {
+      0% {
+        transform: translateY(0);
+      }
+      100% {
+        transform: translateY(-4px);
+      }
+    }
+
+    @media (min-width: 900px) {
+      .lobby-hero {
+        grid-template-columns: minmax(0, 1.25fr) minmax(18rem, 0.85fr);
+        align-items: end;
+      }
+
+      .lobby-hero .page-heading,
+      .lobby-hero__ticker,
+      .lobby-hero__footer {
+        grid-column: 1;
+      }
+
+      .glass-stat-grid {
+        grid-column: 2;
+        grid-row: 1 / span 3;
+        align-self: stretch;
+      }
+    }
+
+    @media (max-width: 640px) {
+      .lobby-hero {
+        gap: 0.95rem;
+      }
+
+      .lobby-hero__ticker {
+        gap: 0.4rem;
+        font-size: 0.78rem;
+      }
+
+      .lobby-hero__footer {
+        align-items: stretch;
+      }
+
+      .lobby-hero__footer .pill {
+        width: 100%;
+        justify-content: center;
+      }
+
+      .lobby-hero__orbs {
+        width: 5.4rem;
+        height: 2.25rem;
+      }
     }
   `]
 })

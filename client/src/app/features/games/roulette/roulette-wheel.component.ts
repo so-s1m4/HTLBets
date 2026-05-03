@@ -26,7 +26,7 @@ const redNumbers = new Set([1, 3, 5, 7, 9, 12, 14, 16, 18, 19, 21, 23, 25, 27, 3
               [class.green]="slot === 0"
               [style.transform]="labelTransform(index)"
             >
-              <span>{{ slot }}</span>
+              <span [style.transform]="labelTextTransform(index)">{{ slot }}</span>
             </span>
           }
         </div>
@@ -41,7 +41,7 @@ const redNumbers = new Set([1, 3, 5, 7, 9, 12, 14, 16, 18, 19, 21, 23, 25, 27, 3
   styles: [`
     .roulette-wheel {
       position: relative;
-      width: min(100%, 23rem);
+      width: min(100%, 20rem);
       aspect-ratio: 1;
       margin: 0 auto;
       animation: soft-float 8s ease-in-out infinite;
@@ -50,14 +50,14 @@ const redNumbers = new Set([1, 3, 5, 7, 9, 12, 14, 16, 18, 19, 21, 23, 25, 27, 3
     .roulette-wheel__marker {
       position: absolute;
       z-index: 6;
-      top: 0.1rem;
+      top: 0.2rem;
       left: 50%;
-      width: 1.45rem;
-      height: 1.8rem;
+      width: 1.2rem;
+      height: 1.5rem;
       transform: translateX(-50%);
       clip-path: polygon(50% 100%, 0 0, 100% 0);
-      background: linear-gradient(180deg, rgba(255, 255, 255, 0.95), rgba(130, 239, 255, 0.7));
-      filter: drop-shadow(0 6px 14px rgba(130, 239, 255, 0.18));
+      background: linear-gradient(180deg, rgba(255, 244, 213, 0.98), rgba(203, 175, 113, 0.88));
+      filter: drop-shadow(0 6px 10px rgba(0, 0, 0, 0.22));
     }
 
     .roulette-wheel__ball-track,
@@ -75,10 +75,10 @@ const redNumbers = new Set([1, 3, 5, 7, 9, 12, 14, 16, 18, 19, 21, 23, 25, 27, 3
 
     .roulette-wheel__ball {
       position: absolute;
-      top: 1.9rem;
+      top: 1.7rem;
       left: 50%;
-      width: 1rem;
-      height: 1rem;
+      width: 0.88rem;
+      height: 0.88rem;
       transform: translateX(-50%);
       border-radius: 50%;
       background:
@@ -96,7 +96,7 @@ const redNumbers = new Set([1, 3, 5, 7, 9, 12, 14, 16, 18, 19, 21, 23, 25, 27, 3
       background:
         radial-gradient(circle at center, rgba(255, 255, 255, 0.08), transparent 52%),
         radial-gradient(circle at center, rgba(255, 255, 255, 0.05), transparent 66%),
-        #2e2116;
+        #281b12;
       box-shadow:
         inset 0 2px 0 rgba(255, 255, 255, 0.18),
         inset 0 -18px 40px rgba(0, 0, 0, 0.32),
@@ -105,7 +105,7 @@ const redNumbers = new Set([1, 3, 5, 7, 9, 12, 14, 16, 18, 19, 21, 23, 25, 27, 3
 
     .roulette-wheel__outer-ring {
       position: absolute;
-      inset: 0.3rem;
+      inset: 0.25rem;
       border-radius: 50%;
       background:
         radial-gradient(circle at top left, rgba(255, 255, 255, 0.18), transparent 28%),
@@ -117,7 +117,7 @@ const redNumbers = new Set([1, 3, 5, 7, 9, 12, 14, 16, 18, 19, 21, 23, 25, 27, 3
 
     .roulette-wheel__segments {
       position: absolute;
-      inset: 1.55rem;
+      inset: 1.38rem;
       border-radius: 50%;
       background:
         conic-gradient(
@@ -177,15 +177,18 @@ const redNumbers = new Set([1, 3, 5, 7, 9, 12, 14, 16, 18, 19, 21, 23, 25, 27, 3
       left: 50%;
       transform-origin: center center;
       color: rgba(248, 250, 255, 0.92);
-      font-size: 0.52rem;
+      font-size: 0.5rem;
       font-weight: 700;
+      line-height: 1;
+      letter-spacing: -0.03em;
       text-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
       pointer-events: none;
     }
 
     .roulette-wheel__label span {
       display: block;
-      transform: rotate(90deg);
+      min-width: 0.95rem;
+      text-align: center;
     }
 
     .roulette-wheel__label.red {
@@ -198,7 +201,7 @@ const redNumbers = new Set([1, 3, 5, 7, 9, 12, 14, 16, 18, 19, 21, 23, 25, 27, 3
 
     .roulette-wheel__inner-ring {
       position: absolute;
-      inset: 4rem;
+      inset: 3.45rem;
       border-radius: 50%;
       background:
         radial-gradient(circle at 35% 25%, rgba(255, 255, 255, 0.2), transparent 36%),
@@ -210,7 +213,7 @@ const redNumbers = new Set([1, 3, 5, 7, 9, 12, 14, 16, 18, 19, 21, 23, 25, 27, 3
 
     .roulette-wheel__hub {
       position: absolute;
-      inset: 6.3rem;
+      inset: 5.45rem;
       border-radius: 50%;
       background:
         radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.3), transparent 26%),
@@ -251,7 +254,12 @@ export class RouletteWheelComponent {
 
   labelTransform(index: number): string {
     const angle = (360 / this.wheel.length) * index;
-    return `translate(-50%, -50%) rotate(${angle}deg) translateY(-7.2rem)`;
+    return `translate(-50%, -50%) rotate(${angle - 90}deg) translateY(-6.18rem)`;
+  }
+
+  labelTextTransform(index: number): string {
+    const angle = (360 / this.wheel.length) * index;
+    return `rotate(${90 - angle}deg)`;
   }
 
   isRed(value: number): boolean {

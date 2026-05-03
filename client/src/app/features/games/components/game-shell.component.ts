@@ -30,9 +30,11 @@ import { AppCardComponent } from '../../../shared/ui/app-card.component';
         </app-card>
       }
 
-      <div class="game-shell__grid">
+      <div class="game-shell__grid" [class.has-sidebar]="hasSidebar">
         <ng-content select="[table]" />
-        <ng-content select="[sidebar]" />
+        @if (hasSidebar) {
+          <ng-content select="[sidebar]" />
+        }
       </div>
     </div>
   `,
@@ -73,9 +75,33 @@ import { AppCardComponent } from '../../../shared/ui/app-card.component';
       gap: 1rem;
     }
 
-    @media (min-width: 960px) {
-      .game-shell__grid {
-        grid-template-columns: minmax(0, 1.85fr) minmax(300px, 0.92fr);
+    @media (min-width: 900px) {
+      .game-shell__header {
+        grid-template-columns: minmax(0, 1fr) auto;
+        align-items: center;
+      }
+
+      .game-shell__meta {
+        justify-content: flex-end;
+      }
+    }
+
+    .game-shell__grid.has-sidebar {
+      display: grid;
+      gap: 1rem;
+    }
+
+    @media (min-width: 1220px) {
+      .game-shell__grid.has-sidebar {
+        grid-template-columns: minmax(0, 1.65fr) minmax(280px, 0.78fr);
+      }
+    }
+
+    @media (max-width: 640px) {
+      .game-shell__meta {
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 0.55rem;
       }
     }
   `]
@@ -86,4 +112,5 @@ export class GameShellComponent {
   @Input() connectionState = 'disconnected';
   @Input() currentBet = 0;
   @Input() error = '';
+  @Input() hasSidebar = true;
 }

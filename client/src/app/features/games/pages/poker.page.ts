@@ -9,13 +9,24 @@ import { GameShellComponent } from '../components/game-shell.component';
 import { PokerTableComponent } from '../poker/poker-table.component';
 
 interface PokerViewState {
-  phase: 'ready' | 'turn' | 'river' | 'showdown' | 'resolved';
-  playerHand: Array<Record<string, string | boolean>>;
-  opponentHand: Array<Record<string, string | boolean>>;
+  phase: 'waiting' | 'preflop' | 'flop' | 'turn' | 'river' | 'showdown' | 'resolved';
+  pot: number;
+  players: Array<{
+    userId: string;
+    playerLabel: string;
+    ante: number;
+    totalContribution: number;
+    status: 'waiting' | 'active' | 'folded';
+    seatIndex: number;
+    isSelf: boolean;
+    cards: Array<Record<string, string | boolean>>;
+    evaluation?: { label: string } | null;
+  }>;
   communityCards: Array<Record<string, string | boolean>>;
+  winners?: Array<{ userId: string; playerLabel: string; hand: string }>;
+  dealStartsAt?: string;
+  phaseEndsAt?: string;
   notes: string;
-  playerEvaluation: { label: string } | null;
-  opponentEvaluation: { label: string } | null;
 }
 
 @Component({
@@ -40,11 +51,11 @@ interface PokerViewState {
       <app-card table>
         <div class="page-stack">
           <app-poker-table
-            [playerHand]="viewState()?.playerHand || []"
-            [opponentHand]="viewState()?.opponentHand || []"
+            [phase]="viewState()?.phase || 'waiting'"
+            [pot]="viewState()?.pot || 0"
+            [seats]="viewState()?.players || []"
             [communityCards]="viewState()?.communityCards || []"
-            [playerEvaluation]="viewState()?.playerEvaluation || null"
-            [opponentEvaluation]="viewState()?.opponentEvaluation || null"
+            [winners]="viewState()?.winners || null"
           />
 
           <app-card tone="muted">
@@ -52,6 +63,7 @@ interface PokerViewState {
               <div class="utility-row">
                 <span class="pill">Table stage</span>
                 <span class="pill">{{ viewState()?.phase || 'ready' }}</span>
+                <span class="pill">{{ timerLabel() }}</span>
               </div>
               <p class="status-copy">{{ viewState()?.notes || 'Place a bet to start the demo hand.' }}</p>
             </div>
@@ -64,29 +76,34 @@ interface PokerViewState {
           <div class="glass-stat-grid">
             <div class="glass-stat">
               <span class="glass-stat__label">Room</span>
-              <strong class="glass-stat__value">Demo heads-up</strong>
+              <strong class="glass-stat__value">Main online table</strong>
             </div>
             <div class="glass-stat">
               <span class="glass-stat__label">Mode</span>
               <strong class="glass-stat__value">{{ viewState()?.phase || 'ready' }}</strong>
             </div>
+            <div class="glass-stat">
+              <span class="glass-stat__label">Players</span>
+              <strong class="glass-stat__value">{{ viewState()?.players?.length || 0 }}/6</strong>
+            </div>
+            <div class="glass-stat">
+              <span class="glass-stat__label">Pot</span>
+              <strong class="glass-stat__value">{{ viewState()?.pot || 0 }} cr</strong>
+            </div>
           </div>
 
           <app-input
-            label="Bet amount"
+            label="Ante amount"
             inputMode="numeric"
             [value]="betAmount()"
             (valueChange)="betAmount.set($event.replace(/\\D/g, ''))"
           />
 
-          @if (!viewState() || viewState()?.phase === 'ready' || viewState()?.phase === 'resolved') {
-            <app-button block (click)="deal()">Start demo hand</app-button>
+          @if (viewState()?.phase === 'waiting') {
+            <app-button block (click)="joinHand()">Join next hand</app-button>
           } @else {
             <div class="page-stack">
-              <app-button block (click)="action('draw-turn')">Draw turn</app-button>
-              <app-button variant="secondary" block (click)="action('draw-river')">Draw river</app-button>
-              <app-button variant="ghost" block (click)="action('showdown')">Showdown</app-button>
-              <app-button variant="ghost" block (click)="action('fold')">Fold</app-button>
+              <app-button variant="ghost" block (click)="action('fold')">Fold hand</app-button>
             </div>
           }
 
@@ -114,9 +131,27 @@ export class PokerPageComponent {
   private readonly destroyRef = inject(DestroyRef);
 
   readonly betAmount = signal('75');
+  readonly countdownMs = signal(0);
   readonly state = computed(() => this.socket.currentState());
   readonly viewState = computed(() => (this.state()?.state as unknown as PokerViewState | null) || null);
   readonly currentBet = computed(() => this.state()?.currentBet || 0);
+  readonly timerLabel = computed(() => {
+    const state = this.viewState();
+
+    if (!state) {
+      return 'Waiting';
+    }
+
+    const ms = this.countdownMs();
+    if (ms <= 0) {
+      return state.phase === 'waiting' ? 'Open table' : 'Live';
+    }
+
+    const totalSeconds = Math.max(0, Math.ceil(ms / 1000));
+    const minutes = Math.floor(totalSeconds / 60);
+    const seconds = totalSeconds % 60;
+    return `${minutes}:${String(seconds).padStart(2, '0')}`;
+  });
 
   constructor() {
     this.socket.reset();
@@ -125,9 +160,25 @@ export class PokerPageComponent {
       this.socket.leaveGame('poker', this.socket.currentState()?.sessionId);
       this.socket.reset();
     });
+
+    const interval = window.setInterval(() => {
+      const state = this.viewState();
+      const target = state?.phase === 'waiting' ? state.dealStartsAt : state?.phaseEndsAt;
+
+      if (!target) {
+        this.countdownMs.set(0);
+        return;
+      }
+
+      this.countdownMs.set(Math.max(0, new Date(target).getTime() - Date.now()));
+    }, 1000);
+
+    this.destroyRef.onDestroy(() => {
+      window.clearInterval(interval);
+    });
   }
 
-  deal(): void {
+  joinHand(): void {
     const amount = Number(this.betAmount());
 
     if (!amount) {
@@ -137,7 +188,7 @@ export class PokerPageComponent {
     this.socket.placeBet('poker', amount);
   }
 
-  action(action: 'draw-turn' | 'draw-river' | 'showdown' | 'fold'): void {
+  action(action: 'fold'): void {
     this.socket.sendAction('poker', action);
   }
 }

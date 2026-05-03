@@ -37,6 +37,7 @@ import { Component, Input } from '@angular/core';
         linear-gradient(180deg, rgba(255, 255, 255, 0.04), transparent 12%),
         linear-gradient(135deg, rgba(93, 168, 255, 0.06), transparent 28%, transparent 70%, rgba(125, 227, 255, 0.03));
       opacity: 0.92;
+      animation: card-sheen 9s ease-in-out infinite alternate;
     }
 
     .app-card::after {
@@ -72,6 +73,17 @@ import { Component, Input } from '@angular/core';
         transform: translateY(-2px);
         border-color: rgba(149, 171, 211, 0.18);
         box-shadow: var(--shadow-panel-strong);
+      }
+    }
+
+    @keyframes card-sheen {
+      0% {
+        transform: translate3d(-1%, 0, 0);
+        opacity: 0.82;
+      }
+      100% {
+        transform: translate3d(1%, -1%, 0);
+        opacity: 1;
       }
     }
   `]

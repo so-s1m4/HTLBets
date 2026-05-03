@@ -1,6 +1,6 @@
 import { Routes } from '@angular/router';
 
-import { authGuard } from './core/guards/auth.guard';
+import { adminGuard, authGuard, guestOnlyGuard } from './core/guards/auth.guard';
 import { MobileShellComponent } from './layout/mobile-shell/mobile-shell.component';
 
 export const routes: Routes = [
@@ -12,12 +12,14 @@ export const routes: Routes = [
   {
     path: 'auth/email',
     data: { title: 'Sign In' },
+    canActivate: [guestOnlyGuard],
     loadComponent: () =>
       import('./features/auth/pages/email-entry.page').then((module) => module.EmailEntryPageComponent)
   },
   {
     path: 'auth/verify',
     data: { title: 'Verify Code' },
+    canActivate: [guestOnlyGuard],
     loadComponent: () =>
       import('./features/auth/pages/verify-code.page').then((module) => module.VerifyCodePageComponent)
   },
@@ -55,6 +57,13 @@ export const routes: Routes = [
         data: { title: 'Profile' },
         loadComponent: () =>
           import('./features/profile/pages/profile.page').then((module) => module.ProfilePageComponent)
+      },
+      {
+        path: 'admin',
+        data: { title: 'Admin' },
+        canActivate: [adminGuard],
+        loadComponent: () =>
+          import('./features/admin/pages/admin.page').then((module) => module.AdminPageComponent)
       }
     ]
   },

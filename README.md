@@ -207,6 +207,7 @@ cp .env.docker.example .env.docker
 Adjust at least these values before the first run:
 
 - `JWT_SECRET`
+- `ADMIN_EMAILS`
 - `MAIL_HOST`
 - `MAIL_PORT`
 - `MAIL_SECURE`
@@ -218,6 +219,14 @@ Optional published-port overrides:
 
 - `CLIENT_PUBLISHED_PORT=4200`
 - `SERVER_PUBLISHED_PORT=127.0.0.1:3000`
+
+To enable the admin panel, add one or more comma-separated emails:
+
+```env
+ADMIN_EMAILS=maksym.rvachov@htlstp.at,another.admin@htlstp.at
+```
+
+After changing `ADMIN_EMAILS`, restart the `server` container and sign in again so `/api/me` refreshes `isAdmin`.
 - `POSTGRES_PUBLISHED_PORT=5432`
 
 Start the full stack:

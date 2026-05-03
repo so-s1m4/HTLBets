@@ -177,6 +177,22 @@ import { AppButtonComponent } from './app-button.component';
         grid-column: 1 / -1;
       }
     }
+
+    @media (max-width: 480px) {
+      .game-card {
+        gap: 0.9rem;
+        min-height: auto;
+      }
+
+      .game-card__visual {
+        min-height: 7.25rem;
+      }
+
+      .game-card__footer a,
+      .game-card__footer app-button {
+        width: 100%;
+      }
+    }
   `]
 })
 export class AppGameCardComponent {
