@@ -13,6 +13,7 @@ const envSchema = z.object({
   DATABASE_URL: z.string().min(1, 'DATABASE_URL is required.'),
   JWT_SECRET: z.string().min(32, 'JWT_SECRET must be at least 32 characters long.'),
   JWT_EXPIRES_IN: z.string().default('7d'),
+  ADMIN_EMAILS: z.string().optional(),
   CODE_HASH_SECRET: z.string().optional(),
   AUTH_CODE_TTL_MINUTES: z.coerce.number().int().positive().default(10),
   MAIL_HOST: z.string().default('localhost'),
@@ -40,5 +41,9 @@ if (!parsedEnv.success) {
 export const env = {
   ...parsedEnv.data,
   TRUST_PROXY: parseTrustProxy(parsedEnv.data.TRUST_PROXY),
-  CODE_HASH_SECRET: parsedEnv.data.CODE_HASH_SECRET || parsedEnv.data.JWT_SECRET
+  CODE_HASH_SECRET: parsedEnv.data.CODE_HASH_SECRET || parsedEnv.data.JWT_SECRET,
+  ADMIN_EMAILS: (parsedEnv.data.ADMIN_EMAILS || '')
+    .split(',')
+    .map((value) => value.trim().toLowerCase())
+    .filter(Boolean)
 };

@@ -1,6 +1,8 @@
 import { CommonModule } from '@angular/common';
-import { Component } from '@angular/core';
+import { Component, computed, effect, inject } from '@angular/core';
 import { RouterLink, RouterLinkActive } from '@angular/router';
+
+import { AuthService } from '../../core/services/auth.service';
 
 @Component({
   selector: 'app-bottom-nav',
@@ -8,15 +10,15 @@ import { RouterLink, RouterLinkActive } from '@angular/router';
   imports: [CommonModule, RouterLink, RouterLinkActive],
   template: `
     <nav class="bottom-nav">
-      @for (item of items; track item.route) {
+      @for (item of items(); track item.route) {
         <a
           [routerLink]="item.route"
           routerLinkActive="active"
-          [routerLinkActiveOptions]="{ exact: item.route === '/lobby' || item.route === '/profile' }"
+          [routerLinkActiveOptions]="{ exact: item.route === '/lobby' || item.route === '/profile' || item.route === '/admin' }"
           class="bottom-nav__item"
         >
           <span class="bottom-nav__icon">{{ item.icon }}</span>
-          <span>{{ item.label }}</span>
+          <span class="bottom-nav__label">{{ item.label }}</span>
         </a>
       }
     </nav>
@@ -26,10 +28,10 @@ import { RouterLink, RouterLinkActive } from '@angular/router';
       position: fixed;
       z-index: 12;
       left: 50%;
-      bottom: 1rem;
+      bottom: calc(0.9rem + env(safe-area-inset-bottom, 0px));
       transform: translateX(-50%);
       width: min(100%, var(--content-width));
-      padding: 0 1rem;
+      padding: 0 var(--page-padding);
     }
 
     .bottom-nav::before {
@@ -47,7 +49,7 @@ import { RouterLink, RouterLinkActive } from '@angular/router';
 
     .bottom-nav {
       display: grid;
-      grid-template-columns: repeat(3, 1fr);
+      grid-template-columns: repeat(var(--nav-count, 3), minmax(0, 1fr));
       gap: 0.55rem;
     }
 
@@ -78,17 +80,69 @@ import { RouterLink, RouterLinkActive } from '@angular/router';
         0 10px 24px rgba(5, 9, 20, 0.2);
     }
 
+    .bottom-nav__item.active::before {
+      content: '';
+      position: absolute;
+      top: 0.55rem;
+      width: 2rem;
+      height: 2px;
+      border-radius: 999px;
+      background: linear-gradient(90deg, var(--accent-cyan), var(--accent));
+      box-shadow: 0 0 16px rgba(93, 168, 255, 0.24);
+    }
+
     .bottom-nav__icon {
       font-family: 'SF Mono', 'IBM Plex Mono', ui-monospace, monospace;
       font-size: 1rem;
       color: inherit;
     }
+
+    .bottom-nav__label {
+      font-size: 0.84rem;
+      letter-spacing: -0.02em;
+    }
+
+    @media (max-width: 480px) {
+      .bottom-nav {
+        gap: 0.42rem;
+      }
+
+      .bottom-nav::before {
+        inset: -0.14rem var(--page-padding);
+        border-radius: 24px;
+      }
+
+      .bottom-nav__item {
+        min-height: 4rem;
+        border-radius: 20px;
+      }
+
+      .bottom-nav__label {
+        font-size: 0.78rem;
+      }
+    }
   `]
 })
 export class BottomNavigationComponent {
-  readonly items = [
-    { label: 'Lobby', route: '/lobby', icon: '⌂' },
-    { label: 'Roulette', route: '/games/roulette', icon: '◎' },
-    { label: 'Profile', route: '/profile', icon: '◌' }
-  ];
+  private readonly auth = inject(AuthService);
+
+  readonly items = computed(() => {
+    const base = [
+      { label: 'Lobby', route: '/lobby', icon: '⌂' },
+      { label: 'Roulette', route: '/games/roulette', icon: '◎' },
+      { label: 'Profile', route: '/profile', icon: '◌' }
+    ];
+
+    if (this.auth.currentUser()?.isAdmin) {
+      return [...base.slice(0, 2), { label: 'Admin', route: '/admin', icon: '◈' }, base[2]];
+    }
+
+    return base;
+  });
+
+  constructor() {
+    effect(() => {
+      document.documentElement.style.setProperty('--nav-count', String(this.items().length));
+    });
+  }
 }

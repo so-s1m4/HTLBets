@@ -61,7 +61,27 @@ import { TopBarComponent } from '../top-bar/top-bar.component';
     .mobile-shell__content {
       width: min(100%, var(--content-width));
       margin: 0 auto;
-      padding: 1rem 1rem 7.4rem;
+      padding: 1rem var(--page-padding) calc(7.4rem + env(safe-area-inset-bottom, 0px));
+    }
+
+    @media (min-width: 768px) {
+      .mobile-shell__content {
+        padding-top: 1.2rem;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .mobile-shell__ambient--left {
+        left: -10rem;
+        width: 17rem;
+        height: 10rem;
+      }
+
+      .mobile-shell__ambient--right {
+        right: -10rem;
+        width: 15rem;
+        height: 11rem;
+      }
     }
   `]
 })

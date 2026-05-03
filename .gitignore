@@ -7,5 +7,6 @@ dist
 coverage
 client/public/app-config.js
 server/prisma/dev.db
+server/generated
 npm-debug.log*
 .env.docker

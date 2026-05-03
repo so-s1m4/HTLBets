@@ -9,6 +9,8 @@ import {
   type ActionOperationInput,
   type BetOperationInput
 } from '../games/core/game-room.manager';
+import { pokerTableManager } from '../games/poker/poker-table.manager';
+import { rouletteTableManager } from '../games/roulette/roulette-table.manager';
 import { HttpError } from '../../utils/http-error';
 import { socketAuth } from './socket.auth';
 import { socketEvents } from './socket.events';
@@ -25,10 +27,35 @@ export const createSocketServer = (httpServer: HttpServer): Server => {
 
   io.use(socketAuth);
 
+  rouletteTableManager.onStateChange(() => {
+    void emitRouletteTableState(io);
+  });
+
+  pokerTableManager.onStateChange(() => {
+    void emitPokerTableState(io);
+  });
+
   io.on('connection', (socket) => {
     socket.on(socketEvents.join, async (payload: { gameType: string; sessionId?: string }) => {
       try {
         const gameType = parseGameType(payload.gameType);
+
+        if (gameType === 'ROULETTE') {
+          const state = await rouletteTableManager.getStateForUser(socket.data.user.userId);
+          const room = getRoomName(state.gameType, rouletteTableManager.getTableSessionId());
+          socket.join(room);
+          socket.emit(socketEvents.state, state);
+          return;
+        }
+
+        if (gameType === 'POKER') {
+          const state = await pokerTableManager.getStateForUser(socket.data.user.userId);
+          const room = getRoomName(state.gameType, pokerTableManager.getTableSessionId());
+          socket.join(room);
+          socket.emit(socketEvents.state, state);
+          return;
+        }
+
         const state = await gameRoomManager.joinGame({
           userId: socket.data.user.userId,
           gameType,
@@ -45,6 +72,17 @@ export const createSocketServer = (httpServer: HttpServer): Server => {
     socket.on(socketEvents.leave, (payload: { gameType: string; sessionId: string }) => {
       try {
         const gameType = parseGameType(payload.gameType);
+
+        if (gameType === 'ROULETTE') {
+          socket.leave(getRoomName(gameType, rouletteTableManager.getTableSessionId()));
+          return;
+        }
+
+        if (gameType === 'POKER') {
+          socket.leave(getRoomName(gameType, pokerTableManager.getTableSessionId()));
+          return;
+        }
+
         socket.leave(getRoomName(gameType, payload.sessionId));
       } catch (error) {
         emitGameError(socket, error);
@@ -60,6 +98,18 @@ export const createSocketServer = (httpServer: HttpServer): Server => {
           amount: payload.amount,
           payload: payload.payload
         };
+
+        if (request.gameType === 'ROULETTE') {
+          await rouletteTableManager.placeBet(request.userId, request.amount, request.payload);
+          await emitRouletteTableState(io);
+          return;
+        }
+
+        if (request.gameType === 'POKER') {
+          await pokerTableManager.joinHand(request.userId, request.amount);
+          await emitPokerTableState(io);
+          return;
+        }
 
         const state = await gameRoomManager.placeBet(request);
         const room = getRoomName(state.gameType, state.sessionId);
@@ -82,6 +132,12 @@ export const createSocketServer = (httpServer: HttpServer): Server => {
             payload: payload.payload
           };
 
+          if (request.gameType === 'POKER') {
+            await pokerTableManager.performAction(request.userId, request.action);
+            await emitPokerTableState(io);
+            return;
+          }
+
           const state = await gameRoomManager.performAction(request);
           const room = getRoomName(state.gameType, state.sessionId);
           socket.join(room);
@@ -94,6 +150,30 @@ export const createSocketServer = (httpServer: HttpServer): Server => {
   });
 
   return io;
+};
+
+const emitRouletteTableState = async (io: Server): Promise<void> => {
+  const room = getRoomName('ROULETTE', rouletteTableManager.getTableSessionId());
+  const sockets = await io.in(room).fetchSockets();
+
+  await Promise.all(
+    sockets.map(async (socket) => {
+      const state = await rouletteTableManager.getStateForUser(socket.data.user.userId);
+      socket.emit(socketEvents.state, state);
+    })
+  );
+};
+
+const emitPokerTableState = async (io: Server): Promise<void> => {
+  const room = getRoomName('POKER', pokerTableManager.getTableSessionId());
+  const sockets = await io.in(room).fetchSockets();
+
+  await Promise.all(
+    sockets.map(async (socket) => {
+      const state = await pokerTableManager.getStateForUser(socket.data.user.userId);
+      socket.emit(socketEvents.state, state);
+    })
+  );
 };
 
 const emitGameError = (socket: Socket, error: unknown) => {

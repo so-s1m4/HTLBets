@@ -1,4 +1,4 @@
-import type { GameSessionStatus, GameType, User } from '@prisma/client';
+import type { GameSessionStatus, GameType, User } from '../../../../generated/prisma';
 
 export interface GameResolution {
   result: string;

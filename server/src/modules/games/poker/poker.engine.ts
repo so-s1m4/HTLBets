@@ -1,4 +1,4 @@
-import { GameSessionStatus, GameType } from '@prisma/client';
+import { GameSessionStatus, GameType } from '../../../../generated/prisma';
 
 import type {
   ActionRequest,

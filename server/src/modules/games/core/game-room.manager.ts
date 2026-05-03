@@ -1,4 +1,4 @@
-import { GameSessionStatus, GameType, Prisma, type GameSession, type User } from '@prisma/client';
+import { GameSessionStatus, GameType, Prisma, type GameSession, type User } from '../../../../generated/prisma';
 
 import { prisma } from '../../../prisma/client';
 import { HttpError } from '../../../utils/http-error';
