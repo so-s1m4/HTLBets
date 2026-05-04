@@ -1,0 +1,51 @@
+    <div class="page-stack">
+      <app-profile-summary
+        [email]="auth.currentUser()?.email || 'Unknown user'"
+        [balance]="auth.currentUser()?.balance || 0"
+      />
+
+      <app-card tone="muted">
+        <div class="page-stack">
+          <div class="utility-row">
+            <div class="page-heading">
+              <span class="page-heading__eyebrow">History</span>
+              <h2>Session history</h2>
+            </div>
+
+            <app-button variant="secondary" (click)="refresh()">Refresh</app-button>
+          </div>
+
+          @if (loading()) {
+            <p class="status-copy">Loading history...</p>
+          } @else if (history().length === 0) {
+            <p class="status-copy">No rounds recorded yet. Jump into the lobby and play a demo game.</p>
+          } @else {
+            <div class="history-list">
+              @for (entry of history(); track entry.id) {
+                <div class="history-list__item">
+                  <div class="history-list__meta">
+                    <strong>{{ entry.gameType | gameLabel }}</strong>
+                    <p class="status-copy">{{ entry.createdAt | date: 'medium' }}</p>
+                  </div>
+
+                  <div class="history-list__numbers">
+                    <span class="pill">{{ entry.betAmount | credits }}</span>
+                    <span [class]="entry.balanceChange >= 0 ? 'text-success' : 'text-danger'">
+                      {{ entry.balanceChange | credits }}
+                    </span>
+                  </div>
+                </div>
+              }
+            </div>
+          }
+        </div>
+      </app-card>
+
+      @if (auth.currentUser()?.isAdmin) {
+        <a routerLink="/admin">
+          <app-button variant="secondary" block>Open admin panel</app-button>
+        </a>
+      }
+
+      <app-button variant="ghost" block (click)="logout()">Logout</app-button>
+    </div>

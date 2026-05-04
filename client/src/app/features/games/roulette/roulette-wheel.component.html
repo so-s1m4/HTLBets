@@ -1,0 +1,30 @@
+    <div class="roulette-wheel" [class.spinning]="spinning">
+      <div class="roulette-wheel__marker"></div>
+
+      <div class="roulette-wheel__ball-track" [style.transform]="'rotate(' + ballRotation + 'deg)'">
+        <span class="roulette-wheel__ball"></span>
+      </div>
+
+      <div class="roulette-wheel__plate" [style.transform]="'rotate(' + wheelRotation + 'deg)'">
+        <div class="roulette-wheel__outer-ring"></div>
+        <div class="roulette-wheel__segments"></div>
+
+        <div class="roulette-wheel__labels">
+          @for (slot of wheel; track slot; let index = $index) {
+            <span
+              class="roulette-wheel__label"
+              [class.red]="isRed(slot)"
+              [class.green]="slot === 0"
+              [style.transform]="labelTransform(index)"
+            >
+              <span [style.transform]="labelTextTransform(index)">{{ slot }}</span>
+            </span>
+          }
+        </div>
+
+        <div class="roulette-wheel__inner-ring"></div>
+        <div class="roulette-wheel__hub"></div>
+      </div>
+
+      <div class="roulette-wheel__shadow"></div>
+    </div>

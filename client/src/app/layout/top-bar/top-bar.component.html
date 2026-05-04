@@ -1,0 +1,17 @@
+    <header class="top-bar">
+      <div class="top-bar__inner">
+        <div class="top-bar__brand">
+          <span class="top-bar__mark">HB</span>
+          <div class="top-bar__copy">
+            <span class="top-bar__eyebrow">HTL Gambling Floor</span>
+            <strong>Dashboard</strong>
+            <p>Become a millionaire!</p>
+          </div>
+        </div>
+
+        <div class="top-bar__meta">
+          <span class="top-bar__user">{{ auth.currentUser()?.email || 'guest' }}</span>
+          <app-balance-badge [balance]="auth.currentUser()?.balance || 0" />
+        </div>
+      </div>
+    </header>

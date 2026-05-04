@@ -1,0 +1,22 @@
+    <section class="auth-page">
+      <app-auth-panel
+        title="Sign In"
+        subtitle="Try ur luck or skill in our mini betting games. Good Luck!"
+      >
+        <div class="page-stack">
+          <app-input
+            label="Email address"
+            placeholder="student@htlstp.at"
+            helper="Only @htlstp.at addresses are allowed."
+            [value]="email()"
+            (valueChange)="email.set($event)"
+          />
+          @if (error()) {
+            <p class="status-copy text-danger">{{ error() }}</p>
+          }
+          <app-button block [disabled]="loading()" (click)="submit()">
+            {{ loading() ? 'Sending code...' : 'Request verification code' }}
+          </app-button>
+        </div>
+      </app-auth-panel>
+    </section>

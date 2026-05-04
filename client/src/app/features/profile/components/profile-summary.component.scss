@@ -1,0 +1,11 @@
+    .profile-summary {
+      display: grid;
+      gap: 1.1rem;
+    }
+
+    .profile-summary__footer {
+      display: flex;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+      align-items: center;
+    }

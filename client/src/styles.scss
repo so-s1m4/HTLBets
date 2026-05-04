@@ -212,7 +212,7 @@ main {
 .glass-stat-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0.9rem;
+  gap: 0.4em;
 }
 
 .glass-stat {
@@ -231,7 +231,7 @@ main {
   content: '';
   position: absolute;
   inset: 0 auto auto 0;
-  width: 100%;
+  width: 140%;
   height: 3px;
   background: linear-gradient(90deg, var(--accent), var(--accent-cyan), transparent 76%);
   opacity: 0.7;
@@ -333,7 +333,7 @@ main {
   }
 
   .glass-stat-grid {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 
   .hide-mobile {

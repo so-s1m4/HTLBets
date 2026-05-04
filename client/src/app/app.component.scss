@@ -1,0 +1,33 @@
+    .app-boot {
+      min-height: 100vh;
+      display: grid;
+      place-content: center;
+      gap: 0.7rem;
+      text-align: center;
+      padding: 1.5rem;
+    }
+
+    .app-boot__mark {
+      width: 4rem;
+      height: 4rem;
+      margin: 0 auto 0.4rem;
+      display: grid;
+      place-items: center;
+      border-radius: 24px;
+      border: 1px solid rgba(149, 171, 211, 0.16);
+      background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0)),
+        linear-gradient(135deg, rgba(93, 168, 255, 0.4), rgba(15, 23, 36, 0.96) 74%);
+      box-shadow: var(--shadow-panel);
+      font-family: 'SF Mono', 'IBM Plex Mono', ui-monospace, monospace;
+      letter-spacing: 0.16em;
+    }
+
+    .app-boot strong,
+    .app-boot p {
+      margin: 0;
+    }
+
+    .app-boot p {
+      color: var(--text-soft);
+    }

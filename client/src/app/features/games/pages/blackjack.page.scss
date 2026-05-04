@@ -1,0 +1,41 @@
+    .blackjack-table {
+      position: relative;
+      min-height: 34rem;
+      border-radius: var(--radius-xl);
+      overflow: hidden;
+
+      display: flex;
+      flex-direction: column;
+    }
+
+    .blackjack-table__surface {
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(circle at center, rgba(125, 227, 255, 0.08), transparent 28%),
+        radial-gradient(circle at center, rgba(93, 168, 255, 0.08), transparent 54%),
+        linear-gradient(180deg, rgba(14, 56, 47, 0.96), rgba(6, 26, 29, 0.98));
+      border-radius: inherit;
+      box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.05),
+        inset 0 -30px 50px rgba(0, 0, 0, 0.28);
+    }
+
+    .blackjack-table__surface::before {
+      content: '';
+      position: absolute;
+      inset: 12% 10%;
+      border-radius: 50%;
+      border: 1px solid rgba(255, 255, 255, 0.07);
+      box-shadow: 0 0 42px rgba(93, 168, 255, 0.06);
+    }
+
+    .blackjack-table__content {
+      position: relative;
+      z-index: 1;
+
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      flex: 1;
+    }

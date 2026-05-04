@@ -1,0 +1,10 @@
+    .coming-soon {
+      display: grid;
+      gap: 1rem;
+    }
+
+    .coming-soon__list {
+      display: flex;
+      gap: 0.7rem;
+      flex-wrap: wrap;
+    }
