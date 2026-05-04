@@ -12,3 +12,4 @@ npm-debug.log*
 .env.docker
 server/.env
 client/.env
+.idea
