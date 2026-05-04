@@ -10,3 +10,5 @@ server/prisma/dev.db
 server/generated
 npm-debug.log*
 .env.docker
+server/.env
+client/.env

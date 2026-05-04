@@ -10,12 +10,15 @@ interface PokerSeatView {
   userId: string;
   playerLabel: string;
   ante: number;
+  stackRemaining: number;
   totalContribution: number;
-  status: 'waiting' | 'active' | 'folded';
+  streetContribution: number;
+  status: 'waiting' | 'active' | 'folded' | 'all-in';
   seatIndex: number;
   isSelf: boolean;
   cards: DisplayCard[];
   evaluation?: { label: string } | null;
+  lastAction?: string;
 }
 
 @Component({
@@ -33,22 +36,33 @@ interface PokerSeatView {
         </div>
 
         <div class="poker-table__pot">
-          <span class="glass-stat__label">Pot</span>
+          <span class="glass-stat__label">{{ phase === 'waiting' ? 'Committed' : 'Pot' }}</span>
           <strong>{{ pot }} cr</strong>
         </div>
       </div>
 
       <div class="poker-table__ring">
         @for (seat of seats; track seat.userId) {
-          <section class="poker-seat" [class.active]="seat.status === 'active'" [class.self]="seat.isSelf" [style.--seat-index]="seat.seatIndex">
+          <section
+            class="poker-seat"
+            [class.active]="seat.status === 'active'"
+            [class.self]="seat.isSelf"
+            [class.acting]="actingUserId === seat.userId"
+            [style.--seat-index]="seat.seatIndex"
+          >
             <div class="poker-seat__meta">
               <strong>{{ seat.playerLabel }}</strong>
               <span class="pill">{{ seat.status }}</span>
             </div>
 
             <div class="poker-seat__info">
-              <span>{{ seat.ante }} cr ante</span>
-              <span>{{ seat.totalContribution }} cr in</span>
+              <span>{{ seat.stackRemaining }} cr behind</span>
+              <span>{{ seat.totalContribution }} cr {{ phase === 'waiting' ? 'buy-in' : 'in' }}</span>
+            </div>
+
+            <div class="poker-seat__info">
+              <span>{{ seat.streetContribution }} cr street</span>
+              <span>{{ seat.lastAction || 'Waiting' }}</span>
             </div>
 
             <div class="poker-seat__cards">
@@ -72,7 +86,10 @@ interface PokerSeatView {
 
         <section class="poker-board">
           <div class="poker-board__core">
-            <span class="pill">Phase: {{ phase }}</span>
+            <div class="poker-board__status">
+              <span class="pill">Phase: {{ phase }}</span>
+              <span class="pill">Street bet: {{ currentBet }} cr</span>
+            </div>
             <div class="poker-board__cards">
               @for (card of communityCards; track $index) {
                 <div class="poker-card poker-card--board">
@@ -206,6 +223,14 @@ interface PokerSeatView {
       border-color: rgba(93, 168, 255, 0.28);
     }
 
+    .poker-seat.acting {
+      box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.05),
+        0 0 0 1px rgba(125, 227, 255, 0.18),
+        0 0 34px rgba(125, 227, 255, 0.14),
+        0 18px 28px rgba(5, 9, 20, 0.18);
+    }
+
     .poker-seat__meta,
     .poker-seat__info {
       display: flex;
@@ -254,6 +279,13 @@ interface PokerSeatView {
       display: grid;
       gap: 0.9rem;
       justify-items: center;
+    }
+
+    .poker-board__status {
+      display: flex;
+      gap: 0.55rem;
+      flex-wrap: wrap;
+      justify-content: center;
     }
 
     .poker-board__winners {
@@ -336,6 +368,8 @@ interface PokerSeatView {
 export class PokerTableComponent {
   @Input() phase = 'waiting';
   @Input() pot = 0;
+  @Input() currentBet = 0;
+  @Input() actingUserId: string | null = null;
   @Input() seats: PokerSeatView[] = [];
   @Input() communityCards: DisplayCard[] = [];
   @Input() winners: Array<{ userId: string; playerLabel: string; hand: string }> | null = null;
