@@ -1,5 +1,7 @@
 services:
   postgres:
+    networks:
+      - htlbets_default
     image: postgres:16-alpine
     restart: unless-stopped
     environment:
@@ -17,6 +19,9 @@ services:
       retries: 10
 
   server:
+    networks:
+      - htlbets_default
+      - bridge
     build:
       context: .
       dockerfile: server/Dockerfile
@@ -46,6 +51,10 @@ services:
       - '${SERVER_PUBLISHED_PORT:-127.0.0.1:3000}:3000'
 
   client:
+    networks:
+      - htlbets_default
+      - bridge
+
     build:
       context: .
       dockerfile: client/Dockerfile
@@ -57,3 +66,10 @@ services:
 
 volumes:
   postgres-data:
+
+
+networks:
+  htlbets_default:
+    driver: bridge
+  bridge:
+    external: true
