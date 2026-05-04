@@ -1,0 +1,21 @@
+    <div class="hand" [ngClass]="{
+    'player-hand': !isDealer
+    }">
+      <div class="hand__header">
+        <h3>{{ label }}</h3>
+        <span class="pill">Score: {{ score }}</span>
+      </div>
+
+      <div class="hand__cards">
+        @for (card of cards; track $index) {
+          <div class="card" [class.hidden]="isHidden(card)">
+            @if (isHidden(card)) {
+              <span>??</span>
+            } @else {
+                <strong [style.color]=color(card.suit)>{{ card.rank }}</strong>
+                <span [style.color]=color(card.suit)>{{ symbol(card.suit) }}</span>
+            }
+          </div>
+        }
+      </div>
+    </div>

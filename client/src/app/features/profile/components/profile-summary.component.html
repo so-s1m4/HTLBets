@@ -1,0 +1,14 @@
+    <app-card tone="accent">
+      <div class="profile-summary">
+        <div class="page-heading">
+          <span class="page-heading__eyebrow">Profile</span>
+          <h1>{{ email }}</h1>
+          <p class="status-copy">Demo credits only. No payments or withdrawal flows are implemented.</p>
+        </div>
+
+        <div class="profile-summary__footer">
+          <app-balance-badge [balance]="balance" />
+          <span class="pill">Play money only</span>
+        </div>
+      </div>
+    </app-card>

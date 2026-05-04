@@ -1,0 +1,30 @@
+    <div class="game-shell">
+      <app-card tone="accent">
+        <div class="game-shell__header">
+          <div class="page-heading">
+            <span class="page-heading__eyebrow">{{ connectionState }}</span>
+            <h1>{{ title }}</h1>
+            <p class="status-copy">{{ subtitle }}</p>
+          </div>
+
+          <div class="game-shell__meta">
+            <span class="game-shell__dot" [class.connected]="connectionState === 'connected'"></span>
+            <span class="pill">Realtime {{ connectionState }}</span>
+            <span class="pill">Current bet: {{ currentBet }} cr</span>
+          </div>
+        </div>
+      </app-card>
+
+      @if (error) {
+        <app-card tone="muted">
+          <p class="status-copy text-danger">{{ error }}</p>
+        </app-card>
+      }
+
+      <div class="game-shell__grid" [class.has-sidebar]="hasSidebar">
+        <ng-content select="[table]" />
+        @if (hasSidebar) {
+          <ng-content select="[sidebar]" />
+        }
+      </div>
+    </div>

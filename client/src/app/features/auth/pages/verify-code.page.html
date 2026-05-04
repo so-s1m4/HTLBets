@@ -1,0 +1,34 @@
+    <section class="auth-page">
+      <app-auth-panel
+        title="Enter code"
+        subtitle="The verification code expires after 10 minutes. If it times out, request a new one."
+      >
+        <div class="page-stack">
+          <p class="status-copy">
+            Account: <strong>{{ email }}</strong>
+          </p>
+
+          <app-input
+            label="6-digit code"
+            placeholder="123456"
+            inputMode="numeric"
+            [maxlength]="6"
+            [value]="code()"
+            (valueChange)="code.set($event.replace(/\\D/g, '').slice(0, 6))"
+          />
+
+          @if (error()) {
+            <p class="status-copy text-danger">{{ error() }}</p>
+          }
+
+          <div class="page-stack">
+            <app-button block [disabled]="loading()" (click)="submit()">
+              {{ loading() ? 'Verifying...' : 'Verify and enter lobby' }}
+            </app-button>
+            <app-button variant="secondary" block [disabled]="resending()" (click)="resend()">
+              {{ resending() ? 'Sending again...' : 'Resend code' }}
+            </app-button>
+          </div>
+        </div>
+      </app-auth-panel>
+    </section>

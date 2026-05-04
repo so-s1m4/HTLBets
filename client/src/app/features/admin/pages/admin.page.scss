@@ -1,0 +1,64 @@
+    .admin-hero,
+    .admin-toolbar,
+    .admin-user-card,
+    .admin-history {
+      display: grid;
+      gap: 1rem;
+    }
+
+    .admin-toolbar {
+      grid-template-columns: minmax(0, 1fr) auto;
+      align-items: end;
+    }
+
+    .admin-grid {
+      display: grid;
+      gap: 1rem;
+    }
+
+    .admin-user-card__header,
+    .admin-user-card__actions,
+    .admin-history__item,
+    .admin-history__values {
+      display: flex;
+      gap: 0.75rem;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+    }
+
+    .admin-user-card__controls {
+      display: grid;
+      gap: 0.9rem;
+    }
+
+    .admin-history__item {
+      padding: 0.95rem 1rem;
+      border-radius: var(--radius-md);
+      border: 1px solid rgba(149, 171, 211, 0.12);
+      background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0)),
+        linear-gradient(180deg, rgba(16, 23, 36, 0.98), rgba(11, 17, 27, 0.98));
+    }
+
+    .admin-history__item strong,
+    .admin-history__item p {
+      margin: 0;
+    }
+
+    @media (min-width: 980px) {
+      .admin-grid {
+        grid-template-columns: minmax(0, 1.4fr) minmax(320px, 0.9fr);
+        align-items: start;
+      }
+    }
+
+    @media (max-width: 640px) {
+      .admin-toolbar {
+        grid-template-columns: 1fr;
+      }
+
+      .admin-user-card__actions {
+        flex-direction: column;
+      }
+    }

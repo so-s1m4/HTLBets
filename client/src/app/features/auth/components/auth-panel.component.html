@@ -1,0 +1,20 @@
+    <section class="auth-panel">
+      <app-card tone="accent">
+        <div class="auth-panel__content">
+          <div class="auth-panel__grid" aria-hidden="true"></div>
+          <div class="auth-panel__signal" aria-hidden="true">
+            <span></span>
+            <span></span>
+            <span></span>
+          </div>
+
+          <div class="page-heading">
+            <span class="page-heading__eyebrow">{{ eyebrow }}</span>
+            <h1>{{ title }}</h1>
+            <p class="status-copy">{{ subtitle }}</p>
+          </div>
+
+          <ng-content />
+        </div>
+      </app-card>
+    </section>

@@ -1,0 +1,103 @@
+    <app-game-shell
+      title="Poker"
+      subtitle="A dark premium poker table with staged actions, active zones, and expandable shared room state."
+      [connectionState]="socket.connectionState()"
+      [currentBet]="currentBet()"
+      [error]="socket.lastError() || ''"
+    >
+      <app-card table>
+        <div class="page-stack">
+          <app-poker-table
+            [phase]="viewState()?.phase || 'waiting'"
+            [pot]="viewState()?.pot || 0"
+            [currentBet]="viewState()?.currentBet || 0"
+            [actingUserId]="viewState()?.actingUserId || null"
+            [seats]="viewState()?.players || []"
+            [communityCards]="viewState()?.communityCards || []"
+            [winners]="viewState()?.winners || null"
+          />
+
+          <app-card tone="muted">
+            <div class="page-stack">
+              <div class="utility-row">
+                <span class="pill">Table stage</span>
+                <span class="pill">{{ viewState()?.phase || 'ready' }}</span>
+                <span class="pill">{{ timerLabel() }}</span>
+              </div>
+              <p class="status-copy">{{ viewState()?.notes || 'Place a bet to start the demo hand.' }}</p>
+            </div>
+          </app-card>
+        </div>
+      </app-card>
+
+      <app-card sidebar>
+        <div class="page-stack">
+          <div class="glass-stat-grid">
+            <div class="glass-stat">
+              <span class="glass-stat__label">Room</span>
+              <strong class="glass-stat__value">#1</strong>
+            </div>
+            <div class="glass-stat">
+              <span class="glass-stat__label">Players</span>
+              <strong class="glass-stat__value">{{ viewState()?.players?.length || 0 }}/6</strong>
+            </div>
+            <div class="glass-stat">
+              <span class="glass-stat__label">Buy-in now</span>
+              <strong class="glass-stat__value">{{ viewState()?.joinMinimum || 0 }} cr</strong>
+            </div>
+            <div class="glass-stat">
+              <span class="glass-stat__label">To act</span>
+              <strong class="glass-stat__value">{{ actingLabel() }}</strong>
+            </div>
+          </div>
+
+          <app-input
+            label="Ante amount"
+            inputMode="numeric"
+            [value]="betAmount()"
+            (valueChange)="betAmount.set($event.replace(/\\D/g, ''))"
+          />
+
+          @if (viewState()?.phase === 'waiting') {
+            <app-button block (click)="joinHand()">{{ joinedThisHand() ? 'Joined next hand' : 'Join next hand' }}</app-button>
+          } @else {
+            <div class="page-stack">
+              @if (can('check')) {
+                <app-button variant="secondary" block (click)="action('check')">Check</app-button>
+              }
+
+              @if (can('call')) {
+                <app-button variant="secondary" block (click)="action('call')">Call {{ callAmount() }} cr</app-button>
+              }
+
+              @if (can('raise')) {
+                <app-input
+                  label="Raise to"
+                  inputMode="numeric"
+                  [value]="raiseAmount()"
+                  (valueChange)="raiseAmount.set($event.replace(/\\D/g, ''))"
+                />
+                <app-button block (click)="raise()">Raise to {{ raiseTarget() || viewState()?.minRaiseTo || 0 }} cr</app-button>
+              }
+
+              @if (can('all-in')) {
+                <app-button variant="secondary" block (click)="action('all-in')">All-in {{ selfSeat()?.stackRemaining || 0 }} cr</app-button>
+              }
+
+              @if (can('fold')) {
+                <app-button variant="ghost" block (click)="action('fold')">Fold hand</app-button>
+              }
+            </div>
+          }
+
+          @if (socket.currentState()?.outcome; as result) {
+            <div class="page-stack">
+              <span class="pill">{{ result.result }}</span>
+              <p [class]="result.balanceChange >= 0 ? 'text-success' : 'text-danger'">
+                {{ result.balanceChange | credits }}
+              </p>
+            </div>
+          }
+        </div>
+      </app-card>
+    </app-game-shell>

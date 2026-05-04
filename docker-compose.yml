@@ -4,6 +4,8 @@ services:
       - htlbets_default
     image: postgres:16-alpine
     restart: unless-stopped
+    ports:
+      - '${POSTGRES_PUBLISHED_PORT:-127.0.0.1:5432}:5432'
     environment:
       POSTGRES_DB: ${POSTGRES_DB:-htl_bets}
       POSTGRES_USER: ${POSTGRES_USER:-postgres}

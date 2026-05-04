@@ -1,0 +1,75 @@
+    <div class="roulette-board">
+      <div class="roulette-board__surface">
+        <div class="roulette-board__layout">
+          <button
+            class="roulette-board__zero"
+            [class.active]="selectedType === 'number' && selectedValue === 0"
+            (click)="numberSelected.emit(0)"
+          >
+            0
+            @if (getAggregate('number', 0); as aggregate) {
+              <span class="roulette-board__chips">
+                @for (chip of buildChips(aggregate.totalAmount, aggregate.playerCount); track $index) {
+                  <span class="roulette-board__chip" [style.--chip-color]="chip"></span>
+                }
+              </span>
+            }
+          </button>
+
+          <div class="roulette-board__grid">
+            @for (column of columns; track $index) {
+              <div class="roulette-board__column">
+                @for (number of column; track number) {
+                  <button
+                    class="roulette-board__number"
+                    [class.active]="selectedType === 'number' && selectedValue === number"
+                    [class.red]="isRed(number)"
+                    (click)="numberSelected.emit(number)"
+                  >
+                    {{ number }}
+                    @if (getAggregate('number', number); as aggregate) {
+                      <span class="roulette-board__chips">
+                        @for (chip of buildChips(aggregate.totalAmount, aggregate.playerCount); track $index) {
+                          <span class="roulette-board__chip" [style.--chip-color]="chip"></span>
+                        }
+                      </span>
+                    }
+                  </button>
+                }
+              </div>
+            }
+          </div>
+        </div>
+      </div>
+
+      <div class="roulette-board__colors">
+        <button
+          class="roulette-board__choice red"
+          [class.active]="selectedType === 'color' && selectedValue === 'red'"
+          (click)="colorSelected.emit('red')"
+        >
+          Red
+          @if (getAggregate('color', 'red'); as aggregate) {
+            <span class="roulette-board__chips roulette-board__chips--choice">
+              @for (chip of buildChips(aggregate.totalAmount, aggregate.playerCount); track $index) {
+                <span class="roulette-board__chip" [style.--chip-color]="chip"></span>
+              }
+            </span>
+          }
+        </button>
+        <button
+          class="roulette-board__choice black"
+          [class.active]="selectedType === 'color' && selectedValue === 'black'"
+          (click)="colorSelected.emit('black')"
+        >
+          Black
+          @if (getAggregate('color', 'black'); as aggregate) {
+            <span class="roulette-board__chips roulette-board__chips--choice">
+              @for (chip of buildChips(aggregate.totalAmount, aggregate.playerCount); track $index) {
+                <span class="roulette-board__chip" [style.--chip-color]="chip"></span>
+              }
+            </span>
+          }
+        </button>
+      </div>
+    </div>

@@ -1,0 +1,25 @@
+    <app-card tone="accent">
+      <div class="game-card" [attr.data-theme]="theme">
+        <div class="game-card__meta">
+          <div class="utility-row">
+            <span class="pill">{{ badge }}</span>
+            <span class="game-card__availability">{{ availability }}</span>
+          </div>
+          <h3>{{ title }}</h3>
+          <p>{{ description }}</p>
+        </div>
+
+        <div class="game-card__visual" aria-hidden="true">
+          <span class="game-card__visual-ring"></span>
+          <span class="game-card__visual-ring"></span>
+          <span class="game-card__visual-core"></span>
+        </div>
+
+        <div class="game-card__footer">
+          <span class="game-card__hint">Enter table</span>
+          <a [routerLink]="route">
+            <app-button variant="primary">Open</app-button>
+          </a>
+        </div>
+      </div>
+    </app-card>

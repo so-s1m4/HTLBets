@@ -1,0 +1,9 @@
+    @if (auth.ready()) {
+      <router-outlet />
+    } @else {
+      <div class="app-boot">
+        <div class="app-boot__mark">HB</div>
+        <strong>Restoring session</strong>
+        <p>Loading your demo floor…</p>
+      </div>
+    }

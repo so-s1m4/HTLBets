@@ -1,0 +1,16 @@
+    <label class="app-input">
+      <span class="app-input__label">{{ label }}</span>
+      <input
+        class="app-input__control"
+        [type]="type"
+        [placeholder]="placeholder"
+        [value]="value"
+        [disabled]="disabled"
+        [attr.maxlength]="maxlength || null"
+        [attr.inputmode]="inputMode || null"
+        (input)="onInput($event)"
+      />
+      @if (helper) {
+        <span class="app-input__helper">{{ helper }}</span>
+      }
+    </label>

@@ -1,0 +1,74 @@
+<app-game-shell
+  title="Blackjack"
+  subtitle="A polished felt table with animated dealing and clear hit, stand, and double controls."
+  [connectionState]="socket.connectionState()"
+  [currentBet]="currentBet()"
+  [error]="socket.lastError() || ''"
+>
+
+  <app-card table>
+    <div class="blackjack-table">
+      <div class="blackjack-table__surface"></div>
+
+      <div class="page-stack blackjack-table__content">
+        <app-blackjack-hand
+          label="Dealer"
+          [cards]="viewState()?.dealerHand || []"
+          [score]="viewState()?.dealerScore || 0"
+          [hidden]="(viewState()?.dealerHand || []).length == 0 && !isRoundActive()"
+          [isDealer]="true"
+        />
+
+        <app-blackjack-hand
+          label="Player"
+          [cards]="viewState()?.playerHand || []"
+          [score]="viewState()?.playerScore || 0"
+          [hidden]="(viewState()?.playerHand || []).length == 0 && !isRoundActive()"
+        />
+      </div>
+    </div>
+  </app-card>
+
+  <app-card sidebar>
+    <div class="page-stack">
+        <span class="pill" style="width: fit-content">{{ isRoundActive() ? 'Player turn' : 'Ready' }}</span>
+
+      <app-input
+        label="Bet amount"
+        inputMode="numeric"
+        [value]="betAmount()"
+        (valueChange)="betAmount.set($event.replace(/\\D/g, ''))"
+      />
+
+      @if (isRoundActive()) {
+        <div class="page-stack">
+          <app-button block (click)="action('hit')">Hit</app-button>
+          <app-button variant="secondary" block (click)="action('stand')">Stand</app-button>
+          <app-button
+            variant="ghost"
+            block
+            [disabled]="!viewState()?.canDouble"
+            (click)="action('double')"
+          >
+            Double
+          </app-button>
+        </div>
+      } @else {
+        <app-button block (click)="deal()">Deal cards</app-button>
+      }
+
+      @if (socket.currentState()?.outcome; as result) {
+        <div class="page-stack">
+          <span class="pill">{{ result.result }}</span>
+          <p [class]="result.balanceChange >= 0 ? 'text-success' : 'text-danger'">
+            {{ result.balanceChange | credits }}
+          </p>
+        </div>
+      }
+    </div>
+
+      <div class="page-stack">
+          <p class="status-copy">{{ viewState()?.message || 'Place a bet to begin.' }}</p>
+      </div>
+  </app-card>
+</app-game-shell>
