@@ -133,7 +133,7 @@ export const createSocketServer = (httpServer: HttpServer): Server => {
           };
 
           if (request.gameType === 'POKER') {
-            await pokerTableManager.performAction(request.userId, request.action);
+            await pokerTableManager.performAction(request.userId, request.action, request.payload);
             await emitPokerTableState(io);
             return;
           }

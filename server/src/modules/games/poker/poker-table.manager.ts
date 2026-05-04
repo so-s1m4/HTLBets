@@ -4,49 +4,55 @@ import { prisma } from '../../../prisma/client';
 import { HttpError } from '../../../utils/http-error';
 import { createDeck, drawCard, getPokerRankValue, shuffleDeck, type PlayingCard } from '../core/card.utils';
 import type { GameResolution } from '../core/game-engine.interface';
+import { comparePokerEvaluations, computeLayeredPayouts, evaluatePokerHand, type PokerHandEvaluation } from './poker.utils';
 
 type PokerPhase = 'waiting' | 'preflop' | 'flop' | 'turn' | 'river' | 'showdown' | 'resolved';
-type PokerPlayerStatus = 'waiting' | 'active' | 'folded';
-
-interface PokerHandEvaluation {
-  label: string;
-  category: number;
-  ranks: number[];
-}
+type PokerPlayerStatus = 'waiting' | 'active' | 'folded' | 'all-in';
+type PokerAction = 'check' | 'call' | 'raise' | 'all-in' | 'fold';
 
 interface PokerSeatState {
   userId: string;
   playerLabel: string;
   ante: number;
+  stackAtJoin: number;
   totalContribution: number;
+  streetContribution: number;
   status: PokerPlayerStatus;
   seatIndex: number;
   cards: PlayingCard[];
+  lastAction?: string;
 }
 
 interface PublicPokerSeat {
   userId: string;
   playerLabel: string;
   ante: number;
+  stackRemaining: number;
   totalContribution: number;
+  streetContribution: number;
   status: PokerPlayerStatus;
   seatIndex: number;
   isSelf: boolean;
   cards: Array<Record<string, string | boolean>>;
   evaluation?: { label: string } | null;
+  lastAction?: string;
 }
 
 export interface PokerTableState {
   phase: PokerPhase;
   roundId: number;
   pot: number;
+  joinMinimum: number;
+  currentBet: number;
+  actingUserId?: string;
+  minRaiseTo?: number;
   players: PublicPokerSeat[];
   communityCards: Array<Record<string, string>>;
-  playerHand: Array<Record<string, string>>;
   notes: string;
   dealStartsAt?: string;
   phaseEndsAt?: string;
   winners?: Array<{ userId: string; playerLabel: string; hand: string }>;
+  allowedActions?: PokerAction[];
 }
 
 export interface PokerPlayerEnvelope {
@@ -62,13 +68,11 @@ export interface PokerPlayerEnvelope {
 const TABLE_SESSION_ID = 'poker-main';
 const MIN_PLAYERS = 2;
 const JOIN_WINDOW_MS = 15_000;
-const PREFLOP_MS = 9_000;
-const FLOP_MS = 8_000;
-const TURN_MS = 8_000;
-const RIVER_MS = 8_000;
-const SHOWDOWN_MS = 10_000;
 const RESOLVED_MS = 12_000;
 const MAX_SEATS = 6;
+const MIN_RAISE_INCREMENT = 25;
+const MIN_BUY_IN = 100;
+const TURN_TIMEOUT_MS = 40_000;
 
 const formatPlayerLabel = (email: string): string => {
   const [localPart] = email.split('@');
@@ -93,98 +97,15 @@ const hiddenCardView = (): Record<string, boolean> => ({
   hidden: true
 });
 
-const evaluatePlaceholderHand = (cards: PlayingCard[]): PokerHandEvaluation => {
-  const ranks = cards.map(getPokerRankValue).sort((left, right) => right - left);
-  const counts = new Map<number, number>();
-
-  for (const rank of ranks) {
-    counts.set(rank, (counts.get(rank) || 0) + 1);
-  }
-
-  const groups = Array.from(counts.entries()).sort((left, right) => {
-    if (right[1] !== left[1]) {
-      return right[1] - left[1];
-    }
-
-    return right[0] - left[0];
-  });
-
-  const pairs = groups.filter((group) => group[1] === 2).map((group) => group[0]).sort((left, right) => right - left);
-  const trips = groups.filter((group) => group[1] === 3).map((group) => group[0]).sort((left, right) => right - left);
-  const quads = groups.find((group) => group[1] === 4)?.[0];
-  const kickers = groups.filter((group) => group[1] === 1).map((group) => group[0]).sort((left, right) => right - left);
-
-  if (quads) {
-    return {
-      label: 'Four of a Kind',
-      category: 6,
-      ranks: [quads, ...kickers.slice(0, 1)]
-    };
-  }
-
-  if (trips.length > 0 && pairs.length > 0) {
-    return {
-      label: 'Full House',
-      category: 5,
-      ranks: [trips[0], pairs[0]]
-    };
-  }
-
-  if (trips.length > 0) {
-    return {
-      label: 'Three of a Kind',
-      category: 4,
-      ranks: [trips[0], ...kickers.slice(0, 2)]
-    };
-  }
-
-  if (pairs.length >= 2) {
-    return {
-      label: 'Two Pair',
-      category: 3,
-      ranks: [pairs[0], pairs[1], ...kickers.slice(0, 1)]
-    };
-  }
-
-  if (pairs.length === 1) {
-    return {
-      label: 'Pair',
-      category: 2,
-      ranks: [pairs[0], ...kickers.slice(0, 3)]
-    };
-  }
-
-  return {
-    label: 'High Card',
-    category: 1,
-    ranks: ranks.slice(0, 5)
-  };
-};
-
-const compareEvaluations = (left: PokerHandEvaluation, right: PokerHandEvaluation): number => {
-  if (left.category !== right.category) {
-    return left.category - right.category;
-  }
-
-  const maxLength = Math.max(left.ranks.length, right.ranks.length);
-
-  for (let index = 0; index < maxLength; index += 1) {
-    const leftRank = left.ranks[index] || 0;
-    const rightRank = right.ranks[index] || 0;
-
-    if (leftRank !== rightRank) {
-      return leftRank - rightRank;
-    }
-  }
-
-  return 0;
-};
-
 export class PokerTableManager {
   private readonly listeners = new Set<() => void>();
   private phase: PokerPhase = 'waiting';
   private roundId = 1;
   private participants = new Map<string, PokerSeatState>();
+  private turnOrder: string[] = [];
+  private actingUserId: string | null = null;
+  private streetActed = new Set<string>();
+  private currentStreetBet = 0;
   private communityCards: PlayingCard[] = [];
   private deck: PlayingCard[] = [];
   private notes = 'Wait for at least two players, then join the next hand with a demo ante.';
@@ -211,7 +132,7 @@ export class PokerTableManager {
       gameType: GameType.POKER,
       status: this.phase === 'waiting' ? GameSessionStatus.IDLE : GameSessionStatus.WAITING_ACTION,
       balance: user.balance,
-      currentBet: this.participants.get(userId)?.ante || 0,
+      currentBet: this.currentStreetBet,
       state: this.buildStateForUser(userId),
       outcome: this.lastOutcomeByUser.get(userId) || null
     };
@@ -226,8 +147,17 @@ export class PokerTableManager {
       throw new HttpError(400, 'Ante must be a positive whole number.');
     }
 
-    const existing = this.participants.get(userId);
-    if (existing) {
+    const joinAmount = this.currentJoinMinimum();
+
+    if (this.participants.size > 0 && amount !== joinAmount) {
+      throw new HttpError(400, `This hand is locked to a ${joinAmount} buy-in. Join with exactly ${joinAmount}.`);
+    }
+
+    if (this.participants.size === 0 && amount < joinAmount) {
+      throw new HttpError(400, `Minimum buy-in for this poker table is currently ${joinAmount}.`);
+    }
+
+    if (this.participants.has(userId)) {
       throw new HttpError(400, 'You already joined the next poker hand.');
     }
 
@@ -252,14 +182,18 @@ export class PokerTableManager {
       userId,
       playerLabel: formatPlayerLabel(user.email),
       ante: amount,
+      stackAtJoin: user.balance,
       totalContribution: amount,
+      streetContribution: 0,
       status: 'waiting',
       seatIndex: this.nextSeat(),
-      cards: []
+      cards: [],
+      lastAction: 'Joined'
     });
 
     if (this.participants.size >= MIN_PLAYERS && !this.dealStartsAt) {
       this.dealStartsAt = Date.now() + JOIN_WINDOW_MS;
+      this.phaseEndsAt = this.dealStartsAt;
       this.notes = 'Table is filling. Cards deal automatically when the join timer ends.';
       this.schedule(this.closeJoinWindow.bind(this), JOIN_WINDOW_MS);
     } else if (this.participants.size < MIN_PLAYERS) {
@@ -269,27 +203,51 @@ export class PokerTableManager {
     this.emitStateChange();
   }
 
-  async performAction(userId: string, action: string): Promise<void> {
-    if (!['fold'].includes(action.toLowerCase())) {
-      throw new HttpError(400, 'Supported poker action: fold.');
-    }
-
+  async performAction(userId: string, action: string, payload?: Record<string, unknown>): Promise<void> {
     if (this.phase === 'waiting' || this.phase === 'resolved' || this.phase === 'showdown') {
       throw new HttpError(400, 'No active hand available for that action.');
     }
 
-    const participant = this.participants.get(userId);
-    if (!participant) {
+    const normalizedAction = action.toLowerCase() as PokerAction;
+    const player = this.participants.get(userId);
+
+    if (!player) {
       throw new HttpError(404, 'You are not seated at this poker table.');
     }
 
-    if (participant.status !== 'active') {
-      throw new HttpError(400, 'You already folded or are not in the active hand.');
+    if (player.status === 'folded') {
+      throw new HttpError(400, 'You already folded this hand.');
     }
 
-    participant.status = 'folded';
-    this.notes = `${participant.playerLabel} folded.`;
-    await this.maybeResolveByLastPlayer();
+    if (player.status === 'all-in') {
+      throw new HttpError(400, 'You are already all-in for this hand.');
+    }
+
+    if (this.actingUserId !== userId) {
+      throw new HttpError(400, 'It is not your turn.');
+    }
+
+    switch (normalizedAction) {
+      case 'check':
+        this.handleCheck(player);
+        break;
+      case 'call':
+        this.handleCall(player);
+        break;
+      case 'raise':
+        this.handleRaise(player, payload);
+        break;
+      case 'all-in':
+        this.handleAllIn(player);
+        break;
+      case 'fold':
+        this.handleFold(player);
+        break;
+      default:
+        throw new HttpError(400, 'Supported poker actions: check, call, raise, all-in, fold.');
+    }
+
+    await this.afterAction(player.userId);
     this.emitStateChange();
   }
 
@@ -306,6 +264,7 @@ export class PokerTableManager {
   }
 
   private buildStateForUser(userId: string): PokerTableState {
+    const waitingCommitted = Array.from(this.participants.values()).reduce((sum, player) => sum + player.totalContribution, 0);
     const visiblePlayers = Array.from(this.participants.values())
       .sort((left, right) => left.seatIndex - right.seatIndex)
       .map((player) => {
@@ -315,7 +274,9 @@ export class PokerTableManager {
           userId: player.userId,
           playerLabel: player.playerLabel,
           ante: player.ante,
+          stackRemaining: Math.max(0, player.stackAtJoin - player.totalContribution),
           totalContribution: player.totalContribution,
+          streetContribution: player.streetContribution,
           status: player.status,
           seatIndex: player.seatIndex,
           isSelf: player.userId === userId,
@@ -323,28 +284,73 @@ export class PokerTableManager {
           evaluation:
             revealCards && this.evaluations.has(player.userId)
               ? { label: this.evaluations.get(player.userId)?.label || 'Hand' }
-              : null
+              : null,
+          lastAction: player.lastAction
         } satisfies PublicPokerSeat;
       });
 
     return {
       phase: this.phase,
       roundId: this.roundId,
-      pot: this.pot,
+      pot: this.phase === 'waiting' ? waitingCommitted : this.pot,
+      joinMinimum: this.currentJoinMinimum(),
+      currentBet: this.currentStreetBet,
+      actingUserId: this.actingUserId || undefined,
+      minRaiseTo: this.currentStreetBet + MIN_RAISE_INCREMENT,
       players: visiblePlayers,
       communityCards: this.communityCards.map(toCardView),
-      playerHand: this.participants.get(userId)?.cards.map(toCardView) || [],
       notes: this.notes,
       dealStartsAt: this.dealStartsAt ? new Date(this.dealStartsAt).toISOString() : undefined,
       phaseEndsAt: this.phaseEndsAt ? new Date(this.phaseEndsAt).toISOString() : undefined,
-      winners: this.winners.length ? [...this.winners] : undefined
+      winners: this.winners.length ? [...this.winners] : undefined,
+      allowedActions: this.allowedActionsFor(userId)
     };
+  }
+
+  private allowedActionsFor(userId: string): PokerAction[] {
+    const player = this.participants.get(userId);
+
+    if (!player || this.actingUserId !== userId || ['waiting', 'showdown', 'resolved'].includes(this.phase)) {
+      return [];
+    }
+
+    if (player.status === 'folded' || player.status === 'all-in') {
+      return [];
+    }
+
+    const toCall = this.currentStreetBet - player.streetContribution;
+    const remaining = this.stackRemaining(player);
+    const actions: PokerAction[] = ['fold'];
+
+    if (toCall <= 0) {
+      actions.unshift('check');
+    } else if (remaining >= toCall) {
+      actions.unshift('call');
+    }
+
+    if (remaining > toCall && remaining > 0) {
+      actions.push('raise');
+      actions.push('all-in');
+    } else if (remaining > 0 && !actions.includes('all-in')) {
+      actions.push('all-in');
+    }
+
+    return actions;
   }
 
   private nextSeat(): number {
     const seat = this.seatCursor % MAX_SEATS;
     this.seatCursor += 1;
     return seat;
+  }
+
+  private currentJoinMinimum(): number {
+    const committedMaximum = Array.from(this.participants.values()).reduce(
+      (highest, player) => Math.max(highest, player.ante),
+      0
+    );
+
+    return Math.max(MIN_BUY_IN, committedMaximum);
   }
 
   private schedule(task: () => void | Promise<void>, delayMs: number): void {
@@ -357,9 +363,52 @@ export class PokerTableManager {
     }, delayMs);
   }
 
+  private clearRoundTimer(): void {
+    if (this.roundTimer) {
+      clearTimeout(this.roundTimer);
+      this.roundTimer = null;
+    }
+  }
+
+  private beginTurn(userId: string | null): void {
+    this.clearRoundTimer();
+    this.actingUserId = userId;
+
+    if (!userId) {
+      this.phaseEndsAt = null;
+      return;
+    }
+
+    this.phaseEndsAt = Date.now() + TURN_TIMEOUT_MS;
+    this.schedule(async () => {
+      await this.autoFoldTurn(userId);
+    }, TURN_TIMEOUT_MS);
+  }
+
+  private async autoFoldTurn(userId: string): Promise<void> {
+    if (this.actingUserId !== userId || ['waiting', 'showdown', 'resolved'].includes(this.phase)) {
+      return;
+    }
+
+    const player = this.participants.get(userId);
+
+    if (!player || player.status !== 'active') {
+      return;
+    }
+
+    player.status = 'folded';
+    player.lastAction = 'Auto-folded';
+    this.streetActed.add(player.userId);
+    this.notes = `${player.playerLabel} timed out and was auto-folded.`;
+
+    await this.afterAction(player.userId);
+    this.emitStateChange();
+  }
+
   private async closeJoinWindow(): Promise<void> {
     if (this.participants.size < MIN_PLAYERS) {
       this.dealStartsAt = null;
+      this.phaseEndsAt = null;
       this.notes = 'Join window expired. Waiting for enough players again.';
       this.emitStateChange();
       return;
@@ -367,141 +416,290 @@ export class PokerTableManager {
 
     this.phase = 'preflop';
     this.dealStartsAt = null;
-    this.phaseEndsAt = Date.now() + PREFLOP_MS;
+    this.phaseEndsAt = null;
     this.deck = shuffleDeck(createDeck());
     this.communityCards = [];
     this.evaluations.clear();
     this.winners = [];
+    this.currentStreetBet = 0;
+    this.streetActed.clear();
     this.pot = 0;
 
-    for (const player of this.participants.values()) {
+    const orderedPlayers = Array.from(this.participants.values()).sort((left, right) => left.seatIndex - right.seatIndex);
+    this.turnOrder = orderedPlayers.map((player) => player.userId);
+
+    for (const player of orderedPlayers) {
       player.status = 'active';
       player.cards = [drawCard(this.deck), drawCard(this.deck)];
+      player.streetContribution = 0;
+      player.lastAction = 'Dealt in';
       this.pot += player.ante;
     }
 
-    this.notes = 'Cards are live. Watch the board build and fold if the hand looks dead.';
+    this.beginTurn(this.turnOrder[0] || null);
+    this.notes = 'Preflop betting is live. Use check, call, raise, all-in, or fold.';
     this.emitStateChange();
-    this.schedule(this.revealFlop.bind(this), PREFLOP_MS);
   }
 
-  private async revealFlop(): Promise<void> {
-    if (this.phase !== 'preflop') {
-      return;
+  private handleCheck(player: PokerSeatState): void {
+    if (player.streetContribution !== this.currentStreetBet) {
+      throw new HttpError(400, 'You can only check when you already match the current bet.');
     }
 
-    this.communityCards.push(drawCard(this.deck), drawCard(this.deck), drawCard(this.deck));
-    this.phase = 'flop';
-    this.phaseEndsAt = Date.now() + FLOP_MS;
-    this.notes = 'Flop on the felt. Active players stay in unless they fold.';
-    await this.maybeResolveByLastPlayer();
-    this.emitStateChange();
-    if (this.phase === 'flop') {
-      this.schedule(this.revealTurn.bind(this), FLOP_MS);
-    }
+    player.lastAction = 'Checked';
+    this.streetActed.add(player.userId);
   }
 
-  private async revealTurn(): Promise<void> {
-    if (this.phase !== 'flop') {
-      return;
+  private handleCall(player: PokerSeatState): void {
+    const toCall = this.currentStreetBet - player.streetContribution;
+
+    if (toCall <= 0) {
+      throw new HttpError(400, 'There is nothing to call right now.');
     }
 
-    this.communityCards.push(drawCard(this.deck));
-    this.phase = 'turn';
-    this.phaseEndsAt = Date.now() + TURN_MS;
-    this.notes = 'Turn card revealed. The table is heading into the final stretch.';
-    await this.maybeResolveByLastPlayer();
-    this.emitStateChange();
-    if (this.phase === 'turn') {
-      this.schedule(this.revealRiver.bind(this), TURN_MS);
-    }
-  }
-
-  private async revealRiver(): Promise<void> {
-    if (this.phase !== 'turn') {
-      return;
+    if (this.stackRemaining(player) < toCall) {
+      throw new HttpError(400, 'Use all-in if you cannot cover the call.');
     }
 
-    this.communityCards.push(drawCard(this.deck));
-    this.phase = 'river';
-    this.phaseEndsAt = Date.now() + RIVER_MS;
-    this.notes = 'River is out. Showdown is next unless the hand is already dead.';
-    await this.maybeResolveByLastPlayer();
-    this.emitStateChange();
-    if (this.phase === 'river') {
-      this.schedule(this.runShowdown.bind(this), RIVER_MS);
+    player.streetContribution += toCall;
+    player.totalContribution += toCall;
+    player.lastAction = `Called ${this.currentStreetBet}`;
+    this.pot += toCall;
+    this.streetActed.add(player.userId);
+
+    if (this.stackRemaining(player) === 0) {
+      player.status = 'all-in';
     }
   }
 
-  private async maybeResolveByLastPlayer(): Promise<void> {
-    const activePlayers = Array.from(this.participants.values()).filter((player) => player.status === 'active');
+  private handleRaise(player: PokerSeatState, payload?: Record<string, unknown>): void {
+    const raiseTo = Number(payload?.amount);
 
-    if (activePlayers.length > 1) {
+    if (!Number.isFinite(raiseTo) || !Number.isInteger(raiseTo)) {
+      throw new HttpError(400, 'Raise amount must be a whole number.');
+    }
+
+    const minimum = this.currentStreetBet + MIN_RAISE_INCREMENT;
+    if (raiseTo < minimum) {
+      throw new HttpError(400, `Raise must be at least ${minimum}.`);
+    }
+
+    const additional = raiseTo - player.streetContribution;
+    if (additional <= 0) {
+      throw new HttpError(400, 'Raise must increase your total street contribution.');
+    }
+
+    if (additional > this.stackRemaining(player)) {
+      throw new HttpError(400, 'Raise exceeds your remaining demo stack. Use all-in instead.');
+    }
+
+    player.streetContribution = raiseTo;
+    player.totalContribution += additional;
+    player.lastAction = `Raised to ${raiseTo}`;
+    this.currentStreetBet = raiseTo;
+    this.pot += additional;
+    this.streetActed = new Set([player.userId]);
+
+    if (this.stackRemaining(player) === 0) {
+      player.status = 'all-in';
+    }
+  }
+
+  private handleAllIn(player: PokerSeatState): void {
+    const remaining = this.stackRemaining(player);
+
+    if (remaining <= 0) {
+      throw new HttpError(400, 'You have no remaining stack for an all-in.');
+    }
+
+    player.streetContribution += remaining;
+    player.totalContribution += remaining;
+    this.pot += remaining;
+
+    if (player.streetContribution > this.currentStreetBet) {
+      this.currentStreetBet = player.streetContribution;
+      this.streetActed = new Set([player.userId]);
+      player.lastAction = `All-in ${player.streetContribution}`;
+    } else {
+      this.streetActed.add(player.userId);
+      player.lastAction = 'All-in';
+    }
+
+    player.status = 'all-in';
+  }
+
+  private handleFold(player: PokerSeatState): void {
+    player.status = 'folded';
+    player.lastAction = 'Folded';
+    this.streetActed.add(player.userId);
+  }
+
+  private async afterAction(userId: string): Promise<void> {
+    const activePlayers = this.nonFoldedPlayers();
+
+    if (activePlayers.length <= 1) {
+      await this.resolveByLastPlayer();
       return;
     }
 
-    if (activePlayers.length === 0) {
-      await this.resolveRound([]);
+    if (this.isBettingRoundComplete()) {
+      await this.advanceStreet();
       return;
     }
 
-    this.phase = 'showdown';
-    this.phaseEndsAt = Date.now() + SHOWDOWN_MS;
-    const winner = activePlayers[0];
-    this.evaluations.set(winner.userId, evaluatePlaceholderHand([...winner.cards, ...this.communityCards]));
-    this.winners = [
-      {
-        userId: winner.userId,
-        playerLabel: winner.playerLabel,
-        hand: this.evaluations.get(winner.userId)?.label || 'Survived'
+    const nextActor = this.findNextActingPlayer(userId);
+    this.beginTurn(nextActor);
+    this.notes = `${this.participants.get(nextActor || '')?.playerLabel || 'Next player'} to act.`;
+  }
+
+  private nonFoldedPlayers(): PokerSeatState[] {
+    return Array.from(this.participants.values()).filter((player) => player.status !== 'folded');
+  }
+
+  private activeTurnPlayers(): PokerSeatState[] {
+    return Array.from(this.participants.values()).filter((player) => player.status === 'active');
+  }
+
+  private stackRemaining(player: PokerSeatState): number {
+    return Math.max(0, player.stackAtJoin - player.totalContribution);
+  }
+
+  private findNextActingPlayer(currentUserId: string): string | null {
+    if (!this.turnOrder.length) {
+      return null;
+    }
+
+    const startIndex = this.turnOrder.indexOf(currentUserId);
+
+    for (let offset = 1; offset <= this.turnOrder.length; offset += 1) {
+      const userId = this.turnOrder[(startIndex + offset) % this.turnOrder.length];
+      const player = this.participants.get(userId);
+
+      if (player && player.status === 'active') {
+        return userId;
       }
-    ];
-    this.notes = `${winner.playerLabel} wins after everyone else folded.`;
-    await this.resolveRound([winner.userId]);
+    }
+
+    return null;
+  }
+
+  private isBettingRoundComplete(): boolean {
+    const players = this.nonFoldedPlayers();
+
+    if (players.length <= 1) {
+      return true;
+    }
+
+    return players.every((player) => {
+      if (player.status === 'all-in') {
+        return true;
+      }
+
+      return player.streetContribution === this.currentStreetBet && this.streetActed.has(player.userId);
+    });
+  }
+
+  private async advanceStreet(): Promise<void> {
+    if (this.phase === 'river') {
+      await this.runShowdown();
+      return;
+    }
+
+    for (const player of this.participants.values()) {
+      player.streetContribution = 0;
+    }
+
+    this.currentStreetBet = 0;
+    this.streetActed.clear();
+
+    if (this.phase === 'preflop') {
+      this.communityCards.push(drawCard(this.deck), drawCard(this.deck), drawCard(this.deck));
+      this.phase = 'flop';
+      this.notes = 'Flop is out. New betting round.';
+    } else if (this.phase === 'flop') {
+      this.communityCards.push(drawCard(this.deck));
+      this.phase = 'turn';
+      this.notes = 'Turn card revealed. Betting continues.';
+    } else if (this.phase === 'turn') {
+      this.communityCards.push(drawCard(this.deck));
+      this.phase = 'river';
+      this.notes = 'River card is out. Final betting round.';
+    }
+
+    const next = this.turnOrder.find((userId) => this.participants.get(userId)?.status === 'active') || null;
+
+    if (!next) {
+      await this.runShowdown();
+      return;
+    }
+
+    this.beginTurn(next);
+  }
+
+  private async resolveByLastPlayer(): Promise<void> {
+    const players = this.nonFoldedPlayers();
+    this.phase = 'showdown';
+    this.clearRoundTimer();
+    this.actingUserId = null;
+    this.phaseEndsAt = Date.now() + RESOLVED_MS;
+
+    if (players.length === 1) {
+      const winner = players[0];
+      this.evaluations.set(winner.userId, evaluatePokerHand([...winner.cards, ...this.communityCards]));
+      this.winners = [
+        {
+          userId: winner.userId,
+          playerLabel: winner.playerLabel,
+          hand: this.evaluations.get(winner.userId)?.label || 'Survived'
+        }
+      ];
+      this.notes = `${winner.playerLabel} wins because everyone else folded.`;
+      await this.resolveRound([winner.userId]);
+      return;
+    }
+
+    this.winners = [];
+    this.notes = 'Hand ended without a showdown winner.';
+    await this.resolveRound([]);
   }
 
   private async runShowdown(): Promise<void> {
-    if (!['river', 'flop', 'turn', 'preflop'].includes(this.phase)) {
-      return;
-    }
-
     this.phase = 'showdown';
-    this.phaseEndsAt = Date.now() + SHOWDOWN_MS;
+    this.phaseEndsAt = Date.now() + RESOLVED_MS;
+    this.clearRoundTimer();
+    this.actingUserId = null;
 
-    const activePlayers = Array.from(this.participants.values()).filter((player) => player.status === 'active');
+    const contenders = this.nonFoldedPlayers();
 
-    if (activePlayers.length === 0) {
+    if (contenders.length === 0) {
       await this.resolveRound([]);
       return;
     }
 
     let bestEvaluation: PokerHandEvaluation | null = null;
-    let winners: string[] = [];
+    let winnerIds: string[] = [];
 
-    for (const player of activePlayers) {
-      const evaluation = evaluatePlaceholderHand([...player.cards, ...this.communityCards]);
+    for (const player of contenders) {
+      const evaluation = evaluatePokerHand([...player.cards, ...this.communityCards]);
       this.evaluations.set(player.userId, evaluation);
 
       if (!bestEvaluation) {
         bestEvaluation = evaluation;
-        winners = [player.userId];
+        winnerIds = [player.userId];
         continue;
       }
 
-      const comparison = compareEvaluations(evaluation, bestEvaluation);
+      const comparison = comparePokerEvaluations(evaluation, bestEvaluation);
 
       if (comparison > 0) {
         bestEvaluation = evaluation;
-        winners = [player.userId];
-        continue;
-      }
-
-      if (comparison === 0) {
-        winners.push(player.userId);
+        winnerIds = [player.userId];
+      } else if (comparison === 0) {
+        winnerIds.push(player.userId);
       }
     }
 
-    this.winners = winners.map((userId) => {
+    this.winners = winnerIds.map((userId) => {
       const player = this.participants.get(userId)!;
       return {
         userId,
@@ -509,39 +707,38 @@ export class PokerTableManager {
         hand: this.evaluations.get(userId)?.label || 'Hand'
       };
     });
-    this.notes = this.winners.length > 1 ? 'Split pot. Multiple players hit the same best hand.' : 'Showdown complete.';
-    await this.resolveRound(winners);
+    this.notes = this.winners.length > 1 ? 'Split pot. Matched best hands at showdown.' : 'Showdown complete.';
+    await this.resolveRound(winnerIds);
   }
 
   private async resolveRound(winnerIds: string[]): Promise<void> {
     const participantList = Array.from(this.participants.values()).sort((left, right) => left.seatIndex - right.seatIndex);
-    const totalPot = this.pot;
     const winnerCount = winnerIds.length;
-    const winnerSet = new Set(winnerIds);
+    const { payouts, winningUserIds, sharedWinners } = computeLayeredPayouts(participantList, this.evaluations);
 
-    const payouts = new Map<string, number>();
-    if (winnerCount > 0) {
-      const baseShare = Math.floor(totalPot / winnerCount);
-      let remainder = totalPot % winnerCount;
-
-      for (const winnerId of winnerIds) {
-        const share = baseShare + (remainder > 0 ? 1 : 0);
-        payouts.set(winnerId, share);
-        remainder = Math.max(0, remainder - 1);
-      }
+    if (this.phase === 'showdown') {
+      this.winners = participantList
+        .filter((player) => (payouts.get(player.userId) || 0) > 0)
+        .map((player) => ({
+          userId: player.userId,
+          playerLabel: player.playerLabel,
+          hand: this.evaluations.get(player.userId)?.label || 'Hand'
+        }));
     }
 
     await prisma.$transaction(async (tx) => {
       for (const player of participantList) {
         const payout = payouts.get(player.userId) || 0;
-        const balanceChange = payout - player.ante;
+        const balanceChange = payout - player.totalContribution;
         const result =
           winnerCount === 0
             ? 'VOID'
-            : winnerSet.has(player.userId)
-              ? winnerCount > 1
+            : winningUserIds.has(player.userId)
+              ? sharedWinners.has(player.userId)
                 ? 'SPLIT'
-                : 'WIN'
+                : balanceChange > 0
+                  ? 'WIN'
+                  : 'PUSH'
               : player.status === 'folded'
                 ? 'FOLD'
                 : 'LOSS';
@@ -550,7 +747,7 @@ export class PokerTableManager {
           data: {
             userId: player.userId,
             gameType: GameType.POKER,
-            betAmount: player.ante,
+            betAmount: player.totalContribution,
             result,
             balanceChange
           }
@@ -570,21 +767,27 @@ export class PokerTableManager {
         this.lastOutcomeByUser.set(player.userId, {
           result,
           balanceChange,
-          betAmount: player.ante
+          betAmount: player.totalContribution
         });
       }
     });
 
     this.phase = 'resolved';
     this.phaseEndsAt = Date.now() + RESOLVED_MS;
+    this.clearRoundTimer();
     this.emitStateChange();
     this.schedule(this.resetRound.bind(this), RESOLVED_MS);
   }
 
   private resetRound(): void {
+    this.clearRoundTimer();
     this.phase = 'waiting';
     this.roundId += 1;
     this.participants.clear();
+    this.turnOrder = [];
+    this.actingUserId = null;
+    this.streetActed.clear();
+    this.currentStreetBet = 0;
     this.communityCards = [];
     this.deck = [];
     this.notes = 'Next hand is open. Join with a demo ante to sit in.';

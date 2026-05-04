@@ -5,45 +5,11 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="72435455-c784-4516-b90f-3949f10df00f" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/.env.docker.example" beforeDir="false" afterPath="$PROJECT_DIR$/.env.docker.example" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client/src/app/app.component.ts" beforeDir="false" afterPath="$PROJECT_DIR$/client/src/app/app.component.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client/src/app/app.routes.ts" beforeDir="false" afterPath="$PROJECT_DIR$/client/src/app/app.routes.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client/src/app/core/guards/auth.guard.ts" beforeDir="false" afterPath="$PROJECT_DIR$/client/src/app/core/guards/auth.guard.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client/src/app/core/models/user.model.ts" beforeDir="false" afterPath="$PROJECT_DIR$/client/src/app/core/models/user.model.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client/src/app/core/services/auth.service.ts" beforeDir="false" afterPath="$PROJECT_DIR$/client/src/app/core/services/auth.service.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client/src/app/features/auth/components/auth-panel.component.ts" beforeDir="false" afterPath="$PROJECT_DIR$/client/src/app/features/auth/components/auth-panel.component.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client/src/app/features/games/components/game-shell.component.ts" beforeDir="false" afterPath="$PROJECT_DIR$/client/src/app/features/games/components/game-shell.component.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/client/src/app/features/games/pages/poker.page.ts" beforeDir="false" afterPath="$PROJECT_DIR$/client/src/app/features/games/pages/poker.page.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client/src/app/features/games/pages/roulette.page.ts" beforeDir="false" afterPath="$PROJECT_DIR$/client/src/app/features/games/pages/roulette.page.ts" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/client/src/app/features/games/poker/poker-table.component.ts" beforeDir="false" afterPath="$PROJECT_DIR$/client/src/app/features/games/poker/poker-table.component.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client/src/app/features/games/roulette/roulette-board.component.ts" beforeDir="false" afterPath="$PROJECT_DIR$/client/src/app/features/games/roulette/roulette-board.component.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client/src/app/features/games/roulette/roulette-wheel.component.ts" beforeDir="false" afterPath="$PROJECT_DIR$/client/src/app/features/games/roulette/roulette-wheel.component.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client/src/app/features/lobby/pages/lobby.page.ts" beforeDir="false" afterPath="$PROJECT_DIR$/client/src/app/features/lobby/pages/lobby.page.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client/src/app/features/profile/pages/profile.page.ts" beforeDir="false" afterPath="$PROJECT_DIR$/client/src/app/features/profile/pages/profile.page.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client/src/app/layout/bottom-navigation/bottom-navigation.component.ts" beforeDir="false" afterPath="$PROJECT_DIR$/client/src/app/layout/bottom-navigation/bottom-navigation.component.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client/src/app/layout/mobile-shell/mobile-shell.component.ts" beforeDir="false" afterPath="$PROJECT_DIR$/client/src/app/layout/mobile-shell/mobile-shell.component.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client/src/app/layout/top-bar/top-bar.component.ts" beforeDir="false" afterPath="$PROJECT_DIR$/client/src/app/layout/top-bar/top-bar.component.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client/src/app/shared/ui/app-button.component.ts" beforeDir="false" afterPath="$PROJECT_DIR$/client/src/app/shared/ui/app-button.component.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client/src/app/shared/ui/app-card.component.ts" beforeDir="false" afterPath="$PROJECT_DIR$/client/src/app/shared/ui/app-card.component.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client/src/app/shared/ui/app-game-card.component.ts" beforeDir="false" afterPath="$PROJECT_DIR$/client/src/app/shared/ui/app-game-card.component.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client/src/styles.scss" beforeDir="false" afterPath="$PROJECT_DIR$/client/src/styles.scss" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/docker-compose.yml" beforeDir="false" afterPath="$PROJECT_DIR$/docker-compose.yml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/server/Dockerfile" beforeDir="false" afterPath="$PROJECT_DIR$/server/Dockerfile" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/server/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/server/package.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/server/prisma/schema.prisma" beforeDir="false" afterPath="$PROJECT_DIR$/server/prisma/schema.prisma" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/server/src/config/env.ts" beforeDir="false" afterPath="$PROJECT_DIR$/server/src/config/env.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/server/src/modules/games/blackjack/blackjack.engine.ts" beforeDir="false" afterPath="$PROJECT_DIR$/server/src/modules/games/blackjack/blackjack.engine.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/server/src/modules/games/core/game-engine.interface.ts" beforeDir="false" afterPath="$PROJECT_DIR$/server/src/modules/games/core/game-engine.interface.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/server/src/modules/games/core/game-room.manager.ts" beforeDir="false" afterPath="$PROJECT_DIR$/server/src/modules/games/core/game-room.manager.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/server/src/modules/games/poker/poker.engine.ts" beforeDir="false" afterPath="$PROJECT_DIR$/server/src/modules/games/poker/poker.engine.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/server/src/modules/games/roulette/roulette.engine.ts" beforeDir="false" afterPath="$PROJECT_DIR$/server/src/modules/games/roulette/roulette.engine.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/server/src/modules/users/user.model.ts" beforeDir="false" afterPath="$PROJECT_DIR$/server/src/modules/users/user.model.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/server/src/modules/users/user.routes.ts" beforeDir="false" afterPath="$PROJECT_DIR$/server/src/modules/users/user.routes.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/server/src/modules/users/user.service.ts" beforeDir="false" afterPath="$PROJECT_DIR$/server/src/modules/users/user.service.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/server/src/modules/games/poker/poker-table.manager.ts" beforeDir="false" afterPath="$PROJECT_DIR$/server/src/modules/games/poker/poker-table.manager.ts" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/server/src/modules/websocket/socket.server.ts" beforeDir="false" afterPath="$PROJECT_DIR$/server/src/modules/websocket/socket.server.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/server/src/prisma/client.ts" beforeDir="false" afterPath="$PROJECT_DIR$/server/src/prisma/client.ts" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -66,26 +32,26 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "ASKED_SHARE_PROJECT_CONFIGURATION_FILES": "true",
-    "ModuleVcsDetector.initialDetectionPerformed": "true",
-    "RunOnceActivity.ShowReadmeOnStart": "true",
-    "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252": "true",
-    "RunOnceActivity.git.unshallow": "true",
-    "git-widget-placeholder": "freatures",
-    "kotlin-language-version-configured": "true",
-    "last_opened_file_path": "/Users/maksym/Documents/Programming/Projects/HTLBets",
-    "node.js.detected.package.eslint": "true",
-    "node.js.detected.package.tslint": "true",
-    "node.js.selected.package.eslint": "(autodetect)",
-    "node.js.selected.package.tslint": "(autodetect)",
-    "nodejs_package_manager_path": "npm",
-    "npm.test.executor": "Run",
-    "ts.external.directory.path": "/Applications/IntelliJ IDEA.app/Contents/plugins/javascript-plugin/jsLanguageServicesImpl/external",
-    "vue.rearranger.settings.migration": "true"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;ASKED_SHARE_PROJECT_CONFIGURATION_FILES&quot;: &quot;true&quot;,
+    &quot;ModuleVcsDetector.initialDetectionPerformed&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;main&quot;,
+    &quot;kotlin-language-version-configured&quot;: &quot;true&quot;,
+    &quot;last_opened_file_path&quot;: &quot;/Users/maksym/Documents/Programming/Projects/HTLBets&quot;,
+    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
+    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
+    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
+    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
+    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
+    &quot;npm.test.executor&quot;: &quot;Run&quot;,
+    &quot;ts.external.directory.path&quot;: &quot;/Applications/IntelliJ IDEA.app/Contents/plugins/javascript-plugin/jsLanguageServicesImpl/external&quot;,
+    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
   }
-}]]></component>
+}</component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
       <recent name="$PROJECT_DIR$" />
@@ -129,7 +95,8 @@
       <workItem from="1777565344430" duration="20000" />
       <workItem from="1777565386961" duration="1995000" />
       <workItem from="1777801369106" duration="8000" />
-      <workItem from="1777801486725" duration="4320000" />
+      <workItem from="1777801486725" duration="7392000" />
+      <workItem from="1777887060410" duration="2716000" />
     </task>
     <servers />
   </component>
