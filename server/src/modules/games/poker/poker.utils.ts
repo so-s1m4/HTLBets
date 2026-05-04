@@ -19,6 +19,36 @@ export interface LayeredPayoutResult {
   sharedWinners: Set<string>;
 }
 
+export const classifyPokerOutcome = ({
+  winnerCount,
+  balanceChange,
+  sharedWinner,
+  folded
+}: {
+  winnerCount: number;
+  balanceChange: number;
+  sharedWinner: boolean;
+  folded: boolean;
+}): string => {
+  if (winnerCount === 0) {
+    return 'VOID';
+  }
+
+  if (balanceChange > 0) {
+    return sharedWinner ? 'SPLIT' : 'WIN';
+  }
+
+  if (balanceChange === 0) {
+    return 'PUSH';
+  }
+
+  if (folded) {
+    return 'FOLD';
+  }
+
+  return 'LOSS';
+};
+
 export const getStraightHigh = (values: number[]): number | null => {
   const unique = Array.from(new Set(values)).sort((left, right) => right - left);
 

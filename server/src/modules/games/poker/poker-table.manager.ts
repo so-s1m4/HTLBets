@@ -4,7 +4,7 @@ import { prisma } from '../../../prisma/client';
 import { HttpError } from '../../../utils/http-error';
 import { createDeck, drawCard, getPokerRankValue, shuffleDeck, type PlayingCard } from '../core/card.utils';
 import type { GameResolution } from '../core/game-engine.interface';
-import { comparePokerEvaluations, computeLayeredPayouts, evaluatePokerHand, type PokerHandEvaluation } from './poker.utils';
+import { classifyPokerOutcome, comparePokerEvaluations, computeLayeredPayouts, evaluatePokerHand, type PokerHandEvaluation } from './poker.utils';
 
 type PokerPhase = 'waiting' | 'preflop' | 'flop' | 'turn' | 'river' | 'showdown' | 'resolved';
 type PokerPlayerStatus = 'waiting' | 'active' | 'folded' | 'all-in';
@@ -730,18 +730,12 @@ export class PokerTableManager {
       for (const player of participantList) {
         const payout = payouts.get(player.userId) || 0;
         const balanceChange = payout - player.totalContribution;
-        const result =
-          winnerCount === 0
-            ? 'VOID'
-            : winningUserIds.has(player.userId)
-              ? sharedWinners.has(player.userId)
-                ? 'SPLIT'
-                : balanceChange > 0
-                  ? 'WIN'
-                  : 'PUSH'
-              : player.status === 'folded'
-                ? 'FOLD'
-                : 'LOSS';
+        const result = classifyPokerOutcome({
+          winnerCount,
+          balanceChange,
+          sharedWinner: sharedWinners.has(player.userId),
+          folded: player.status === 'folded'
+        });
 
         await tx.gameHistory.create({
           data: {

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import type { PlayingCard } from '../core/card.utils';
-import { computeLayeredPayouts, evaluatePokerHand } from './poker.utils';
+import { classifyPokerOutcome, computeLayeredPayouts, evaluatePokerHand } from './poker.utils';
 
 describe('evaluatePokerHand', () => {
   it('detects a straight instead of falling back to high card', () => {
@@ -62,5 +62,29 @@ describe('computeLayeredPayouts', () => {
 
     expect(result.payouts.get('short')).toBe(20);
     expect(result.payouts.get('deep')).toBe(990);
+  });
+});
+
+describe('classifyPokerOutcome', () => {
+  it('marks negative side-pot net results as losses instead of push', () => {
+    expect(
+      classifyPokerOutcome({
+        winnerCount: 1,
+        balanceChange: -25,
+        sharedWinner: false,
+        folded: false
+      })
+    ).toBe('LOSS');
+  });
+
+  it('keeps zero net outcomes as push', () => {
+    expect(
+      classifyPokerOutcome({
+        winnerCount: 1,
+        balanceChange: 0,
+        sharedWinner: false,
+        folded: false
+      })
+    ).toBe('PUSH');
   });
 });
