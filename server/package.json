@@ -12,6 +12,7 @@
     "pretest": "npm run prisma:generate",
     "prestart": "npm run prisma:generate",
     "prisma:generate": "prisma generate",
+    "prisma:deploy": "prisma migrate deploy",
     "prisma:migrate": "prisma migrate dev",
     "prisma:studio": "prisma studio"
   },
