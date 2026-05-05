@@ -16,6 +16,7 @@ import { socketAuth } from './socket.auth';
 import { socketEvents } from './socket.events';
 
 const getRoomName = (gameType: string, sessionId: string): string => `game:${gameType}:${sessionId}`;
+const pokerRoomPrefix = 'game:POKER:';
 
 export const createSocketServer = (httpServer: HttpServer): Server => {
   const io = new Server(httpServer, {
@@ -49,9 +50,9 @@ export const createSocketServer = (httpServer: HttpServer): Server => {
         }
 
         if (gameType === 'POKER') {
-          const state = await pokerTableManager.getStateForUser(socket.data.user.userId);
-          const room = getRoomName(state.gameType, pokerTableManager.getTableSessionId());
-          socket.join(room);
+          const requestedSessionId = payload.sessionId || pokerTableManager.getLobbySessionId();
+          const state = await pokerTableManager.getStateForUser(socket.data.user.userId, requestedSessionId);
+          syncPokerSocketSession(socket, state.sessionId);
           socket.emit(socketEvents.state, state);
           return;
         }
@@ -69,7 +70,7 @@ export const createSocketServer = (httpServer: HttpServer): Server => {
       }
     });
 
-    socket.on(socketEvents.leave, (payload: { gameType: string; sessionId: string }) => {
+    socket.on(socketEvents.leave, async (payload: { gameType: string; sessionId: string }) => {
       try {
         const gameType = parseGameType(payload.gameType);
 
@@ -79,7 +80,8 @@ export const createSocketServer = (httpServer: HttpServer): Server => {
         }
 
         if (gameType === 'POKER') {
-          socket.leave(getRoomName(gameType, pokerTableManager.getTableSessionId()));
+          const state = await pokerTableManager.getStateForUser(socket.data.user.userId, pokerTableManager.getLobbySessionId());
+          syncPokerSocketSession(socket, state.sessionId);
           return;
         }
 
@@ -106,8 +108,7 @@ export const createSocketServer = (httpServer: HttpServer): Server => {
         }
 
         if (request.gameType === 'POKER') {
-          await pokerTableManager.joinHand(request.userId, request.amount);
-          await emitPokerTableState(io);
+          throw new HttpError(400, 'Poker buy-ins and table joins are handled through table actions.');
           return;
         }
 
@@ -133,7 +134,28 @@ export const createSocketServer = (httpServer: HttpServer): Server => {
           };
 
           if (request.gameType === 'POKER') {
-            await pokerTableManager.performAction(request.userId, request.action, request.payload);
+            if (request.action === 'create-table') {
+              const sessionId = await pokerTableManager.createTable(request.userId, request.payload);
+              syncPokerSocketSession(socket, sessionId);
+              await emitPokerTableState(io);
+              return;
+            }
+
+            if (request.action === 'join-table') {
+              const sessionId = await pokerTableManager.joinTable(request.userId, request.payload);
+              syncPokerSocketSession(socket, sessionId);
+              await emitPokerTableState(io);
+              return;
+            }
+
+            if (request.action === 'leave-table' || request.action === 'return-lobby') {
+              await pokerTableManager.leaveTable(request.userId);
+              syncPokerSocketSession(socket, pokerTableManager.getLobbySessionId());
+              await emitPokerTableState(io);
+              return;
+            }
+
+            await pokerTableManager.performAction(request.userId, request.sessionId, request.action, request.payload);
             await emitPokerTableState(io);
             return;
           }
@@ -165,15 +187,27 @@ const emitRouletteTableState = async (io: Server): Promise<void> => {
 };
 
 const emitPokerTableState = async (io: Server): Promise<void> => {
-  const room = getRoomName('POKER', pokerTableManager.getTableSessionId());
-  const sockets = await io.in(room).fetchSockets();
+  const sockets = Array.from(io.sockets.sockets.values()).filter((socket) => typeof socket.data.pokerSessionId === 'string');
 
   await Promise.all(
     sockets.map(async (socket) => {
-      const state = await pokerTableManager.getStateForUser(socket.data.user.userId);
+      const requestedSessionId = socket.data.pokerSessionId || pokerTableManager.getLobbySessionId();
+      const state = await pokerTableManager.getStateForUser(socket.data.user.userId, requestedSessionId);
+      syncPokerSocketSession(socket, state.sessionId);
       socket.emit(socketEvents.state, state);
     })
   );
+};
+
+const syncPokerSocketSession = (socket: Socket, sessionId: string) => {
+  for (const room of socket.rooms) {
+    if (room.startsWith(pokerRoomPrefix)) {
+      socket.leave(room);
+    }
+  }
+
+  socket.data.pokerSessionId = sessionId;
+  socket.join(getRoomName('POKER', sessionId));
 };
 
 const emitGameError = (socket: Socket, error: unknown) => {

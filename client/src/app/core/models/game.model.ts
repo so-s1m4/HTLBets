@@ -8,6 +8,77 @@ export interface GameOutcome {
   betAmount: number;
 }
 
+export interface PokerDisplayCard {
+  hidden?: boolean;
+  rank?: string;
+  suit?: string;
+}
+
+export interface PokerSeatView {
+  userId: string;
+  playerLabel: string;
+  buyIn: number;
+  stackRemaining: number;
+  totalContribution: number;
+  streetContribution: number;
+  status: 'waiting' | 'active' | 'folded' | 'all-in' | 'busted';
+  seatIndex: number;
+  isSelf: boolean;
+  cards: PokerDisplayCard[];
+  evaluation?: { label: string } | null;
+  lastAction?: string;
+}
+
+export interface PokerWinnerView {
+  userId: string;
+  playerLabel: string;
+  hand: string;
+}
+
+export interface PokerTableSummary {
+  sessionId: string;
+  tableName: string;
+  visibility: 'public' | 'private';
+  maxPlayers: number;
+  playerCount: number;
+  minBuyIn: number;
+  phase: 'waiting' | 'preflop' | 'flop' | 'turn' | 'river' | 'showdown' | 'resolved';
+  requiresPassword: boolean;
+}
+
+export interface PokerLobbyState {
+  kind: 'lobby';
+  tables: PokerTableSummary[];
+  notes: string;
+}
+
+export interface PokerTableState {
+  kind: 'table';
+  tableId: string;
+  tableName: string;
+  visibility: 'public' | 'private';
+  requiresPassword: boolean;
+  maxPlayers: number;
+  minBuyIn: number;
+  ownerUserId: string;
+  phase: 'waiting' | 'preflop' | 'flop' | 'turn' | 'river' | 'showdown' | 'resolved';
+  pot: number;
+  currentBet: number;
+  actingUserId?: string;
+  minRaiseTo?: number;
+  allowedActions?: Array<'check' | 'call' | 'raise' | 'all-in' | 'fold'>;
+  players: PokerSeatView[];
+  communityCards: PokerDisplayCard[];
+  winners?: PokerWinnerView[];
+  dealStartsAt?: string;
+  phaseEndsAt?: string;
+  notes: string;
+  isSeated: boolean;
+  canJoin: boolean;
+}
+
+export type PokerRealtimeState = PokerLobbyState | PokerTableState;
+
 export interface RealtimeGameState {
   sessionId: string;
   gameType: GameType;

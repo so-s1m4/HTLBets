@@ -1,41 +1,13 @@
 import { Component, DestroyRef, computed, effect, inject, signal } from '@angular/core';
 
+import type { PokerLobbyState, PokerRealtimeState, PokerTableState, PokerTableSummary } from '../../../core/models/game.model';
 import { GameSocketService } from '../../../core/services/game-socket.service';
+import { CreditsPipe } from '../../../shared/pipes/credits.pipe';
 import { AppButtonComponent } from '../../../shared/ui/app-button.component';
 import { AppCardComponent } from '../../../shared/ui/app-card.component';
 import { AppInputComponent } from '../../../shared/ui/app-input.component';
-import { CreditsPipe } from '../../../shared/pipes/credits.pipe';
 import { GameShellComponent } from '../components/game-shell.component';
 import { PokerTableComponent } from '../poker/poker-table.component';
-
-interface PokerViewState {
-  phase: 'waiting' | 'preflop' | 'flop' | 'turn' | 'river' | 'showdown' | 'resolved';
-  pot: number;
-  joinMinimum: number;
-  currentBet: number;
-  actingUserId?: string;
-  minRaiseTo?: number;
-  allowedActions?: Array<'check' | 'call' | 'raise' | 'all-in' | 'fold'>;
-  players: Array<{
-    userId: string;
-    playerLabel: string;
-    ante: number;
-    stackRemaining: number;
-    totalContribution: number;
-    streetContribution: number;
-    status: 'waiting' | 'active' | 'folded' | 'all-in';
-    seatIndex: number;
-    isSelf: boolean;
-    cards: Array<Record<string, string | boolean>>;
-    evaluation?: { label: string } | null;
-    lastAction?: string;
-  }>;
-  communityCards: Array<Record<string, string | boolean>>;
-  winners?: Array<{ userId: string; playerLabel: string; hand: string }>;
-  dealStartsAt?: string;
-  phaseEndsAt?: string;
-  notes: string;
-}
 
 @Component({
   selector: 'app-poker-page',
@@ -56,37 +28,29 @@ export class PokerPageComponent {
 
   private readonly destroyRef = inject(DestroyRef);
 
-  readonly betAmount = signal('75');
+  readonly createTableName = signal('Skyline No-Limit');
+  readonly createVisibility = signal<'public' | 'private'>('public');
+  readonly createPassword = signal('');
+  readonly createMinBuyIn = signal('200');
+  readonly createMaxPlayers = signal('6');
+  readonly createBuyIn = signal('400');
+  readonly joinBuyIn = signal('200');
+  readonly privatePassword = signal('');
   readonly raiseAmount = signal('');
   readonly countdownMs = signal(0);
+  readonly selectedTableId = signal<string | null>(null);
+
   readonly state = computed(() => this.socket.currentState());
-  readonly viewState = computed(() => (this.state()?.state as unknown as PokerViewState | null) || null);
+  readonly pokerState = computed(() => (this.state()?.state as unknown as PokerRealtimeState | null) || null);
+  readonly lobbyState = computed(() => (this.pokerState()?.kind === 'lobby' ? (this.pokerState() as PokerLobbyState) : null));
+  readonly tableState = computed(() => (this.pokerState()?.kind === 'table' ? (this.pokerState() as PokerTableState) : null));
   readonly currentBet = computed(() => this.state()?.currentBet || 0);
-  readonly selfSeat = computed(() => this.viewState()?.players?.find((player) => player.isSelf) || null);
-  readonly joinedThisHand = computed(() => Boolean(this.selfSeat()));
-  readonly actingLabel = computed(() => {
-    const state = this.viewState();
-    const actor = state?.players?.find((player) => player.userId === state?.actingUserId);
-    return actor?.playerLabel || (state?.phase === 'waiting' ? 'Join table' : 'Showdown');
-  });
-  readonly raiseTarget = computed(() => {
-    const target = Number(this.raiseAmount());
-    return Number.isFinite(target) && target > 0 ? target : 0;
-  });
-  readonly callAmount = computed(() => {
-    const seat = this.selfSeat();
-    const state = this.viewState();
-    if (!seat || !state) {
-      return 0;
-    }
-
-    return Math.max(0, state.currentBet - seat.streetContribution);
-  });
+  readonly selfSeat = computed(() => this.tableState()?.players.find((seat) => seat.isSelf) || null);
+  readonly selectedTable = computed(() => this.lobbyState()?.tables.find((table) => table.sessionId === this.selectedTableId()) || null);
   readonly timerLabel = computed(() => {
-    const state = this.viewState();
-
+    const state = this.tableState();
     if (!state) {
-      return 'Waiting';
+      return 'Lobby';
     }
 
     const ms = this.countdownMs();
@@ -99,18 +63,37 @@ export class PokerPageComponent {
     const seconds = totalSeconds % 60;
     return `${minutes}:${String(seconds).padStart(2, '0')}`;
   });
+  readonly actingLabel = computed(() => {
+    const table = this.tableState();
+    const actor = table?.players.find((player) => player.userId === table?.actingUserId);
+    return actor?.playerLabel || (table?.phase === 'waiting' ? 'Waiting for seats' : 'Runout');
+  });
+  readonly callAmount = computed(() => {
+    const seat = this.selfSeat();
+    const table = this.tableState();
+
+    if (!seat || !table) {
+      return 0;
+    }
+
+    return Math.max(0, table.currentBet - seat.streetContribution);
+  });
+  readonly raiseTarget = computed(() => {
+    const amount = Number(this.raiseAmount());
+    return Number.isFinite(amount) && amount > 0 ? amount : 0;
+  });
 
   constructor() {
     this.socket.reset();
-    this.socket.joinGame('poker');
+    this.socket.joinGame('poker', 'poker-lobby');
     this.destroyRef.onDestroy(() => {
       this.socket.leaveGame('poker', this.socket.currentState()?.sessionId);
       this.socket.reset();
     });
 
     const interval = window.setInterval(() => {
-      const state = this.viewState();
-      const target = state?.phase === 'waiting' ? state.dealStartsAt : state?.phaseEndsAt;
+      const table = this.tableState();
+      const target = table?.phase === 'waiting' ? table.dealStartsAt : table?.phaseEndsAt;
 
       if (!target) {
         this.countdownMs.set(0);
@@ -125,37 +108,93 @@ export class PokerPageComponent {
     });
 
     effect(() => {
-      const state = this.viewState();
+      const selected = this.selectedTable();
+      if (selected) {
+        this.joinBuyIn.set(String(Math.max(selected.minBuyIn, Number(this.joinBuyIn()) || 0)));
+      }
+    });
 
-      if (!state || state.phase !== 'waiting' || this.joinedThisHand()) {
+    effect(() => {
+      const lobby = this.lobbyState();
+      if (!lobby) {
         return;
       }
 
-      this.betAmount.set(String(state.joinMinimum || 100));
+      if (!this.selectedTableId() || !lobby.tables.some((table) => table.sessionId === this.selectedTableId())) {
+        this.selectedTableId.set(lobby.tables[0]?.sessionId || null);
+      }
+    });
+
+    effect(() => {
+      const table = this.tableState();
+      if (!table) {
+        return;
+      }
+
+      this.joinBuyIn.set(String(Math.max(table.minBuyIn, Number(this.joinBuyIn()) || 0)));
+      if (table.minRaiseTo) {
+        this.raiseAmount.set(String(table.minRaiseTo));
+      }
     });
   }
 
-  joinHand(): void {
-    if (this.joinedThisHand()) {
+  selectPublicTable(table: PokerTableSummary): void {
+    this.selectedTableId.set(table.sessionId);
+    this.joinBuyIn.set(String(table.minBuyIn));
+  }
+
+  createTable(): void {
+    this.socket.sendAction('poker', 'create-table', {
+      tableName: this.createTableName().trim(),
+      visibility: this.createVisibility(),
+      password: this.createVisibility() === 'private' ? this.createPassword().trim() : undefined,
+      minBuyIn: Number(this.createMinBuyIn()),
+      maxPlayers: Number(this.createMaxPlayers()),
+      buyIn: Number(this.createBuyIn())
+    });
+  }
+
+  joinSelectedPublicTable(): void {
+    const table = this.selectedTable();
+    if (!table) {
       return;
     }
 
-    const amount = Number(this.betAmount());
+    this.socket.sendAction('poker', 'join-table', {
+      sessionId: table.sessionId,
+      buyIn: Number(this.joinBuyIn())
+    });
+  }
 
-    if (!amount) {
+  joinPrivateTable(): void {
+    this.socket.sendAction('poker', 'join-table', {
+      password: this.privatePassword().trim(),
+      buyIn: Number(this.joinBuyIn())
+    });
+  }
+
+  buyInCurrentTable(): void {
+    const table = this.tableState();
+    if (!table) {
       return;
     }
 
-    this.socket.placeBet('poker', amount);
+    this.socket.sendAction('poker', 'join-table', {
+      sessionId: table.tableId,
+      buyIn: Number(this.joinBuyIn())
+    });
+  }
+
+  leaveTable(): void {
+    this.socket.sendAction('poker', 'leave-table');
   }
 
   can(action: 'check' | 'call' | 'raise' | 'all-in' | 'fold'): boolean {
-    return Boolean(this.viewState()?.allowedActions?.includes(action));
+    return Boolean(this.tableState()?.allowedActions?.includes(action));
   }
 
   raise(): void {
     const amount = this.raiseTarget();
-
     if (!amount) {
       return;
     }

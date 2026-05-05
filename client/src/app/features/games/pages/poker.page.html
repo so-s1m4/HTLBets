@@ -1,103 +1,261 @@
-    <app-game-shell
-      title="Poker"
-      subtitle="A dark premium poker table with staged actions, active zones, and expandable shared room state."
-      [connectionState]="socket.connectionState()"
-      [currentBet]="currentBet()"
-      [error]="socket.lastError() || ''"
-    >
-      <app-card table>
-        <div class="page-stack">
-          <app-poker-table
-            [phase]="viewState()?.phase || 'waiting'"
-            [pot]="viewState()?.pot || 0"
-            [currentBet]="viewState()?.currentBet || 0"
-            [actingUserId]="viewState()?.actingUserId || null"
-            [seats]="viewState()?.players || []"
-            [communityCards]="viewState()?.communityCards || []"
-            [winners]="viewState()?.winners || null"
-          />
+<app-game-shell
+  title="Poker"
+  subtitle="Create public and private tables, set the buy-in floor, and play on a full circular table with progressive board reveals."
+  [connectionState]="socket.connectionState()"
+  [currentBet]="currentBet()"
+  [error]="socket.lastError() || ''"
+  [splitSidebar]="tableState()?.kind === 'table'"
+>
+  @if (lobbyState(); as lobby) {
+    <app-card table>
+      <div class="page-stack">
+        <div class="lobby-grid">
+          <app-card tone="muted">
+            <div class="page-stack">
+              <div class="page-heading">
+                <span class="page-heading__eyebrow">Table Builder</span>
+                <h2>Create a room</h2>
+                <p class="status-copy">Public tables show up in the open lobby. Private tables stay hidden behind a 5-digit passcode.</p>
+              </div>
+
+              <app-input label="Table name" [value]="createTableName()" (valueChange)="createTableName.set($event)" />
+
+              <div class="toggle-row">
+                <button type="button" class="toggle-pill" [class.active]="createVisibility() === 'public'" (click)="createVisibility.set('public')">
+                  Public
+                </button>
+                <button type="button" class="toggle-pill" [class.active]="createVisibility() === 'private'" (click)="createVisibility.set('private')">
+                  Private
+                </button>
+              </div>
+
+              @if (createVisibility() === 'private') {
+                <app-input
+                  label="5-digit table password"
+                  inputMode="numeric"
+                  [value]="createPassword()"
+                  (valueChange)="createPassword.set($event.replace(/\D/g, '').slice(0, 5))"
+                />
+              }
+
+              <div class="form-grid">
+                <app-input
+                  label="Minimum buy-in"
+                  inputMode="numeric"
+                  [value]="createMinBuyIn()"
+                  (valueChange)="createMinBuyIn.set($event.replace(/\D/g, ''))"
+                />
+                <app-input
+                  label="Seat count (2-8)"
+                  inputMode="numeric"
+                  [value]="createMaxPlayers()"
+                  (valueChange)="createMaxPlayers.set($event.replace(/\D/g, '').slice(0, 1))"
+                />
+                <app-input
+                  label="Your initial buy-in"
+                  inputMode="numeric"
+                  [value]="createBuyIn()"
+                  (valueChange)="createBuyIn.set($event.replace(/\D/g, ''))"
+                />
+              </div>
+
+              <app-button block (click)="createTable()">Create table</app-button>
+            </div>
+          </app-card>
 
           <app-card tone="muted">
             <div class="page-stack">
-              <div class="utility-row">
-                <span class="pill">Table stage</span>
-                <span class="pill">{{ viewState()?.phase || 'ready' }}</span>
-                <span class="pill">{{ timerLabel() }}</span>
+              <div class="page-heading">
+                <span class="page-heading__eyebrow">Open Lobby</span>
+                <h2>Public tables</h2>
+                <p class="status-copy">{{ lobby.notes }}</p>
               </div>
-              <p class="status-copy">{{ viewState()?.notes || 'Place a bet to start the demo hand.' }}</p>
+
+              <div class="table-list">
+                @for (table of lobby.tables; track table.sessionId) {
+                  <button
+                    type="button"
+                    class="table-item"
+                    [class.active]="selectedTableId() === table.sessionId"
+                    (click)="selectPublicTable(table)"
+                  >
+                    <div>
+                      <strong>{{ table.tableName }}</strong>
+                      <span>{{ table.playerCount }}/{{ table.maxPlayers }} seats · {{ table.phase }}</span>
+                    </div>
+                    <span class="pill">{{ table.minBuyIn }} cr min</span>
+                  </button>
+                } @empty {
+                  <div class="empty-copy">
+                    <strong>No public tables yet</strong>
+                    <span>Create the first room or join a private one with a password.</span>
+                  </div>
+                }
+              </div>
+
+              <app-input
+                label="Buy-in for selected public table"
+                inputMode="numeric"
+                [value]="joinBuyIn()"
+                (valueChange)="joinBuyIn.set($event.replace(/\D/g, ''))"
+              />
+
+              <app-button block [disabled]="!selectedTable()" (click)="joinSelectedPublicTable()">Join selected public table</app-button>
+
+              <div class="divider"></div>
+
+              <div class="page-heading">
+                <span class="page-heading__eyebrow">Private Join</span>
+                <h3>Enter a hidden room</h3>
+              </div>
+
+              <app-input
+                label="5-digit table password"
+                inputMode="numeric"
+                [value]="privatePassword()"
+                (valueChange)="privatePassword.set($event.replace(/\D/g, '').slice(0, 5))"
+              />
+
+              <app-input
+                label="Private table buy-in"
+                inputMode="numeric"
+                [value]="joinBuyIn()"
+                (valueChange)="joinBuyIn.set($event.replace(/\D/g, ''))"
+              />
+
+              <app-button variant="secondary" block (click)="joinPrivateTable()">Join private table</app-button>
             </div>
           </app-card>
         </div>
-      </app-card>
+      </div>
+    </app-card>
+  }
 
-      <app-card sidebar>
-        <div class="page-stack">
-          <div class="glass-stat-grid">
-            <div class="glass-stat">
-              <span class="glass-stat__label">Room</span>
-              <strong class="glass-stat__value">#1</strong>
-            </div>
-            <div class="glass-stat">
-              <span class="glass-stat__label">Players</span>
-              <strong class="glass-stat__value">{{ viewState()?.players?.length || 0 }}/6</strong>
-            </div>
-            <div class="glass-stat">
-              <span class="glass-stat__label">Buy-in now</span>
-              <strong class="glass-stat__value">{{ viewState()?.joinMinimum || 0 }} cr</strong>
-            </div>
-            <div class="glass-stat">
-              <span class="glass-stat__label">To act</span>
-              <strong class="glass-stat__value">{{ actingLabel() }}</strong>
-            </div>
+  @if (lobbyState(); as lobby) {
+    <app-card sidebar>
+      <div class="page-stack">
+        <div class="glass-stat-grid">
+          <div class="glass-stat">
+            <span class="glass-stat__label">Public tables</span>
+            <strong class="glass-stat__value">{{ lobby.tables.length }}</strong>
           </div>
-
-          <app-input
-            label="Ante amount"
-            inputMode="numeric"
-            [value]="betAmount()"
-            (valueChange)="betAmount.set($event.replace(/\D/g, ''))"
-          />
-
-          @if (viewState()?.phase === 'waiting') {
-            <app-button block (click)="joinHand()">{{ joinedThisHand() ? 'Joined next hand' : 'Join next hand' }}</app-button>
-          } @else {
-            <div class="page-stack">
-              @if (can('check')) {
-                <app-button variant="secondary" block (click)="action('check')">Check</app-button>
-              }
-
-              @if (can('call')) {
-                <app-button variant="secondary" block (click)="action('call')">Call {{ callAmount() }} cr</app-button>
-              }
-
-              @if (can('raise')) {
-                <app-input
-                  label="Raise to"
-                  inputMode="numeric"
-                  [value]="raiseAmount()"
-                  (valueChange)="raiseAmount.set($event.replace(/\D/g, ''))"
-                />
-                <app-button block (click)="raise()">Raise to {{ raiseTarget() || viewState()?.minRaiseTo || 0 }} cr</app-button>
-              }
-
-              @if (can('all-in')) {
-                <app-button variant="secondary" block (click)="action('all-in')">All-in {{ selfSeat()?.stackRemaining || 0 }} cr</app-button>
-              }
-
-              @if (can('fold')) {
-                <app-button variant="ghost" block (click)="action('fold')">Fold hand</app-button>
-              }
-            </div>
-          }
-
-          @if (socket.currentState()?.outcome; as result) {
-            <div class="page-stack">
-              <span class="pill">{{ result.result }}</span>
-              <p [class]="result.balanceChange >= 0 ? 'text-success' : 'text-danger'">
-                {{ result.balanceChange | credits }}
-              </p>
-            </div>
-          }
+          <div class="glass-stat">
+            <span class="glass-stat__label">Recommended entry</span>
+            <strong class="glass-stat__value">{{ selectedTable()?.minBuyIn || 100 }} cr</strong>
+          </div>
         </div>
-      </app-card>
-    </app-game-shell>
+      </div>
+    </app-card>
+  }
+
+  @if (tableState(); as table) {
+    <app-card table>
+      <div class="page-stack">
+        <app-poker-table
+          [tableName]="table.tableName"
+          [phase]="table.phase"
+          [pot]="table.pot"
+          [currentBet]="table.currentBet"
+          [actingUserId]="table.actingUserId || null"
+          [seats]="table.players"
+          [communityCards]="table.communityCards"
+          [winners]="table.winners || null"
+        />
+
+        <app-card tone="muted">
+          <div class="page-stack">
+            <div class="utility-row">
+              <span class="pill">{{ table.visibility }}</span>
+              <span class="pill">{{ timerLabel() }}</span>
+              <span class="pill">{{ actingLabel() }}</span>
+            </div>
+            <p class="status-copy">{{ table.notes }}</p>
+          </div>
+        </app-card>
+      </div>
+    </app-card>
+  }
+
+  @if (tableState(); as table) {
+    <app-card sidebar>
+      <div class="page-stack">
+        <div class="glass-stat-grid">
+          <div class="glass-stat">
+            <span class="glass-stat__label">Seats</span>
+            <strong class="glass-stat__value">{{ table.players.length }}/{{ table.maxPlayers }}</strong>
+          </div>
+          <div class="glass-stat">
+            <span class="glass-stat__label">Min buy-in</span>
+            <strong class="glass-stat__value">{{ table.minBuyIn }} cr</strong>
+          </div>
+          <div class="glass-stat">
+            <span class="glass-stat__label">Visibility</span>
+            <strong class="glass-stat__value">{{ table.visibility }}</strong>
+          </div>
+          <div class="glass-stat">
+            <span class="glass-stat__label">Stage</span>
+            <strong class="glass-stat__value">{{ table.phase }}</strong>
+          </div>
+        </div>
+
+        @if (!table.isSeated) {
+          <div class="page-stack">
+            <app-input
+              label="Buy in to take a seat"
+              inputMode="numeric"
+              [value]="joinBuyIn()"
+              (valueChange)="joinBuyIn.set($event.replace(/\D/g, ''))"
+            />
+            <app-button block [disabled]="!table.canJoin" (click)="buyInCurrentTable()">Take a seat</app-button>
+          </div>
+        } @else if (table.phase === 'waiting') {
+          <app-card tone="muted">
+            <div class="page-stack">
+              <span class="pill">Seated</span>
+              <p class="status-copy">Your chips stay on the felt. The next hand starts automatically when enough players are ready.</p>
+            </div>
+          </app-card>
+        } @else {
+          <div class="page-stack">
+            @if (can('check')) {
+              <app-button variant="secondary" block (click)="action('check')">Check</app-button>
+            }
+
+            @if (can('call')) {
+              <app-button variant="secondary" block (click)="action('call')">Call {{ callAmount() }} cr</app-button>
+            }
+
+            @if (can('raise')) {
+              <app-input
+                label="Raise to"
+                inputMode="numeric"
+                [value]="raiseAmount()"
+                (valueChange)="raiseAmount.set($event.replace(/\D/g, ''))"
+              />
+              <app-button block (click)="raise()">Raise to {{ raiseTarget() || table.minRaiseTo || 0 }} cr</app-button>
+            }
+
+            @if (can('all-in')) {
+              <app-button variant="secondary" block (click)="action('all-in')">All-in {{ selfSeat()?.stackRemaining || 0 }} cr</app-button>
+            }
+
+            @if (can('fold')) {
+              <app-button variant="ghost" block (click)="action('fold')">Fold hand</app-button>
+            }
+          </div>
+        }
+
+        <app-button variant="ghost" block (click)="leaveTable()">{{ table.isSeated ? 'Leave table' : 'Back to lobby' }}</app-button>
+
+        @if (socket.currentState()?.outcome; as result) {
+          <div class="page-stack">
+            <span class="pill">{{ result.result }}</span>
+            <p [class]="result.balanceChange >= 0 ? 'text-success' : 'text-danger'">
+              {{ result.balanceChange | credits }}
+            </p>
+          </div>
+        }
+      </div>
+    </app-card>
+  }
+</app-game-shell>
