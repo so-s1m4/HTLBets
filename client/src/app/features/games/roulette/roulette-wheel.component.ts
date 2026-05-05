@@ -15,15 +15,20 @@ export class RouletteWheelComponent {
   @Input() spinning = false;
 
   readonly wheel = wheelOrder;
+  private readonly slotStep = 360 / this.wheel.length;
 
   labelTransform(index: number): string {
-    const angle = (360 / this.wheel.length) * index;
-    return `translate(-50%, -50%) rotate(${angle - 90}deg) translateY(-6.18rem)`;
+    const angle = this.slotCenterAngle(index);
+    return `translate(-50%, -50%) rotate(${angle}deg) translateX(-6.18rem)`;
   }
 
   labelTextTransform(index: number): string {
-    const angle = (360 / this.wheel.length) * index;
-    return `rotate(${90 - angle}deg)`;
+    const angle = this.slotCenterAngle(index);
+    return `rotate(${-angle}deg)`;
+  }
+
+  private slotCenterAngle(index: number): number {
+    return this.slotStep * index + this.slotStep / 2;
   }
 
   isRed(value: number): boolean {

@@ -29,6 +29,8 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
     environment:
       NODE_ENV: production
       PORT: 3000
@@ -49,6 +51,21 @@ services:
       MAIL_DEBUG_BCC: ${MAIL_DEBUG_BCC:-}
     ports:
       - '${SERVER_PUBLISHED_PORT:-127.0.0.1:3000}:3000'
+
+  migrate:
+    networks:
+      - htlbets_default
+    build:
+      context: .
+      dockerfile: server/Dockerfile
+    restart: 'no'
+    depends_on:
+      postgres:
+        condition: service_healthy
+    command: ['sh', '-c', 'cd /app/server && ../node_modules/.bin/prisma migrate deploy']
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-htl_bets}
 
   client:
     networks:

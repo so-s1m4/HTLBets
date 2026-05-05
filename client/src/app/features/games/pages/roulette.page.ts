@@ -1,7 +1,6 @@
 import { Component, DestroyRef, computed, effect, inject, signal } from '@angular/core';
 
 import { GameSocketService } from '../../../core/services/game-socket.service';
-import { AppButtonComponent } from '../../../shared/ui/app-button.component';
 import { AppCardComponent } from '../../../shared/ui/app-card.component';
 import { AppInputComponent } from '../../../shared/ui/app-input.component';
 import { CreditsPipe } from '../../../shared/pipes/credits.pipe';
@@ -40,7 +39,6 @@ interface RouletteViewState {
   selector: 'app-roulette-page',
   standalone: true,
   imports: [
-    AppButtonComponent,
     AppCardComponent,
     AppInputComponent,
     CreditsPipe,
@@ -56,6 +54,9 @@ export class RoulettePageComponent {
 
   private readonly destroyRef = inject(DestroyRef);
   private lastSpinSignature = '';
+  private readonly spinDurationMs = 5200;
+  private pendingRevealSignature: string | null = null;
+  private revealTimer: number | null = null;
 
   readonly betAmount = signal('25');
   readonly selectedChip = signal(25);
@@ -65,15 +66,17 @@ export class RoulettePageComponent {
   readonly ballRotation = signal(0);
   readonly isSpinning = signal(false);
   readonly countdownMs = signal(0);
+  readonly revealedRound = signal<RouletteViewState['lastRound'] | null>(null);
   readonly chipValues = [10, 25, 100, 250];
 
   readonly state = computed(() => this.socket.currentState());
   readonly viewState = computed(() => (this.state()?.state as unknown as RouletteViewState | null) || null);
   readonly currentBet = computed(() => this.state()?.currentBet || 0);
   readonly outcome = computed(() => this.state()?.outcome || null);
+  readonly revealedOutcome = signal<ReturnType<typeof this.outcome> | null>(null);
   readonly hasSidebarContent = computed(() => {
     const state = this.viewState();
-    return Boolean(this.outcome() || state?.bets?.length || state?.history?.length);
+    return Boolean(this.revealedOutcome() || state?.bets?.length || state?.history?.length);
   });
   readonly countdownLabel = computed(() => {
     if (this.isSpinning()) {
@@ -91,15 +94,24 @@ export class RoulettePageComponent {
     this.socket.reset();
     this.socket.joinGame('roulette');
     this.destroyRef.onDestroy(() => {
+      if (this.revealTimer !== null) {
+        window.clearTimeout(this.revealTimer);
+      }
       this.socket.leaveGame('roulette', this.socket.currentState()?.sessionId);
       this.socket.reset();
     });
 
-    effect((onCleanup) => {
+    effect(() => {
       const round = this.viewState()?.lastRound;
       const phase = this.viewState()?.phase;
+      const outcome = this.outcome();
 
       this.isSpinning.set(phase === 'spinning');
+
+      if (phase !== 'spinning' && this.pendingRevealSignature === null) {
+        this.revealedRound.set(round ?? null);
+        this.revealedOutcome.set(outcome ?? null);
+      }
 
       if (!round) {
         return;
@@ -112,22 +124,32 @@ export class RoulettePageComponent {
       }
 
       this.lastSpinSignature = signature;
+      this.pendingRevealSignature = signature;
+      this.revealedRound.set(null);
+      this.revealedOutcome.set(null);
 
       const step = 360 / 37;
       const wheelIndex = this.wheelOrder.indexOf(round.spin.number);
-      const targetRotation = 360 - wheelIndex * step;
+      const targetRotation = 360 - (wheelIndex * step + step / 2);
       const nextWheel = this.wheelRotation() + 1800 + targetRotation - (this.wheelRotation() % 360);
-      const nextBall = this.ballRotation() + 2520 - (this.ballRotation() % 360);
+      const normalizedBall = ((this.ballRotation() % 360) + 360) % 360;
+      const nextBall = this.ballRotation() - 3240 - normalizedBall;
 
       this.wheelRotation.set(nextWheel);
       this.ballRotation.set(nextBall);
       this.isSpinning.set(true);
 
-      const timer = window.setTimeout(() => {
-        this.isSpinning.set(false);
-      }, 4500);
+      if (this.revealTimer !== null) {
+        window.clearTimeout(this.revealTimer);
+      }
 
-      onCleanup(() => window.clearTimeout(timer));
+      this.revealTimer = window.setTimeout(() => {
+        this.isSpinning.set(false);
+        this.pendingRevealSignature = null;
+        this.revealedRound.set(round);
+        this.revealedOutcome.set(this.outcome());
+        this.revealTimer = null;
+      }, this.spinDurationMs);
     });
 
     const countdownTimer = window.setInterval(() => {
@@ -153,9 +175,19 @@ export class RoulettePageComponent {
     this.selectedValue.set(color);
   }
 
+  confirmColorBet(color: 'red' | 'black'): void {
+    this.selectColor(color);
+    this.placeBet('color', color);
+  }
+
   selectNumber(number: number): void {
     this.selectedType.set('number');
     this.selectedValue.set(number);
+  }
+
+  confirmNumberBet(number: number): void {
+    this.selectNumber(number);
+    this.placeBet('number', number);
   }
 
   selectChip(chip: number): void {
@@ -163,17 +195,16 @@ export class RoulettePageComponent {
     this.betAmount.set(String(chip));
   }
 
-  placeBet(): void {
+  placeBet(selectionType = this.selectedType(), value = this.selectedValue()): void {
     const amount = Number(this.betAmount());
 
-    if (!amount) {
+    if (!amount || this.isSpinning()) {
       return;
     }
 
     this.selectedChip.set(amount);
-    this.socket.placeBet('roulette', amount, {
-      selectionType: this.selectedType(),
-      value: this.selectedValue()
-    });
+    this.selectedType.set(selectionType);
+    this.selectedValue.set(value);
+    this.socket.placeBet('roulette', amount, { selectionType, value });
   }
 }

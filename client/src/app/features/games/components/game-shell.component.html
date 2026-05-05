@@ -21,7 +21,7 @@
         </app-card>
       }
 
-      <div class="game-shell__grid" [class.has-sidebar]="hasSidebar">
+      <div class="game-shell__grid" [class.has-sidebar]="hasSidebar" [class.split-sidebar]="hasSidebar && splitSidebar">
         <ng-content select="[table]" />
         @if (hasSidebar) {
           <ng-content select="[sidebar]" />

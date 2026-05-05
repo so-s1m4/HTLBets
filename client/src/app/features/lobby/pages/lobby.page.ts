@@ -3,13 +3,12 @@ import { Component, computed, inject } from '@angular/core';
 import { AuthService } from '../../../core/services/auth.service';
 import { AppGameCardComponent } from '../../../shared/ui/app-game-card.component';
 import { AppCardComponent } from '../../../shared/ui/app-card.component';
-import { AppBalanceBadgeComponent } from '../../../shared/ui/app-balance-badge.component';
 import { ComingSoonComponent } from '../components/coming-soon.component';
 
 @Component({
   selector: 'app-lobby-page',
   standalone: true,
-  imports: [AppGameCardComponent, AppCardComponent, AppBalanceBadgeComponent, ComingSoonComponent],
+  imports: [AppGameCardComponent, AppCardComponent, ComingSoonComponent],
   templateUrl: './lobby.page.html',
   styleUrl: './lobby.page.scss'
 })

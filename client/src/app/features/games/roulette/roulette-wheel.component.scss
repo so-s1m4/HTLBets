@@ -1,23 +1,10 @@
-    .roulette-wheel {
-      position: relative;
-      width: min(100%, 20rem);
-      aspect-ratio: 1;
-      margin: 0 auto;
-      animation: soft-float 8s ease-in-out infinite;
-    }
-
-    .roulette-wheel__marker {
-      position: absolute;
-      z-index: 6;
-      top: 0.2rem;
-      left: 50%;
-      width: 1.2rem;
-      height: 1.5rem;
-      transform: translateX(-50%);
-      clip-path: polygon(50% 100%, 0 0, 100% 0);
-      background: linear-gradient(180deg, rgba(255, 244, 213, 0.98), rgba(203, 175, 113, 0.88));
-      filter: drop-shadow(0 6px 10px rgba(0, 0, 0, 0.22));
-    }
+.roulette-wheel {
+  position: relative;
+  width: min(100%, 20rem);
+  aspect-ratio: 1;
+  margin: 0 auto;
+  animation: soft-float 8s ease-in-out infinite;
+}
 
     .roulette-wheel__ball-track,
     .roulette-wheel__plate,
@@ -27,21 +14,21 @@
       border-radius: 50%;
     }
 
-    .roulette-wheel__ball-track {
-      z-index: 5;
-      transition: transform 4.6s cubic-bezier(0.08, 0.76, 0.14, 1);
-    }
+.roulette-wheel__ball-track {
+  z-index: 5;
+  transition: transform 5.2s cubic-bezier(0.12, 0.82, 0.08, 1);
+}
 
-    .roulette-wheel__ball {
-      position: absolute;
-      top: 1.7rem;
-      left: 50%;
-      width: 0.88rem;
-      height: 0.88rem;
-      transform: translateX(-50%);
-      border-radius: 50%;
-      background:
-        radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 1), rgba(255, 255, 255, 0.9) 30%, rgba(211, 230, 255, 0.92) 52%, rgba(107, 126, 168, 0.95));
+.roulette-wheel__ball {
+  position: absolute;
+  top: 50%;
+  left: 1.92rem;
+  width: 0.88rem;
+  height: 0.88rem;
+  transform: translateY(-50%);
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 1), rgba(255, 255, 255, 0.9) 30%, rgba(211, 230, 255, 0.92) 52%, rgba(107, 126, 168, 0.95));
       box-shadow:
         0 0 0 2px rgba(255, 255, 255, 0.08),
         0 8px 18px rgba(0, 0, 0, 0.4),
@@ -130,25 +117,25 @@
       z-index: 3;
     }
 
-    .roulette-wheel__label {
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform-origin: center center;
-      color: rgba(248, 250, 255, 0.92);
-      font-size: 0.5rem;
-      font-weight: 700;
+.roulette-wheel__label {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform-origin: center center;
+  color: rgba(248, 250, 255, 0.92);
+  font-size: 0.44rem;
+  font-weight: 700;
       line-height: 1;
       letter-spacing: -0.03em;
       text-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
       pointer-events: none;
     }
 
-    .roulette-wheel__label span {
-      display: block;
-      min-width: 0.95rem;
-      text-align: center;
-    }
+.roulette-wheel__label span {
+  display: block;
+  min-width: 0.72rem;
+  text-align: center;
+}
 
     .roulette-wheel__label.red {
       color: #ffb0bf;
@@ -191,14 +178,50 @@
     }
 
     .roulette-wheel.spinning .roulette-wheel__ball {
-      animation: roulette-ball-bounce 360ms ease-in-out infinite alternate;
+      animation: roulette-ball-physics 5.2s cubic-bezier(0.12, 0.82, 0.08, 1) forwards;
     }
 
-    @keyframes roulette-ball-bounce {
+    @keyframes roulette-ball-physics {
       0% {
-        transform: translateX(-50%) translateY(0);
+        left: 1.1rem;
+        transform: translateY(-50%) scale(0.98);
+        box-shadow:
+          0 0 0 2px rgba(255, 255, 255, 0.08),
+          0 10px 22px rgba(0, 0, 0, 0.44),
+          0 0 22px rgba(255, 255, 255, 0.2);
       }
+
+      18% {
+        left: 1.16rem;
+        transform: translateY(calc(-50% - 3px)) scale(1);
+      }
+
+      36% {
+        left: 1.24rem;
+        transform: translateY(calc(-50% + 2px)) scale(0.985);
+      }
+
+      58% {
+        left: 1.38rem;
+        transform: translateY(calc(-50% - 2px)) scale(1);
+      }
+
+      74% {
+        left: 1.56rem;
+        transform: translateY(calc(-50% + 1px)) scale(0.995);
+      }
+
+      88% {
+        left: 1.76rem;
+        transform: translateY(-50%) scale(1);
+      }
+
       100% {
-        transform: translateX(-50%) translateY(-3px);
+        left: 1.92rem;
+        transform: translateY(-50%) scale(1);
+        box-shadow:
+          0 0 0 2px rgba(255, 255, 255, 0.08),
+          0 8px 18px rgba(0, 0, 0, 0.4),
+          0 0 20px rgba(255, 255, 255, 0.25);
       }
     }
