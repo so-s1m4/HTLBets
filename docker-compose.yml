@@ -5,7 +5,7 @@ services:
     image: postgres:16-alpine
     restart: unless-stopped
     ports:
-      - '${POSTGRES_PUBLISHED_PORT:-127.0.0.1:5432}:5432'
+      - '127.0.0.1:${POSTGRES_PUBLISHED_PORT:-5432}:5432'
     environment:
       POSTGRES_DB: ${POSTGRES_DB:-htl_bets}
       POSTGRES_USER: ${POSTGRES_USER:-postgres}
@@ -39,7 +39,7 @@ services:
       ADMIN_EMAILS: ${ADMIN_EMAILS:-}
       CODE_HASH_SECRET: ${CODE_HASH_SECRET:-}
       AUTH_CODE_TTL_MINUTES: ${AUTH_CODE_TTL_MINUTES:-10}
-      TRUST_PROXY: ${TRUST_PROXY:-1}
+      TRUST_PROXY: ${DEPLOY_TRUST_PROXY:-2}
       MAIL_HOST: ${MAIL_HOST:-mail.your-domain.tld}
       MAIL_PORT: ${MAIL_PORT:-587}
       MAIL_SECURE: ${MAIL_SECURE:-false}

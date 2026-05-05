@@ -1,14 +1,26 @@
 import dotenv from 'dotenv';
+import { existsSync } from 'node:fs';
+import { resolve } from 'node:path';
 import { z } from 'zod';
 
 import { parseTrustProxy } from '../utils/trust-proxy';
 
-dotenv.config({ quiet: true });
+const dotenvPathCandidates = [resolve(process.cwd(), '.env.docker'), resolve(process.cwd(), '..', '.env.docker')];
+const dotenvPath = dotenvPathCandidates.find((candidate) => existsSync(candidate));
+
+dotenv.config({
+  path: dotenvPath,
+  quiet: true
+});
 
 const envSchema = z.object({
   NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
   PORT: z.coerce.number().int().positive().default(3000),
   CLIENT_ORIGIN: z.string().default('http://localhost:4200'),
+  DEBUG_AUTH: z
+    .string()
+    .optional()
+    .transform((value) => value === 'true'),
   TRUST_PROXY: z.string().optional(),
   DATABASE_URL: z.string().min(1, 'DATABASE_URL is required.'),
   JWT_SECRET: z.string().min(32, 'JWT_SECRET must be at least 32 characters long.'),
