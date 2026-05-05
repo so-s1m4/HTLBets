@@ -4,7 +4,7 @@
   "scripts": {
     "ng": "ng",
     "generate:config": "tsx scripts/generate-runtime-config.ts",
-    "dev": "npm run generate:config && ng serve --proxy-config proxy.conf.json",
+    "dev": "npm run generate:config && node scripts/start-dev-server.mjs",
     "start": "npm run dev",
     "build": "npm run generate:config && ng build",
     "watch": "ng build --watch --configuration development",

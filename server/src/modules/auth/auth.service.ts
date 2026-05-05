@@ -1,4 +1,5 @@
 import { prisma } from '../../prisma/client';
+import { env } from '../../config/env';
 import { emailService } from '../email/email.service';
 import { generateVerificationCode, getVerificationCodeExpiry, hashVerificationCode } from '../../utils/code';
 import { HttpError } from '../../utils/http-error';
@@ -12,6 +13,10 @@ interface VerifyCodeResult {
 
 class AuthService {
   async requestCode(email: string): Promise<void> {
+    if (env.DEBUG_AUTH) {
+      return;
+    }
+
     const code = generateVerificationCode();
 
     await prisma.$transaction(async (tx) => {
@@ -38,6 +43,10 @@ class AuthService {
   }
 
   async verifyCode(email: string, code: string): Promise<VerifyCodeResult> {
+    if (env.DEBUG_AUTH) {
+      return this.issueAccessToken(email);
+    }
+
     const verification = await prisma.emailVerificationCode.findFirst({
       where: {
         email,
@@ -59,25 +68,19 @@ class AuthService {
       throw new HttpError(400, 'Invalid or expired verification code.');
     }
 
-    const user = await prisma.$transaction(async (tx) => {
-      await tx.emailVerificationCode.update({
-        where: { id: verification.id },
-        data: { used: true }
-      });
+    await prisma.emailVerificationCode.update({
+      where: { id: verification.id },
+      data: { used: true }
+    });
 
-      const existingUser = await tx.user.findUnique({
-        where: { email }
-      });
+    return this.issueAccessToken(email);
+  }
 
-      if (existingUser) {
-        return existingUser;
-      }
-
-      return tx.user.create({
-        data: {
-          email
-        }
-      });
+  private async issueAccessToken(email: string): Promise<VerifyCodeResult> {
+    const user = await prisma.user.upsert({
+      where: { email },
+      update: {},
+      create: { email }
     });
 
     return {

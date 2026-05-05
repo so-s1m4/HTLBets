@@ -19,8 +19,8 @@ npm run dev
 
 `npm run dev` automatically:
 
-- creates `server/.env` from [server/.env.example](/Users/maksym/Documents/Programming/Projects/HTLBets/server/.env.example) if missing
-- creates `client/.env` from [client/.env.example](/Users/maksym/Documents/Programming/Projects/HTLBets/client/.env.example) if missing
+- creates `.env.docker` from `.env.docker.example` if missing
+- syncs `PORT`, `CLIENT_ORIGIN`, `DATABASE_URL`, and `TRUST_PROXY` from the local dev entries in `.env.docker`
 - starts local PostgreSQL through Docker Compose
 - runs Prisma generate + migrate deploy
 - starts backend and frontend
@@ -28,20 +28,20 @@ npm run dev
 Default local URLs:
 
 - client: `http://localhost:4200`
-- server: `http://localhost:3000`
+- server: `http://localhost:4201`
 
 Requirement: Docker must be running locally.
 
-## Env Files
+## Env File
 
-Local development:
+Everything reads from `.env.docker`.
 
-- [server/.env.example](/Users/maksym/Documents/Programming/Projects/HTLBets/server/.env.example)
-- [client/.env.example](/Users/maksym/Documents/Programming/Projects/HTLBets/client/.env.example)
-
-Docker stack:
-
-- [.env.docker.example](/Users/maksym/Documents/Programming/Projects/HTLBets/.env.docker.example)
+- `.env.docker.example` is the template
+- `.env.docker` is used by both `npm run dev` and `docker compose`
+- `DEV_CLIENT_PORT` is client dev only
+- `DEV_SERVER_PORT` and `DEV_TRUST_PROXY` are server dev only
+- `POSTGRES_PUBLISHED_PORT` is the shared local Postgres host port and is also used to build `DATABASE_URL`
+- `SERVER_PUBLISHED_PORT`, `CLIENT_PUBLISHED_PORT`, and `DEPLOY_TRUST_PROXY` are deployment-only
 
 ## Commands
 
