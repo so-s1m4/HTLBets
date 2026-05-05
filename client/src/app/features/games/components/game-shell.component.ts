@@ -16,4 +16,5 @@ export class GameShellComponent {
   @Input() currentBet = 0;
   @Input() error = '';
   @Input() hasSidebar = true;
+  @Input() splitSidebar = true;
 }

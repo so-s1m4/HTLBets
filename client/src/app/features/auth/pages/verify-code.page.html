@@ -14,7 +14,7 @@
             inputMode="numeric"
             [maxlength]="6"
             [value]="code()"
-            (valueChange)="code.set($event.replace(/\\D/g, '').slice(0, 6))"
+            (valueChange)="code.set($event.replace(/\D/g, '').slice(0, 6))"
           />
 
           @if (error()) {

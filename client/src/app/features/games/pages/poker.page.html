@@ -55,7 +55,7 @@
             label="Ante amount"
             inputMode="numeric"
             [value]="betAmount()"
-            (valueChange)="betAmount.set($event.replace(/\\D/g, ''))"
+            (valueChange)="betAmount.set($event.replace(/\D/g, ''))"
           />
 
           @if (viewState()?.phase === 'waiting') {
@@ -75,7 +75,7 @@
                   label="Raise to"
                   inputMode="numeric"
                   [value]="raiseAmount()"
-                  (valueChange)="raiseAmount.set($event.replace(/\\D/g, ''))"
+                  (valueChange)="raiseAmount.set($event.replace(/\D/g, ''))"
                 />
                 <app-button block (click)="raise()">Raise to {{ raiseTarget() || viewState()?.minRaiseTo || 0 }} cr</app-button>
               }
