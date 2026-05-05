@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { requestCodeSchema, verifyCodeSchema } from './auth.validation';
+import { passwordLoginSchema, requestCodeSchema, verifyCodeSchema } from './auth.validation';
 import { htlstpEmailErrorMessage } from '../../utils/email';
 
 describe('auth validation', () => {
@@ -33,6 +33,18 @@ describe('auth validation', () => {
     expect(parsed).toEqual({
       email: 'student@htlstp.at',
       code: '123456'
+    });
+  });
+
+  it('accepts valid password login payloads', () => {
+    const parsed = passwordLoginSchema.parse({
+      email: 'student@htlstp.at',
+      password: 'strongpass123'
+    });
+
+    expect(parsed).toEqual({
+      email: 'student@htlstp.at',
+      password: 'strongpass123'
     });
   });
 });

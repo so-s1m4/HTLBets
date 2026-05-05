@@ -8,20 +8,19 @@ import { AuthPanelComponent } from '../components/auth-panel.component';
 import { AuthFlowService } from '../services/auth-flow.service';
 
 @Component({
-  selector: 'app-verify-code-page',
+  selector: 'app-password-entry-page',
   standalone: true,
   imports: [AuthPanelComponent, AppButtonComponent, AppInputComponent],
-  templateUrl: './verify-code.page.html',
-  styleUrl: './verify-code.page.scss'
+  templateUrl: './password-entry.page.html',
+  styleUrl: './password-entry.page.scss'
 })
-export class VerifyCodePageComponent {
+export class PasswordEntryPageComponent {
   private readonly router = inject(Router);
   private readonly auth = inject(AuthService);
   private readonly flow = inject(AuthFlowService);
 
-  readonly code = signal('');
+  readonly password = signal('');
   readonly loading = signal(false);
-  readonly resending = signal(false);
   readonly error = signal('');
   readonly email = this.flow.pendingEmail();
 
@@ -32,8 +31,8 @@ export class VerifyCodePageComponent {
   }
 
   async submit(): Promise<void> {
-    if (this.code().length !== 6) {
-      this.error.set('Enter the full 6-digit verification code.');
+    if (this.password().length < 8) {
+      this.error.set('Password must be at least 8 characters.');
       return;
     }
 
@@ -41,26 +40,13 @@ export class VerifyCodePageComponent {
     this.error.set('');
 
     try {
-      const result = await this.auth.verifyCode(this.email, this.code());
+      await this.auth.loginWithPassword(this.email, this.password());
       this.flow.clearPendingEmail();
-      await this.router.navigate([result.requiresPasswordSetup ? '/auth/set-password' : '/lobby']);
+      await this.router.navigate(['/lobby']);
     } catch {
-      this.error.set('Invalid or expired verification code.');
+      this.error.set('Incorrect password.');
     } finally {
       this.loading.set(false);
-    }
-  }
-
-  async resend(): Promise<void> {
-    this.resending.set(true);
-    this.error.set('');
-
-    try {
-      await this.auth.requestCode(this.email);
-    } catch {
-      this.error.set('Unable to resend the code right now.');
-    } finally {
-      this.resending.set(false);
     }
   }
 }

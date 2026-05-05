@@ -2,7 +2,7 @@ import { computed, inject, Injectable, signal } from '@angular/core';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
 
-import type { ApiMessage, VerifyCodeResponse } from '../models/auth.model';
+import type { ApiMessage, AuthResponse, BeginAuthResponse, SetPasswordResponse } from '../models/auth.model';
 import type { User } from '../models/user.model';
 import { AppConfigService } from './app-config.service';
 
@@ -21,6 +21,7 @@ export class AuthService {
   readonly currentUser = signal<User | null>(this.readStoredUser());
   readonly ready = signal(false);
   readonly isAuthenticated = computed(() => Boolean(this.token()));
+  readonly needsPasswordSetup = computed(() => Boolean(this.currentUser() && !this.currentUser()!.hasPassword));
 
   constructor() {
     if (this.token() && this.currentUser()) {
@@ -33,15 +34,17 @@ export class AuthService {
     }
   }
 
-  async requestCode(email: string): Promise<ApiMessage> {
-    return firstValueFrom(
-      this.http.post<ApiMessage>(`${this.config.apiUrl}/auth/request-code`, { email })
-    );
+  async beginAuth(email: string): Promise<BeginAuthResponse> {
+    return firstValueFrom(this.http.post<BeginAuthResponse>(`${this.config.apiUrl}/auth/begin`, { email }));
   }
 
-  async verifyCode(email: string, code: string): Promise<VerifyCodeResponse> {
+  async requestCode(email: string): Promise<ApiMessage> {
+    return firstValueFrom(this.http.post<ApiMessage>(`${this.config.apiUrl}/auth/request-code`, { email }));
+  }
+
+  async verifyCode(email: string, code: string): Promise<AuthResponse> {
     const response = await firstValueFrom(
-      this.http.post<VerifyCodeResponse>(`${this.config.apiUrl}/auth/verify-code`, {
+      this.http.post<AuthResponse>(`${this.config.apiUrl}/auth/verify-code`, {
         email,
         code
       })
@@ -49,6 +52,29 @@ export class AuthService {
 
     this.setSession(response.accessToken, response.user);
     return response;
+  }
+
+  async loginWithPassword(email: string, password: string): Promise<AuthResponse> {
+    const response = await firstValueFrom(
+      this.http.post<AuthResponse>(`${this.config.apiUrl}/auth/login-password`, {
+        email,
+        password
+      })
+    );
+
+    this.setSession(response.accessToken, response.user);
+    return response;
+  }
+
+  async setPassword(password: string): Promise<User> {
+    const response = await firstValueFrom(
+      this.http.post<SetPasswordResponse>(`${this.config.apiUrl}/auth/set-password`, {
+        password
+      })
+    );
+
+    this.persistUser(response.user);
+    return response.user;
   }
 
   async loadCurrentUser(): Promise<User | null> {

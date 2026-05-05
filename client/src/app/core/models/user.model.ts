@@ -4,6 +4,7 @@ export interface User {
   username: string | null;
   balance: number;
   isAdmin: boolean;
+  hasPassword: boolean;
   createdAt: string;
   updatedAt: string;
 }

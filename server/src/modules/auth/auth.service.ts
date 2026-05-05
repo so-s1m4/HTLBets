@@ -4,15 +4,43 @@ import { emailService } from '../email/email.service';
 import { generateVerificationCode, getVerificationCodeExpiry, hashVerificationCode } from '../../utils/code';
 import { HttpError } from '../../utils/http-error';
 import { signAccessToken } from '../../utils/jwt';
+import { hashPassword, verifyPassword } from '../../utils/password';
 import { toPublicUser, type PublicUser } from '../users/user.model';
 
-interface VerifyCodeResult {
+interface AuthResponse {
   accessToken: string;
   user: PublicUser;
+  requiresPasswordSetup: boolean;
+}
+
+interface BeginAuthResponse {
+  mode: 'password' | 'code';
 }
 
 class AuthService {
+  async beginAuth(email: string): Promise<BeginAuthResponse> {
+    const user = await prisma.user.findUnique({
+      where: { email },
+      select: {
+        passwordHash: true
+      }
+    });
+
+    return {
+      mode: user?.passwordHash ? 'password' : 'code'
+    };
+  }
+
   async requestCode(email: string): Promise<void> {
+    const existingUser = await prisma.user.findUnique({
+      where: { email },
+      select: { passwordHash: true }
+    });
+
+    if (existingUser?.passwordHash) {
+      throw new HttpError(400, 'This account already uses a password for sign in.');
+    }
+
     if (env.DEBUG_AUTH) {
       return;
     }
@@ -42,7 +70,7 @@ class AuthService {
     await emailService.sendVerificationCode(email, code);
   }
 
-  async verifyCode(email: string, code: string): Promise<VerifyCodeResult> {
+  async verifyCode(email: string, code: string): Promise<AuthResponse> {
     if (env.DEBUG_AUTH) {
       return this.issueAccessToken(email);
     }
@@ -76,19 +104,51 @@ class AuthService {
     return this.issueAccessToken(email);
   }
 
-  private async issueAccessToken(email: string): Promise<VerifyCodeResult> {
+  async loginWithPassword(email: string, password: string): Promise<AuthResponse> {
+    const user = await prisma.user.findUnique({
+      where: { email }
+    });
+
+    if (!user?.passwordHash) {
+      throw new HttpError(400, 'This account must be verified by code before password sign in is available.');
+    }
+
+    const valid = await verifyPassword(password, user.passwordHash);
+    if (!valid) {
+      throw new HttpError(400, 'Incorrect password.');
+    }
+
+    return this.buildAuthResponse(user);
+  }
+
+  async setPassword(userId: string, password: string): Promise<PublicUser> {
+    const passwordHash = await hashPassword(password);
+    const user = await prisma.user.update({
+      where: { id: userId },
+      data: { passwordHash }
+    });
+
+    return toPublicUser(user);
+  }
+
+  private async issueAccessToken(email: string): Promise<AuthResponse> {
     const user = await prisma.user.upsert({
       where: { email },
       update: {},
       create: { email }
     });
 
+    return this.buildAuthResponse(user);
+  }
+
+  private buildAuthResponse(user: { id: string; email: string; passwordHash: string | null; username: string | null; balance: number; createdAt: Date; updatedAt: Date }): AuthResponse {
     return {
       accessToken: signAccessToken({
         userId: user.id,
         email: user.email
       }),
-      user: toPublicUser(user)
+      user: toPublicUser(user),
+      requiresPasswordSetup: !user.passwordHash
     };
   }
 }
