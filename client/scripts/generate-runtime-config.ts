@@ -4,7 +4,7 @@ import { join } from 'node:path';
 import dotenv from 'dotenv';
 
 const rootDir = process.cwd();
-const envFile = join(rootDir, '.env');
+const envFile = join(rootDir, '..', '.env.docker');
 
 if (existsSync(envFile)) {
   dotenv.config({ path: envFile });

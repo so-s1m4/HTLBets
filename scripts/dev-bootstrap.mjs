@@ -3,7 +3,17 @@ import { dirname, resolve } from 'node:path';
 import { execSync } from 'node:child_process';
 import net from 'node:net';
 
+import {
+  readEnvValue,
+  readSharedEnvContents,
+  readSharedDevConfig,
+  readSharedEnvPath,
+  SHARED_ENV_EXAMPLE_FILENAME,
+  upsertEnvValue
+} from './dev-config.mjs';
+
 const rootDir = process.cwd();
+const prismaBin = resolve(rootDir, 'node_modules', '.bin', process.platform === 'win32' ? 'prisma.cmd' : 'prisma');
 
 const ensureFile = (targetPath, contents) => {
   if (existsSync(targetPath)) {
@@ -21,18 +31,6 @@ const run = (command, options = {}) => {
     stdio: 'inherit',
     ...options
   });
-};
-
-const readEnvValue = (contents, key) => {
-  const line = contents
-    .split('\n')
-    .find((entry) => entry.trim().startsWith(`${key}=`));
-
-  if (!line) {
-    return '';
-  }
-
-  return line.slice(line.indexOf('=') + 1).trim();
 };
 
 const parseDatabaseUrl = (databaseUrl) => {
@@ -119,60 +117,108 @@ const waitForPostgres = () => {
   throw new Error('Postgres did not become healthy in time.');
 };
 
-const serverEnvPath = resolve(rootDir, 'server/.env');
-const clientEnvPath = resolve(rootDir, 'client/.env');
-const serverEnvExamplePath = resolve(rootDir, 'server/.env.example');
-const clientEnvExamplePath = resolve(rootDir, 'client/.env.example');
+const readCommandOutput = (command) => {
+  try {
+    return execSync(command, {
+      cwd: rootDir,
+      stdio: ['ignore', 'pipe', 'ignore']
+    })
+      .toString()
+      .trim();
+  } catch {
+    return '';
+  }
+};
 
-const serverEnvExample = `NODE_ENV=development
-PORT=3000
-CLIENT_ORIGIN=http://localhost:4200
-TRUST_PROXY=1
-DATABASE_URL=postgresql://postgres:postgres@localhost:5432/htl_bets
-JWT_SECRET=dev-only-super-long-secret-change-me-1234567890
-JWT_EXPIRES_IN=7d
-ADMIN_EMAILS=
-CODE_HASH_SECRET=
-AUTH_CODE_TTL_MINUTES=10
-MAIL_HOST=localhost
-MAIL_PORT=1025
-MAIL_SECURE=false
-MAIL_USER=
-MAIL_PASS=
-MAIL_FROM=no-reply@minigames.local
-MAIL_DEBUG_BCC=
-`;
+const stopRepoProcessOnPort = (port) => {
+  const output = readCommandOutput(`lsof -nP -iTCP:${port} -sTCP:LISTEN -Fp`);
+  const pids = output
+    .split('\n')
+    .filter((line) => line.startsWith('p'))
+    .map((line) => Number.parseInt(line.slice(1), 10))
+    .filter(Number.isInteger);
 
-const clientEnvExample = `CLIENT_API_URL=/api
-CLIENT_SOCKET_URL=
-`;
+  for (const pid of pids) {
+    const command = readCommandOutput(`ps -p ${pid} -o command=`);
 
-ensureFile(serverEnvExamplePath, serverEnvExample);
-ensureFile(clientEnvExamplePath, clientEnvExample);
+    if (!command) {
+      continue;
+    }
 
-const serverEnvCreated = ensureFile(serverEnvPath, readFileSync(serverEnvExamplePath, 'utf8'));
-const clientEnvCreated = ensureFile(clientEnvPath, readFileSync(clientEnvExamplePath, 'utf8'));
-const serverEnvContents = readFileSync(serverEnvPath, 'utf8');
-const databaseUrl = readEnvValue(serverEnvContents, 'DATABASE_URL');
+    const isRepoOwned =
+      command.includes(rootDir) ||
+      command.includes('proxy.conf.json') ||
+      command.includes('tsx watch src/server.ts') ||
+      command.includes('concurrently');
 
-if (serverEnvCreated) {
-  console.log('Created server/.env for local development.');
-}
+    if (!isRepoOwned) {
+      throw new Error(`Port ${port} is already in use by an external process: ${command}`);
+    }
 
-if (clientEnvCreated) {
-  console.log('Created client/.env for local development.');
-}
+    process.kill(pid, 'SIGTERM');
+  }
+};
+
+const sharedEnvPath = readSharedEnvPath(rootDir);
+const sharedEnvExamplePath = resolve(rootDir, SHARED_ENV_EXAMPLE_FILENAME);
+const proxyConfigPath = resolve(rootDir, 'client/proxy.conf.json');
+
+ensureFile(sharedEnvPath, readFileSync(sharedEnvExamplePath, 'utf8'));
+
+let sharedEnvContents = readSharedEnvContents(rootDir);
+const { clientPort, serverPort, postgresPort, clientOrigin, devTrustProxy } = readSharedDevConfig(rootDir);
+const postgresDb = readEnvValue(sharedEnvContents, 'POSTGRES_DB') || 'htl_bets';
+const postgresUser = readEnvValue(sharedEnvContents, 'POSTGRES_USER') || 'postgres';
+const postgresPassword = readEnvValue(sharedEnvContents, 'POSTGRES_PASSWORD') || 'postgres';
+const databaseUrl = `postgresql://${postgresUser}:${postgresPassword}@localhost:${postgresPort}/${postgresDb}`;
+
+sharedEnvContents = upsertEnvValue(sharedEnvContents, 'DEV_CLIENT_PORT', `${clientPort}`);
+sharedEnvContents = upsertEnvValue(sharedEnvContents, 'DEV_SERVER_PORT', `${serverPort}`);
+sharedEnvContents = upsertEnvValue(sharedEnvContents, 'POSTGRES_PUBLISHED_PORT', readEnvValue(sharedEnvContents, 'POSTGRES_PUBLISHED_PORT') || `${postgresPort}`);
+sharedEnvContents = upsertEnvValue(sharedEnvContents, 'DEV_TRUST_PROXY', devTrustProxy);
+sharedEnvContents = upsertEnvValue(sharedEnvContents, 'NODE_ENV', readEnvValue(sharedEnvContents, 'NODE_ENV') || 'development');
+sharedEnvContents = upsertEnvValue(sharedEnvContents, 'PORT', `${serverPort}`);
+sharedEnvContents = upsertEnvValue(sharedEnvContents, 'CLIENT_ORIGIN', clientOrigin);
+sharedEnvContents = upsertEnvValue(sharedEnvContents, 'DATABASE_URL', databaseUrl);
+sharedEnvContents = upsertEnvValue(sharedEnvContents, 'TRUST_PROXY', devTrustProxy);
+sharedEnvContents = upsertEnvValue(sharedEnvContents, 'CLIENT_API_URL', readEnvValue(sharedEnvContents, 'CLIENT_API_URL') || '/api');
+sharedEnvContents = upsertEnvValue(sharedEnvContents, 'CLIENT_SOCKET_URL', readEnvValue(sharedEnvContents, 'CLIENT_SOCKET_URL'));
+sharedEnvContents = upsertEnvValue(sharedEnvContents, 'DEBUG_AUTH', readEnvValue(sharedEnvContents, 'DEBUG_AUTH') || 'false');
+writeFileSync(sharedEnvPath, sharedEnvContents, 'utf8');
+
+const proxyConfig = `${JSON.stringify(
+  {
+    '/api': {
+      target: `http://localhost:${serverPort}`,
+      secure: false,
+      changeOrigin: true
+    },
+    '/socket.io': {
+      target: `http://localhost:${serverPort}`,
+      secure: false,
+      changeOrigin: true,
+      ws: true
+    }
+  },
+  null,
+  2
+)}\n`;
+
+writeFileSync(proxyConfigPath, proxyConfig, 'utf8');
+stopRepoProcessOnPort(clientPort);
+stopRepoProcessOnPort(serverPort);
 
 if (canUseComposePostgres(databaseUrl)) {
   const parsed = parseDatabaseUrl(databaseUrl);
   const host = parsed?.hostname ?? 'localhost';
   const port = Number(parsed?.port || 5432);
+  const targetPortReachable = await isPortReachable(host, port);
 
-  if (!isComposePostgresRunning() && (await isPortReachable(host, port))) {
+  if (!isComposePostgresRunning() && targetPortReachable) {
     console.log(`Detected an existing PostgreSQL instance at ${host}:${port}. Using it for local development.`);
   } else {
     try {
-      run('docker compose up -d postgres');
+      run('docker compose --env-file .env.docker up -d postgres');
       waitForPostgres();
     } catch (error) {
       console.error('\nFailed to start local PostgreSQL through Docker Compose.');
@@ -184,5 +230,5 @@ if (canUseComposePostgres(databaseUrl)) {
   console.log(`Using external PostgreSQL from DATABASE_URL: ${databaseUrl}`);
 }
 
-run('npm run prisma:generate --workspace server');
-run('npm run prisma:deploy --workspace server');
+run(`${prismaBin} generate --schema server/prisma/schema.prisma --config server/prisma.config.ts`);
+run(`${prismaBin} migrate deploy --schema server/prisma/schema.prisma --config server/prisma.config.ts`);
