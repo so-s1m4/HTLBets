@@ -3,36 +3,49 @@ import { CanActivateFn, Router } from '@angular/router';
 
 import { AuthService } from '../services/auth.service';
 
-export const authGuard: CanActivateFn = () => {
+const resolveProtectedTarget = (allowWithoutPasswordSetup: boolean) => {
   const auth = inject(AuthService);
   const router = inject(Router);
 
+  if (!auth.isAuthenticated()) {
+    return router.createUrlTree(['/auth/email']);
+  }
+
+  if (!allowWithoutPasswordSetup && auth.needsPasswordSetup()) {
+    return router.createUrlTree(['/auth/set-password']);
+  }
+
+  return true;
+};
+
+export const authGuard: CanActivateFn = (route) => {
+  const auth = inject(AuthService);
+  const allowWithoutPasswordSetup = Boolean(route.data?.['allowWithoutPasswordSetup']);
+
   if (!auth.ready()) {
-    return auth.restoreSession().then(() => {
-      if (auth.isAuthenticated()) {
-        return true;
-      }
-
-      return router.createUrlTree(['/auth/email']);
-    });
+    return auth.restoreSession().then(() => resolveProtectedTarget(allowWithoutPasswordSetup));
   }
 
-  if (auth.isAuthenticated()) {
-    return true;
-  }
-
-  return router.createUrlTree(['/auth/email']);
+  return resolveProtectedTarget(allowWithoutPasswordSetup);
 };
 
 export const guestOnlyGuard: CanActivateFn = () => {
   const auth = inject(AuthService);
   const router = inject(Router);
 
+  const resolve = () => {
+    if (!auth.isAuthenticated()) {
+      return true;
+    }
+
+    return auth.needsPasswordSetup() ? router.createUrlTree(['/auth/set-password']) : router.createUrlTree(['/lobby']);
+  };
+
   if (!auth.ready()) {
-    return auth.restoreSession().then(() => (auth.isAuthenticated() ? router.createUrlTree(['/lobby']) : true));
+    return auth.restoreSession().then(resolve);
   }
 
-  return auth.isAuthenticated() ? router.createUrlTree(['/lobby']) : true;
+  return resolve();
 };
 
 export const adminGuard: CanActivateFn = () => {
@@ -42,6 +55,10 @@ export const adminGuard: CanActivateFn = () => {
   const resolve = () => {
     if (!auth.isAuthenticated()) {
       return router.createUrlTree(['/auth/email']);
+    }
+
+    if (auth.needsPasswordSetup()) {
+      return router.createUrlTree(['/auth/set-password']);
     }
 
     return auth.currentUser()?.isAdmin ? true : router.createUrlTree(['/lobby']);

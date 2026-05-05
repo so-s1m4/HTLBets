@@ -4,6 +4,7 @@ import { isAdminEmail } from '../../utils/admin';
 
 export interface PublicUser extends Pick<User, 'id' | 'email' | 'username' | 'balance' | 'createdAt' | 'updatedAt'> {
   isAdmin: boolean;
+  hasPassword: boolean;
 }
 
 export interface PublicGameHistory extends Pick<GameHistory, 'id' | 'betAmount' | 'result' | 'balanceChange' | 'createdAt'> {
@@ -16,6 +17,7 @@ export const toPublicUser = (user: User): PublicUser => ({
   username: user.username,
   balance: user.balance,
   isAdmin: isAdminEmail(user.email),
+  hasPassword: Boolean(user.passwordHash),
   createdAt: user.createdAt,
   updatedAt: user.updatedAt
 });

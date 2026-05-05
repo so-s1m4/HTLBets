@@ -40,11 +40,18 @@ export class EmailEntryPageComponent {
     this.error.set('');
 
     try {
-      await this.auth.requestCode(email);
       this.flow.setPendingEmail(email);
+      const result = await this.auth.beginAuth(email);
+
+      if (result.mode === 'password') {
+        await this.router.navigate(['/auth/password']);
+        return;
+      }
+
+      await this.auth.requestCode(email);
       await this.router.navigate(['/auth/verify']);
     } catch {
-      this.error.set('Unable to send a verification code right now.');
+      this.error.set('Unable to start sign in right now.');
     } finally {
       this.loading.set(false);
     }

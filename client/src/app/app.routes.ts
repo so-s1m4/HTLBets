@@ -17,11 +17,25 @@ export const routes: Routes = [
       import('./features/auth/pages/email-entry.page').then((module) => module.EmailEntryPageComponent)
   },
   {
+    path: 'auth/password',
+    data: { title: 'Enter Password' },
+    canActivate: [guestOnlyGuard],
+    loadComponent: () =>
+      import('./features/auth/pages/password-entry.page').then((module) => module.PasswordEntryPageComponent)
+  },
+  {
     path: 'auth/verify',
     data: { title: 'Verify Code' },
     canActivate: [guestOnlyGuard],
     loadComponent: () =>
       import('./features/auth/pages/verify-code.page').then((module) => module.VerifyCodePageComponent)
+  },
+  {
+    path: 'auth/set-password',
+    data: { title: 'Set Password', allowWithoutPasswordSetup: true },
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import('./features/auth/pages/set-password.page').then((module) => module.SetPasswordPageComponent)
   },
   {
     path: '',

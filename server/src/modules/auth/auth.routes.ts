@@ -1,9 +1,22 @@
 import { Router } from 'express';
 import rateLimit from 'express-rate-limit';
 
-import { requestCodeController, verifyCodeController } from './auth.controller';
+import {
+  beginAuthController,
+  passwordLoginController,
+  requestCodeController,
+  setPasswordController,
+  verifyCodeController
+} from './auth.controller';
 import { validateBody } from '../../middleware/validate';
-import { requestCodeSchema, verifyCodeSchema } from './auth.validation';
+import {
+  beginAuthSchema,
+  passwordLoginSchema,
+  requestCodeSchema,
+  setPasswordSchema,
+  verifyCodeSchema
+} from './auth.validation';
+import { authMiddleware } from '../../middleware/auth.middleware';
 
 const requestCodeLimiter = rateLimit({
   windowMs: 10 * 60_000,
@@ -19,5 +32,8 @@ const requestCodeLimiter = rateLimit({
 
 export const authRouter = Router();
 
+authRouter.post('/begin', validateBody(beginAuthSchema), beginAuthController);
 authRouter.post('/request-code', requestCodeLimiter, validateBody(requestCodeSchema), requestCodeController);
 authRouter.post('/verify-code', validateBody(verifyCodeSchema), verifyCodeController);
+authRouter.post('/login-password', validateBody(passwordLoginSchema), passwordLoginController);
+authRouter.post('/set-password', authMiddleware, validateBody(setPasswordSchema), setPasswordController);
