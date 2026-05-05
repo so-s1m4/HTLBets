@@ -36,4 +36,4 @@ COPY --from=build /app/server/prisma.config.ts ./server/prisma.config.ts
 
 EXPOSE 3000
 
-CMD ["sh", "-c", "cd /app/server && ../node_modules/.bin/prisma migrate deploy && node dist/server.js"]
+CMD ["sh", "-c", "cd /app/server && node dist/server.js"]
