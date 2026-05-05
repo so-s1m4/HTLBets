@@ -40,8 +40,8 @@ export class LobbyPageComponent {
       title: 'Poker',
       description: 'Texas Hold\'em style poker where you can bet, raise, or fold against other players. May the best hand win!',
       route: '/games/poker',
-      badge: 'Livd',
-      availability: 'Join to the Table',
+      badge: 'Live',
+      availability: 'Join the Table',
       theme: 'poker' as const
     }
   ];
