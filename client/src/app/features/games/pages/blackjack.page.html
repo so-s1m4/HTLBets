@@ -37,7 +37,7 @@
         label="Bet amount"
         inputMode="numeric"
         [value]="betAmount()"
-        (valueChange)="betAmount.set($event.replace(/\\D/g, ''))"
+        (valueChange)="betAmount.set($event.replace(/\D/g, ''))"
       />
 
       @if (isRoundActive()) {

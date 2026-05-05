@@ -45,16 +45,16 @@
       }
     }
 
-    .game-shell__grid.has-sidebar {
-      display: grid;
-      gap: 1rem;
-    }
+.game-shell__grid.has-sidebar {
+  display: grid;
+  gap: 1rem;
+}
 
-    @media (min-width: 1220px) {
-      .game-shell__grid.has-sidebar {
-        grid-template-columns: minmax(0, 1.65fr) minmax(280px, 0.78fr);
-      }
-    }
+@media (min-width: 1480px) {
+  .game-shell__grid.split-sidebar {
+    grid-template-columns: minmax(0, 1.9fr) minmax(250px, 0.62fr);
+  }
+}
 
     @media (max-width: 640px) {
       .game-shell__meta {

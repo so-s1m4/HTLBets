@@ -31,10 +31,10 @@
       text-transform: uppercase;
     }
 
-    .roulette-table__surface {
-      display: grid;
-      gap: 1rem;
-      padding: 1rem;
+.roulette-table__surface {
+  display: grid;
+  gap: 1rem;
+  padding: 1rem;
       border-radius: 32px;
       border: 1px solid rgba(116, 156, 121, 0.18);
       background:
@@ -44,18 +44,25 @@
         inset 0 1px 0 rgba(255, 255, 255, 0.08),
         inset 0 -24px 40px rgba(0, 0, 0, 0.18),
         0 20px 42px rgba(4, 8, 20, 0.22);
-    }
+}
 
-    .roulette-table__wheel-bay,
-    .roulette-table__board-bay {
-      display: grid;
-      gap: 1rem;
-    }
+.roulette-table__wheel-bay,
+.roulette-table__board-bay {
+  display: grid;
+  gap: 1rem;
+  min-width: 0;
+}
 
-    .roulette-table__wheel-shell {
-      position: relative;
-      padding: 1.1rem 0.9rem 1.2rem;
-      border-radius: 50% / 44%;
+.roulette-table__wheel-bay {
+  align-content: start;
+}
+
+.roulette-table__wheel-shell {
+  position: relative;
+  width: min(100%, 22rem);
+  margin: 0 auto;
+  padding: 1.1rem 0.9rem 1.2rem;
+  border-radius: 50% / 44%;
       border: 1px solid rgba(57, 37, 23, 0.88);
       background:
         radial-gradient(circle at 35% 28%, rgba(255, 255, 255, 0.12), transparent 22%),
@@ -86,23 +93,28 @@
       pointer-events: none;
     }
 
-    .roulette-table__board-bay {
-      padding: 1rem;
-      border-radius: 28px;
+.roulette-table__board-bay {
+  padding: 1rem;
+  border-radius: 28px;
       border: 1px solid rgba(255, 255, 255, 0.08);
       background:
         linear-gradient(180deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0)),
         rgba(7, 26, 25, 0.54);
-      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
-    }
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
 
-    .roulette-table__board-head {
-      display: flex;
-      align-items: flex-start;
-      justify-content: space-between;
-      gap: 1rem;
-      flex-wrap: wrap;
-    }
+.roulette-table__board-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  min-width: 0;
+}
+
+.roulette-table__board-head .pill {
+  flex-shrink: 0;
+}
 
     .roulette-table__rail {
       display: grid;
@@ -117,21 +129,35 @@
       align-items: center;
     }
 
-    .roulette-table__rail-tray {
-      display: grid;
-      gap: 0.75rem;
-      grid-template-columns: repeat(4, minmax(0, 4rem)) minmax(11rem, 1fr) minmax(10rem, 12rem);
-      align-items: end;
-      padding: 0.85rem;
-      border-radius: 22px;
+.roulette-table__rail-tray {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
+  align-items: stretch;
+  padding: 0.85rem;
+  border-radius: 22px;
       border: 1px solid rgba(255, 255, 255, 0.08);
       background:
         linear-gradient(180deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0)),
         rgba(8, 22, 24, 0.56);
-      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
-    }
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
 
-    .roulette-highlight {
+.roulette-table__chip-row {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.75rem;
+  align-items: center;
+}
+
+.roulette-table__bet-controls {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0.75rem;
+  align-items: end;
+}
+
+.roulette-highlight {
       padding: 1rem;
       border-radius: var(--radius-lg);
       border: 1px solid rgba(149, 171, 211, 0.12);
@@ -175,10 +201,11 @@
       top: 6.2rem;
     }
 
-    .roulette-chip {
-      position: relative;
-      min-height: 3.8rem;
-      border-radius: 50%;
+.roulette-chip {
+  position: relative;
+  width: 100%;
+  min-height: 3.8rem;
+  border-radius: 50%;
       border: 1px solid rgba(149, 171, 211, 0.16);
       background:
         linear-gradient(180deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0)),
@@ -253,27 +280,22 @@
       flex-wrap: wrap;
     }
 
-    @media (min-width: 1080px) {
-      .roulette-table__surface {
-        grid-template-columns: minmax(220px, 0.6fr) minmax(0, 1.7fr);
-        align-items: stretch;
-      }
+@media (min-width: 1080px) {
+  .roulette-table__surface {
+    grid-template-columns: minmax(220px, 0.64fr) minmax(0, 1.72fr);
+    align-items: start;
+  }
+}
 
-      .roulette-table__wheel-bay {
-        align-content: start;
-      }
-    }
+@media (max-width: 1080px) {
+  .roulette-table__rail-tray {
+    grid-template-columns: 1fr;
+  }
 
-    @media (max-width: 1080px) {
-      .roulette-table__rail-tray {
-        grid-template-columns: repeat(4, minmax(0, 1fr));
-      }
-
-      .roulette-table__rail-tray app-input,
-      .roulette-table__rail-tray app-button {
-        grid-column: 1 / -1;
-      }
-    }
+  .roulette-table__bet-controls {
+    grid-template-columns: 1fr;
+  }
+}
 
     @media (max-width: 860px) {
       .roulette-sidebar {
@@ -307,10 +329,9 @@
         margin-right: 0;
       }
 
-      .roulette-table__wheel-shell {
-        max-width: 18.5rem;
-        margin: 0 auto;
-      }
+  .roulette-table__wheel-shell {
+    width: min(100%, 18.5rem);
+  }
 
       .roulette-table__board-bay {
         padding: 0.82rem;
@@ -321,20 +342,27 @@
         gap: 0.7rem;
       }
 
-      .roulette-table__rail-tray {
-        gap: 0.65rem;
-        padding: 0.75rem;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-      }
+  .roulette-table__rail-tray {
+    gap: 0.65rem;
+    padding: 0.75rem;
+  }
 
-      .roulette-chip {
-        min-height: 3.3rem;
-      }
+  .roulette-chip {
+    min-height: 3.3rem;
+  }
 
-      .roulette-highlight__number strong {
-        font-size: 2.25rem;
-      }
-    }
+  .roulette-table__chip-row {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .roulette-table__bet-controls {
+    gap: 0.65rem;
+  }
+
+  .roulette-highlight__number strong {
+    font-size: 2.25rem;
+  }
+}
 
     @media (max-width: 420px) {
       .roulette-table__surface {

@@ -72,7 +72,7 @@
                       label="Set balance"
                       inputMode="numeric"
                       [value]="draftBalance(user.id)"
-                      (valueChange)="setDraftBalance(user.id, $event.replace(/\\D/g, ''))"
+                      (valueChange)="setDraftBalance(user.id, $event.replace(/\D/g, ''))"
                     />
 
                     <div class="admin-user-card__actions">
