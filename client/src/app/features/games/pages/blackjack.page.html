@@ -9,21 +9,33 @@
   <app-card table>
     <div class="blackjack-table">
       <div class="blackjack-table__surface"></div>
+      <div class="blackjack-table__deck" [class.blackjack-table__deck--active]="isDealing()" aria-hidden="true">
+        <span></span>
+        <span></span>
+        <span></span>
+      </div>
 
       <div class="page-stack blackjack-table__content">
+        @if (resultBanner(); as result) {
+          <div class="blackjack-status-banner" [class.blackjack-status-banner--loss]="result.tone === 'loss'" [class.blackjack-status-banner--win]="result.tone === 'win'">
+            <strong>{{ result.title }}</strong>
+            <span>{{ result.amount | credits }}</span>
+          </div>
+        }
+
         <app-blackjack-hand
           label="Dealer"
-          [cards]="viewState()?.dealerHand || []"
-          [score]="viewState()?.dealerScore || 0"
-          [hidden]="(viewState()?.dealerHand || []).length == 0 && !isRoundActive()"
+          [cards]="displayedDealerHand()"
+          [score]="displayedDealerScore()"
+          [hidden]="displayedDealerHand().length == 0 && !isRoundActive()"
           [isDealer]="true"
         />
 
         <app-blackjack-hand
           label="Player"
-          [cards]="viewState()?.playerHand || []"
-          [score]="viewState()?.playerScore || 0"
-          [hidden]="(viewState()?.playerHand || []).length == 0 && !isRoundActive()"
+          [cards]="displayedPlayerHand()"
+          [score]="displayedPlayerScore()"
+          [hidden]="displayedPlayerHand().length == 0 && !isRoundActive()"
         />
       </div>
     </div>
@@ -31,7 +43,7 @@
 
   <app-card sidebar>
     <div class="page-stack">
-        <span class="pill" style="width: fit-content">{{ isRoundActive() ? 'Player turn' : 'Ready' }}</span>
+        <span class="pill" style="width: fit-content">{{ statusLabel() }}</span>
 
       <app-input
         label="Bet amount"
@@ -54,7 +66,7 @@
           </app-button>
         </div>
       } @else {
-        <app-button block (click)="deal()">Deal cards</app-button>
+        <app-button block [disabled]="isDealing()" (click)="deal()">Deal cards</app-button>
       }
 
       @if (socket.currentState()?.outcome; as result) {

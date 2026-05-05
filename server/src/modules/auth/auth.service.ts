@@ -141,7 +141,16 @@ class AuthService {
     return this.buildAuthResponse(user);
   }
 
-  private buildAuthResponse(user: { id: string; email: string; passwordHash: string | null; username: string | null; balance: number; createdAt: Date; updatedAt: Date }): AuthResponse {
+  private buildAuthResponse(user: {
+    id: string;
+    email: string;
+    username: string | null;
+    avatarUrl: string | null;
+    passwordHash: string | null;
+    balance: number;
+    createdAt: Date;
+    updatedAt: Date;
+  }): AuthResponse {
     return {
       accessToken: signAccessToken({
         userId: user.id,

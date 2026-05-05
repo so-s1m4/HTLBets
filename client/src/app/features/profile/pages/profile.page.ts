@@ -1,5 +1,5 @@
 import { DatePipe } from '@angular/common';
-import { Component, inject, signal } from '@angular/core';
+import { Component, computed, effect, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { RouterLink } from '@angular/router';
 
@@ -9,6 +9,7 @@ import { HistoryService } from '../../../core/services/history.service';
 import type { GameHistoryRecord } from '../../../core/models/user.model';
 import { AppButtonComponent } from '../../../shared/ui/app-button.component';
 import { AppCardComponent } from '../../../shared/ui/app-card.component';
+import { AppInputComponent } from '../../../shared/ui/app-input.component';
 import { CreditsPipe } from '../../../shared/pipes/credits.pipe';
 import { GameLabelPipe } from '../../../shared/pipes/game-label.pipe';
 import { ProfileSummaryComponent } from '../components/profile-summary.component';
@@ -19,6 +20,7 @@ import { ProfileSummaryComponent } from '../components/profile-summary.component
   imports: [
     AppButtonComponent,
     AppCardComponent,
+    AppInputComponent,
     CreditsPipe,
     DatePipe,
     GameLabelPipe,
@@ -37,8 +39,42 @@ export class ProfilePageComponent {
 
   readonly history = signal<GameHistoryRecord[]>([]);
   readonly loading = signal(true);
+  readonly savingUsername = signal(false);
+  readonly savingAvatar = signal(false);
+  readonly profileError = signal('');
+  readonly profileNotice = signal('');
+  readonly usernameDraft = signal('');
+  readonly avatarUrlDraft = signal('');
+  readonly usernameDirty = signal(false);
+  readonly avatarDirty = signal(false);
+  readonly currentPage = signal(1);
+  readonly pageSize = 10;
+  readonly totalPages = computed(() => Math.max(1, Math.ceil(this.history().length / this.pageSize)));
+  readonly paginatedHistory = computed(() => {
+    const start = (this.currentPage() - 1) * this.pageSize;
+    return this.history().slice(start, start + this.pageSize);
+  });
+  readonly canPreviousPage = computed(() => this.currentPage() > 1);
+  readonly canNextPage = computed(() => this.currentPage() < this.totalPages());
+  private lastSyncedUsername = '';
+  private lastSyncedAvatarUrl = '';
 
   constructor() {
+    effect(() => {
+      const user = this.auth.currentUser();
+      const nextUsername = user?.username || '';
+      const nextAvatarUrl = user?.avatarUrl || '';
+
+      if (nextUsername !== this.lastSyncedUsername && !this.usernameDirty()) {
+        this.lastSyncedUsername = nextUsername;
+        this.usernameDraft.set(nextUsername);
+      }
+
+      if (nextAvatarUrl !== this.lastSyncedAvatarUrl && !this.avatarDirty()) {
+        this.lastSyncedAvatarUrl = nextAvatarUrl;
+        this.avatarUrlDraft.set(nextAvatarUrl);
+      }
+    });
     void this.refresh();
   }
 
@@ -47,6 +83,7 @@ export class ProfilePageComponent {
 
     try {
       this.history.set(await this.historyService.getHistory());
+      this.currentPage.set(1);
     } finally {
       this.loading.set(false);
     }
@@ -56,5 +93,71 @@ export class ProfilePageComponent {
     this.socket.disconnect();
     this.auth.logout();
     await this.router.navigate(['/auth/email']);
+  }
+
+  async saveUsername(): Promise<void> {
+    this.savingUsername.set(true);
+    this.profileError.set('');
+    this.profileNotice.set('');
+
+    try {
+      const user = await this.auth.updateProfile({
+        username: this.usernameDraft()
+      });
+      const savedUsername = user.username || '';
+      this.lastSyncedUsername = savedUsername;
+      this.usernameDraft.set(savedUsername);
+      this.usernameDirty.set(false);
+      this.profileNotice.set('Username updated.');
+    } catch (error) {
+      this.profileError.set(error instanceof Error ? error.message : 'Failed to update username.');
+    } finally {
+      this.savingUsername.set(false);
+    }
+  }
+
+  async saveAvatar(): Promise<void> {
+    this.savingAvatar.set(true);
+    this.profileError.set('');
+    this.profileNotice.set('');
+
+    try {
+      const user = await this.auth.updateProfile({
+        avatarUrl: this.avatarUrlDraft().trim() || null
+      });
+      const savedAvatarUrl = user.avatarUrl || '';
+      this.lastSyncedAvatarUrl = savedAvatarUrl;
+      this.avatarUrlDraft.set(savedAvatarUrl);
+      this.avatarDirty.set(false);
+      this.profileNotice.set('Profile picture updated.');
+    } catch (error) {
+      this.profileError.set(error instanceof Error ? error.message : 'Failed to update profile picture.');
+    } finally {
+      this.savingAvatar.set(false);
+    }
+  }
+
+  async clearAvatar(): Promise<void> {
+    this.avatarUrlDraft.set('');
+    this.avatarDirty.set(true);
+    await this.saveAvatar();
+  }
+
+  setUsernameDraft(value: string): void {
+    this.usernameDirty.set(true);
+    this.usernameDraft.set(value);
+  }
+
+  setAvatarUrlDraft(value: string): void {
+    this.avatarDirty.set(true);
+    this.avatarUrlDraft.set(value);
+  }
+
+  goToPreviousPage(): void {
+    this.currentPage.update((page) => Math.max(1, page - 1));
+  }
+
+  goToNextPage(): void {
+    this.currentPage.update((page) => Math.min(this.totalPages(), page + 1));
   }
 }

@@ -33,9 +33,116 @@
     .blackjack-table__content {
       position: relative;
       z-index: 1;
-
       display: flex;
       flex-direction: column;
       justify-content: space-between;
       flex: 1;
+      gap: 2.25rem;
+      padding: 1.5rem;
+    }
+
+    .blackjack-status-banner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.75rem;
+      padding: 0.9rem 1rem;
+      border-radius: 1.1rem;
+      border: 1px solid rgba(149, 171, 211, 0.14);
+      background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0)),
+        rgba(10, 19, 28, 0.72);
+      box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.05),
+        0 14px 28px rgba(4, 8, 20, 0.18);
+    }
+
+    .blackjack-status-banner strong,
+    .blackjack-status-banner span {
+      margin: 0;
+    }
+
+    .blackjack-status-banner strong {
+      letter-spacing: -0.03em;
+    }
+
+    .blackjack-status-banner span {
+      font-size: 1.05rem;
+      font-weight: 700;
+      letter-spacing: -0.04em;
+    }
+
+    .blackjack-status-banner--loss {
+      border-color: rgba(255, 117, 143, 0.24);
+      background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0)),
+        linear-gradient(180deg, rgba(71, 19, 30, 0.82), rgba(28, 11, 17, 0.88));
+    }
+
+    .blackjack-status-banner--loss span {
+      color: var(--danger);
+    }
+
+    .blackjack-status-banner--win {
+      border-color: rgba(117, 243, 191, 0.24);
+      background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0)),
+        linear-gradient(180deg, rgba(13, 58, 46, 0.82), rgba(10, 24, 20, 0.88));
+    }
+
+    .blackjack-status-banner--win span {
+      color: var(--success);
+    }
+
+    .blackjack-table__deck {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      z-index: 2;
+      width: 4.4rem;
+      height: 6rem;
+      transform: translate(-50%, -50%);
+      pointer-events: none;
+    }
+
+    .blackjack-table__deck span {
+      position: absolute;
+      inset: 0;
+      border-radius: 1rem;
+      border: 1px solid rgba(167, 195, 227, 0.18);
+      background:
+        radial-gradient(circle at 28% 22%, rgba(173, 231, 255, 0.18), transparent 28%),
+        linear-gradient(180deg, rgba(241, 247, 255, 0.98), rgba(214, 227, 242, 0.9));
+      box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.36),
+        0 16px 24px rgba(4, 8, 20, 0.22);
+    }
+
+    .blackjack-table__deck span:nth-child(1) {
+      transform: rotate(-8deg) translate(-0.55rem, 0.25rem);
+    }
+
+    .blackjack-table__deck span:nth-child(2) {
+      transform: rotate(4deg) translate(0.35rem, -0.15rem);
+    }
+
+    .blackjack-table__deck span:nth-child(3) {
+      background:
+        radial-gradient(circle at 30% 20%, rgba(159, 219, 255, 0.18), transparent 30%),
+        linear-gradient(180deg, rgba(59, 112, 196, 0.65), rgba(8, 25, 40, 0.98));
+    }
+
+    .blackjack-table__deck--active {
+      animation: blackjack-deck-pulse 700ms ease-in-out infinite alternate;
+    }
+
+    @keyframes blackjack-deck-pulse {
+      0% {
+        transform: translate(-50%, -50%) scale(1);
+        filter: drop-shadow(0 0 0 rgba(125, 227, 255, 0));
+      }
+      100% {
+        transform: translate(-50%, -50%) scale(1.04);
+        filter: drop-shadow(0 0 18px rgba(125, 227, 255, 0.22));
+      }
     }

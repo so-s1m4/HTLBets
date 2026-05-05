@@ -23,13 +23,17 @@
 
       <div class="poker-board__cards">
         @for (card of displayBoardCards(); track $index) {
-          <div class="poker-card poker-card--board" [class.hidden]="card.hidden">
-            @if (card.hidden) {
-              <span>??</span>
-            } @else {
-              <strong [style.color]="color(card.suit)">{{ card.rank }}</strong>
-              <span [style.color]="color(card.suit)">{{ symbol(card.suit) }}</span>
-            }
+          <div class="poker-card poker-card--board" [class.hidden]="card.hidden" [style.animation-delay]="animationDelay($index, 100)">
+            <div class="poker-card__inner">
+              <div class="poker-card__face poker-card__face--back">
+                <span>??</span>
+              </div>
+
+              <div class="poker-card__face poker-card__face--front">
+                <strong [style.color]="color(card.suit)">{{ card.rank }}</strong>
+                <span [style.color]="color(card.suit)">{{ symbol(card.suit) }}</span>
+              </div>
+            </div>
           </div>
         }
       </div>
@@ -63,13 +67,17 @@
 
         <div class="poker-seat__cards">
           @for (card of entry.seat.cards; track $index) {
-            <div class="poker-card" [class.hidden]="card.hidden">
-              @if (card.hidden) {
-                <span>??</span>
-              } @else {
-                <strong [style.color]="color(card.suit)">{{ card.rank }}</strong>
-                <span [style.color]="color(card.suit)">{{ symbol(card.suit) }}</span>
-              }
+            <div class="poker-card" [class.hidden]="card.hidden" [style.animation-delay]="animationDelay($index, 180)">
+              <div class="poker-card__inner">
+                <div class="poker-card__face poker-card__face--back">
+                  <span>??</span>
+                </div>
+
+                <div class="poker-card__face poker-card__face--front">
+                  <strong [style.color]="color(card.suit)">{{ card.rank }}</strong>
+                  <span [style.color]="color(card.suit)">{{ symbol(card.suit) }}</span>
+                </div>
+              </div>
             </div>
           }
         </div>
@@ -94,9 +102,13 @@
 
         <div class="poker-seat__cards poker-seat__cards--self">
           @for (card of self.cards; track $index) {
-            <div class="poker-card">
-              <strong [style.color]="color(card.suit)">{{ card.rank }}</strong>
-              <span [style.color]="color(card.suit)">{{ symbol(card.suit) }}</span>
+            <div class="poker-card" [style.animation-delay]="animationDelay($index, 240)">
+              <div class="poker-card__inner">
+                <div class="poker-card__face poker-card__face--front">
+                  <strong [style.color]="color(card.suit)">{{ card.rank }}</strong>
+                  <span [style.color]="color(card.suit)">{{ symbol(card.suit) }}</span>
+                </div>
+              </div>
             </div>
           }
         </div>

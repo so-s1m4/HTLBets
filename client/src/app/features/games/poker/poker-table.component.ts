@@ -67,6 +67,10 @@ export class PokerTableComponent {
   @Input() communityCards: PokerDisplayCard[] = [];
   @Input() winners: PokerWinnerView[] | null = null;
 
+  animationDelay(index: number, base = 0): string {
+    return `${base + index * 90}ms`;
+  }
+
   selfSeat(): PokerSeatView | null {
     return this.seats.find((seat) => seat.isSelf) || null;
   }

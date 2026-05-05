@@ -2,7 +2,7 @@ import type { GameHistory, User } from '../../../generated/prisma';
 
 import { isAdminEmail } from '../../utils/admin';
 
-export interface PublicUser extends Pick<User, 'id' | 'email' | 'username' | 'balance' | 'createdAt' | 'updatedAt'> {
+export interface PublicUser extends Pick<User, 'id' | 'email' | 'username' | 'avatarUrl' | 'balance' | 'createdAt' | 'updatedAt'> {
   isAdmin: boolean;
   hasPassword: boolean;
 }
@@ -15,6 +15,7 @@ export const toPublicUser = (user: User): PublicUser => ({
   id: user.id,
   email: user.email,
   username: user.username,
+  avatarUrl: user.avatarUrl,
   balance: user.balance,
   isAdmin: isAdminEmail(user.email),
   hasPassword: Boolean(user.passwordHash),

@@ -66,6 +66,47 @@ class UserService {
 
     return toPublicUser(user);
   }
+
+  async updateProfile(userId: string, input: { username?: string; avatarUrl?: string | null }): Promise<PublicUser> {
+    const data: { username?: string | null; avatarUrl?: string | null } = {};
+
+    if (input.username !== undefined) {
+      const username = String(input.username || '').trim();
+
+      if (username.length > 0 && (username.length < 2 || username.length > 24)) {
+        throw new HttpError(400, 'Username must be between 2 and 24 characters long.');
+      }
+
+      data.username = username || null;
+    }
+
+    if (input.avatarUrl !== undefined) {
+      const avatarUrl = String(input.avatarUrl || '').trim();
+
+      if (avatarUrl) {
+        let parsed: URL;
+
+        try {
+          parsed = new URL(avatarUrl);
+        } catch {
+          throw new HttpError(400, 'Profile picture must be a valid URL.');
+        }
+
+        if (!['http:', 'https:'].includes(parsed.protocol)) {
+          throw new HttpError(400, 'Profile picture URL must start with http:// or https://.');
+        }
+      }
+
+      data.avatarUrl = avatarUrl || null;
+    }
+
+    const user = await prisma.user.update({
+      where: { id: userId },
+      data
+    });
+
+    return toPublicUser(user);
+  }
 }
 
 export const userService = new UserService();
