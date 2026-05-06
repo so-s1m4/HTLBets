@@ -128,7 +128,13 @@ const SHOWDOWN_DELAY_MS = 6_500;
 const MIN_TABLE_BUY_IN = 100;
 const MAX_TABLES = 40;
 
-const formatPlayerLabel = (email: string): string => {
+const formatPlayerLabel = (email: string, username?: string | null): string => {
+  const normalizedUsername = String(username || '').trim();
+
+  if (normalizedUsername) {
+    return normalizedUsername;
+  }
+
   const [localPart] = email.split('@');
   if (!localPart) {
     return 'player';
@@ -1149,7 +1155,7 @@ class PokerTableManager {
     );
 
     this.tables.set(table.sessionId, table);
-    table.addSeat(userId, formatPlayerLabel(user.email), Number(config.buyIn));
+    table.addSeat(userId, formatPlayerLabel(user.email, user.username), Number(config.buyIn));
     this.userTable.set(userId, table.sessionId);
     this.emitStateChange();
 
@@ -1173,7 +1179,7 @@ class PokerTableManager {
     }
 
     const user = await this.reserveBalance(userId, config.buyIn);
-    table.addSeat(userId, formatPlayerLabel(user.email), config.buyIn);
+    table.addSeat(userId, formatPlayerLabel(user.email, user.username), config.buyIn);
     this.userTable.set(userId, table.sessionId);
     this.emitStateChange();
 

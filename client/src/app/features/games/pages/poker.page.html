@@ -46,13 +46,13 @@
                   (valueChange)="createMinBuyIn.set($event.replace(/\D/g, ''))"
                 />
                 <app-input
-                  label="Seat count (2-8)"
+                  label="Seat count(2-8)"
                   inputMode="numeric"
                   [value]="createMaxPlayers()"
                   (valueChange)="createMaxPlayers.set($event.replace(/\D/g, '').slice(0, 1))"
                 />
                 <app-input
-                  label="Your initial buy-in"
+                  label="Your buy-in"
                   inputMode="numeric"
                   [value]="createBuyIn()"
                   (valueChange)="createBuyIn.set($event.replace(/\D/g, ''))"
