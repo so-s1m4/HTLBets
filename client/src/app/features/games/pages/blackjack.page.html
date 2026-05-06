@@ -15,14 +15,16 @@
         <span></span>
       </div>
 
-      <div class="page-stack blackjack-table__content">
-        @if (resultBanner(); as result) {
+      @if (resultBanner(); as result) {
+        <div class="blackjack-table__overlay">
           <div class="blackjack-status-banner" [class.blackjack-status-banner--loss]="result.tone === 'loss'" [class.blackjack-status-banner--win]="result.tone === 'win'">
             <strong>{{ result.title }}</strong>
             <span>{{ result.amount | credits }}</span>
           </div>
-        }
+        </div>
+      }
 
+      <div class="page-stack blackjack-table__content">
         <app-blackjack-hand
           label="Dealer"
           [cards]="displayedDealerHand()"

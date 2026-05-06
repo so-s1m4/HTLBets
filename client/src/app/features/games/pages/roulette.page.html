@@ -16,14 +16,16 @@
             <span class="pill">{{ isSpinning() ? 'Spinning' : 'Open for bets' }}</span>
           </div>
 
-          @if (resultBanner(); as result) {
-            <div class="roulette-status-banner" [class.roulette-status-banner--loss]="result.tone === 'loss'" [class.roulette-status-banner--win]="result.tone === 'win'">
-              <strong>{{ result.title }}</strong>
-              <span>{{ result.amount | credits }}</span>
-            </div>
-          }
-
           <div class="roulette-table__surface">
+            @if (resultBanner(); as result) {
+              <div class="roulette-table__overlay">
+                <div class="roulette-status-banner" [class.roulette-status-banner--loss]="result.tone === 'loss'" [class.roulette-status-banner--win]="result.tone === 'win'">
+                  <strong>{{ result.title }}</strong>
+                  <span>{{ result.amount | credits }}</span>
+                </div>
+              </div>
+            }
+
             <div class="roulette-table__wheel-bay">
               <div class="roulette-table__wheel-shell">
                 <app-roulette-wheel

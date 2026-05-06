@@ -52,7 +52,7 @@ export class AppBalanceBadgeComponent {
     this.cancelAnimation();
 
     const startedAt = performance.now();
-    const duration = Math.min(1400, Math.max(380, Math.abs(to - from) * 10));
+    const duration = Math.min(5000, Math.max(3000, Math.abs(to - from) * 20));
 
     const step = (now: number) => {
       const progress = Math.min(1, (now - startedAt) / duration);
