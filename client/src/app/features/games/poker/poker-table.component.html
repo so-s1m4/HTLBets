@@ -57,12 +57,7 @@
       >
         <div class="poker-seat__meta">
           <strong>{{ entry.seat.playerLabel }}</strong>
-          <span class="pill">{{ entry.seat.status }}</span>
-        </div>
-
-        <div class="poker-seat__info">
-          <span>{{ entry.seat.stackRemaining }} cr behind</span>
-          <span>{{ phase === 'waiting' ? entry.seat.buyIn + ' cr buy-in' : entry.seat.totalContribution + ' cr in' }}</span>
+            <span  class="poker-seat__info">{{ entry.seat.stackRemaining }}$</span>
         </div>
 
         <div class="poker-seat__cards">
@@ -92,14 +87,9 @@
       <section class="poker-seat poker-seat--self" [class.active]="self.status === 'active'" [class.acting]="actingUserId === self.userId">
         <div class="poker-seat__meta">
           <strong>You</strong>
-          <span class="pill">{{ self.status }}</span>
-        </div>
+            <span class="poker-seat__info">{{ self.stackRemaining }} $</span>
 
-        <div class="poker-seat__info">
-          <span>{{ self.stackRemaining }} cr behind</span>
-          <span>{{ phase === 'waiting' ? self.buyIn + ' cr buy-in' : self.totalContribution + ' cr in' }}</span>
         </div>
-
         <div class="poker-seat__cards poker-seat__cards--self">
           @for (card of self.cards; track $index) {
             <div class="poker-card" [style.animation-delay]="animationDelay($index, 240)">
