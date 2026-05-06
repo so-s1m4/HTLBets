@@ -1,9 +1,19 @@
     <app-card tone="accent">
       <div class="profile-summary">
-        <div class="page-heading">
-          <span class="page-heading__eyebrow">Profile</span>
-          <h1>{{ email }}</h1>
-          <p class="status-copy">Demo credits only. No payments or withdrawal flows are implemented.</p>
+        <div class="profile-summary__hero">
+          <div class="profile-summary__avatar">
+            @if (avatarUrl) {
+              <img [src]="avatarUrl" [alt]="(username || email) + ' profile picture'" loading="lazy" decoding="async" referrerpolicy="no-referrer" />
+            } @else {
+              <span>{{ initials() }}</span>
+            }
+          </div>
+
+          <div class="page-heading">
+            <span class="page-heading__eyebrow">Profile</span>
+            <h1>{{ username || email }}</h1>
+            <p class="status-copy">{{ email }}</p>
+          </div>
         </div>
 
         <div class="profile-summary__footer">

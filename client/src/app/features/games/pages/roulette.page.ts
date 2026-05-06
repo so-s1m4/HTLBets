@@ -74,6 +74,19 @@ export class RoulettePageComponent {
   readonly currentBet = computed(() => this.state()?.currentBet || 0);
   readonly outcome = computed(() => this.state()?.outcome || null);
   readonly revealedOutcome = signal<ReturnType<typeof this.outcome> | null>(null);
+  readonly resultBanner = computed(() => {
+    const outcome = this.revealedOutcome();
+
+    if (!outcome) {
+      return null;
+    }
+
+    return {
+      tone: outcome.balanceChange < 0 ? 'loss' : outcome.balanceChange > 0 ? 'win' : 'push',
+      title: outcome.balanceChange < 0 ? 'Spin lost' : outcome.balanceChange > 0 ? 'Spin won' : 'Push',
+      amount: outcome.balanceChange
+    };
+  });
   readonly hasSidebarContent = computed(() => {
     const state = this.viewState();
     return Boolean(this.revealedOutcome() || state?.bets?.length || state?.history?.length);

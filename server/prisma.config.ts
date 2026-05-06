@@ -1,6 +1,6 @@
 import { existsSync } from 'node:fs';
 import { resolve } from 'node:path';
-import dotenv from 'dotenv';
+import * as dotenv from 'dotenv';
 import { defineConfig } from 'prisma/config';
 
 const dotenvPathCandidates = [resolve(process.cwd(), '.env.docker'), resolve(process.cwd(), '..', '.env.docker')];

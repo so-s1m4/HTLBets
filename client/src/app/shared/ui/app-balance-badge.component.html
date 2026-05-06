@@ -1,7 +1,7 @@
-    <div class="balance-badge">
+    <div class="balance-badge" [class.balance-badge--up]="trend() === 'up'" [class.balance-badge--down]="trend() === 'down'">
       <span class="balance-badge__pulse"></span>
       <div class="balance-badge__copy">
         <span class="balance-badge__label">Balance</span>
-        <strong class="balance-badge__value">{{ balance | credits }}</strong>
+        <strong class="balance-badge__value">{{ displayBalance() | credits }}</strong>
       </div>
     </div>

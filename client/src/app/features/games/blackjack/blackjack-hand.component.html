@@ -7,14 +7,18 @@
       </div>
 
       <div class="hand__cards">
-        @for (card of cards; track $index) {
+        @for (card of cards; track trackCard($index, card)) {
           <div class="card" [class.hidden]="isHidden(card)">
-            @if (isHidden(card)) {
-              <span>??</span>
-            } @else {
-                <strong [style.color]=color(card.suit)>{{ card.rank }}</strong>
-                <span [style.color]=color(card.suit)>{{ symbol(card.suit) }}</span>
-            }
+            <div class="card__inner">
+              <div class="card__face card__face--back">
+                <span>??</span>
+              </div>
+
+              <div class="card__face card__face--front">
+                <strong [style.color]="color(card.suit)">{{ card.rank }}</strong>
+                <span [style.color]="color(card.suit)">{{ symbol(card.suit) }}</span>
+              </div>
+            </div>
           </div>
         }
       </div>

@@ -1,8 +1,75 @@
     <div class="page-stack">
       <app-profile-summary
         [email]="auth.currentUser()?.email || 'Unknown user'"
+        [username]="auth.currentUser()?.username || ''"
+        [avatarUrl]="auth.currentUser()?.avatarUrl || null"
         [balance]="auth.currentUser()?.balance || 0"
       />
+
+      <app-card tone="muted">
+        <div class="page-stack">
+          <div class="utility-row">
+            <div class="page-heading">
+              <span class="page-heading__eyebrow">Identity</span>
+              <h2>Username</h2>
+            </div>
+            <app-button variant="secondary" [disabled]="savingUsername()" (click)="saveUsername()">Save username</app-button>
+          </div>
+
+          <app-input
+            label="Display name"
+            placeholder="Choose a visible player name"
+            helper="Between 2 and 24 characters. Leave empty to fall back to your email."
+            [value]="usernameDraft()"
+            [disabled]="savingUsername()"
+            [maxlength]="24"
+            (valueChange)="setUsernameDraft($event)"
+          />
+        </div>
+      </app-card>
+
+      <app-card tone="muted">
+        <div class="page-stack">
+          <div class="utility-row">
+            <div class="page-heading">
+              <span class="page-heading__eyebrow">Profile Picture</span>
+              <h2>Avatar</h2>
+            </div>
+            <div class="profile-actions">
+              <app-button variant="secondary" [disabled]="savingAvatar()" (click)="saveAvatar()">Save picture</app-button>
+              <app-button variant="ghost" [disabled]="savingAvatar()" (click)="clearAvatar()">Clear picture</app-button>
+            </div>
+          </div>
+
+          <div class="profile-picture-editor">
+            <div class="profile-picture-editor__preview">
+              @if (avatarUrlDraft().trim()) {
+                <img [src]="avatarUrlDraft().trim()" alt="Profile picture preview" loading="lazy" decoding="async" referrerpolicy="no-referrer" />
+              } @else if (auth.currentUser()?.avatarUrl) {
+                <img [src]="auth.currentUser()!.avatarUrl!" alt="Current profile picture" loading="lazy" decoding="async" referrerpolicy="no-referrer" />
+              } @else {
+                <span>{{ (auth.currentUser()?.username || auth.currentUser()?.email || 'HB').slice(0, 2).toUpperCase() }}</span>
+              }
+            </div>
+
+            <app-input
+              label="Picture URL"
+              type="url"
+              placeholder="https://example.com/avatar.png"
+              helper="Paste a public image URL. http:// and https:// are supported."
+              [value]="avatarUrlDraft()"
+              [disabled]="savingAvatar()"
+              (valueChange)="setAvatarUrlDraft($event)"
+            />
+          </div>
+
+          @if (profileError()) {
+            <p class="status-copy text-danger">{{ profileError() }}</p>
+          } @else if (profileNotice()) {
+            <p class="status-copy text-success">{{ profileNotice() }}</p>
+          }
+        </div>
+      </app-card>
 
       <app-card tone="muted">
         <div class="page-stack">
@@ -20,8 +87,17 @@
           } @else if (history().length === 0) {
             <p class="status-copy">No rounds recorded yet. Jump into the lobby and play a demo game.</p>
           } @else {
+            <div class="utility-row">
+              <span class="pill">Page {{ currentPage() }} / {{ totalPages() }}</span>
+
+              <div class="profile-actions">
+                <app-button variant="ghost" [disabled]="!canPreviousPage()" (click)="goToPreviousPage()">Previous</app-button>
+                <app-button variant="secondary" [disabled]="!canNextPage()" (click)="goToNextPage()">Next</app-button>
+              </div>
+            </div>
+
             <div class="history-list">
-              @for (entry of history(); track entry.id) {
+              @for (entry of paginatedHistory(); track entry.id) {
                 <div class="history-list__item">
                   <div class="history-list__meta">
                     <strong>{{ entry.gameType | gameLabel }}</strong>

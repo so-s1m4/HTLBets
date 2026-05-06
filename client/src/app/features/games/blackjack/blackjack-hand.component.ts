@@ -1,4 +1,4 @@
-import { Component, Input, HostBinding} from '@angular/core';
+import { ChangeDetectionStrategy, Component, HostBinding, Input } from '@angular/core';
 import { NgClass } from '@angular/common';
 
 interface DisplayCard {
@@ -12,7 +12,8 @@ interface DisplayCard {
   imports: [NgClass],
   standalone: true,
   templateUrl: './blackjack-hand.component.html',
-  styleUrl: './blackjack-hand.component.scss'
+  styleUrl: './blackjack-hand.component.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class BlackjackHandComponent {
   @Input() label = '';
@@ -25,6 +26,10 @@ export class BlackjackHandComponent {
 
   isHidden(card: DisplayCard): boolean {
     return Boolean(card.hidden);
+  }
+
+  trackCard(index: number, card: DisplayCard): string {
+    return `${index}:${card.rank || '?'}:${card.suit || '?'}:${card.hidden ? 'hidden' : 'visible'}`;
   }
 
   symbol(suit: string | undefined): string {

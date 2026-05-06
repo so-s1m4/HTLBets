@@ -96,7 +96,13 @@ const normalizeSelection = (payload?: Record<string, unknown>): RouletteSelectio
 
 const selectionKey = (selection: RouletteSelection): string => `${selection.type}:${selection.value}`;
 
-const formatPlayerLabel = (email: string): string => {
+const formatPlayerLabel = (email: string, username?: string | null): string => {
+  const normalizedUsername = String(username || '').trim();
+
+  if (normalizedUsername) {
+    return normalizedUsername;
+  }
+
   const [localPart] = email.split('@');
   if (!localPart) {
     return 'player';
@@ -175,7 +181,7 @@ export class RouletteTableManager {
 
     this.bets.push({
       userId,
-      playerLabel: formatPlayerLabel(user.email),
+      playerLabel: formatPlayerLabel(user.email, user.username),
       amount,
       selection,
       placedAt: new Date().toISOString()

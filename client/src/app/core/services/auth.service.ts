@@ -77,6 +77,12 @@ export class AuthService {
     return response.user;
   }
 
+  async updateProfile(input: { username?: string; avatarUrl?: string | null }): Promise<User> {
+    const user = await firstValueFrom(this.http.patch<User>(`${this.config.apiUrl}/me/profile`, input));
+    this.persistUser(user);
+    return user;
+  }
+
   async loadCurrentUser(): Promise<User | null> {
     if (!this.token()) {
       this.ready.set(true);

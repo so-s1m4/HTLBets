@@ -14,8 +14,10 @@ type ConnectionState = 'disconnected' | 'connecting' | 'connected';
 export class GameSocketService {
   private readonly auth = inject(AuthService);
   private readonly config = inject(AppConfigService);
+  private readonly rouletteBalanceRevealDelayMs = 5200;
 
   private socket: Socket | null = null;
+  private delayedBalanceTimer: number | null = null;
 
   readonly connectionState = signal<ConnectionState>('disconnected');
   readonly currentState = signal<RealtimeGameState | null>(null);
@@ -67,11 +69,13 @@ export class GameSocketService {
   }
 
   reset(): void {
+    this.clearDelayedBalanceTimer();
     this.currentState.set(null);
     this.lastError.set(null);
   }
 
   disconnect(): void {
+    this.clearDelayedBalanceTimer();
     this.socket?.disconnect();
     this.socket = null;
     this.connectionState.set('disconnected');
@@ -119,13 +123,48 @@ export class GameSocketService {
     });
 
     this.socket.on('game:state', (payload: RealtimeGameState) => {
+      const previousState = this.currentState();
       this.currentState.set(payload);
       this.lastError.set(null);
+
+      const previousPhase = this.readPhase(previousState);
+      const nextPhase = this.readPhase(payload);
+      const shouldDelayRouletteBalance =
+        previousState?.gameType === 'ROULETTE' &&
+        payload.gameType === 'ROULETTE' &&
+        previousPhase === 'spinning' &&
+        nextPhase === 'betting' &&
+        Boolean(payload.outcome);
+
+      if (shouldDelayRouletteBalance) {
+        this.clearDelayedBalanceTimer();
+        this.delayedBalanceTimer = window.setTimeout(() => {
+          this.auth.updateBalance(payload.balance);
+          this.delayedBalanceTimer = null;
+        }, this.rouletteBalanceRevealDelayMs);
+        return;
+      }
+
+      this.clearDelayedBalanceTimer();
       this.auth.updateBalance(payload.balance);
     });
 
     this.socket.on('game:error', (payload: { message: string }) => {
       this.lastError.set(payload.message);
     });
+  }
+
+  private readPhase(state: RealtimeGameState | null): string | null {
+    const phase = state?.state && typeof state.state === 'object' ? (state.state as Record<string, unknown>)['phase'] : null;
+    return typeof phase === 'string' ? phase : null;
+  }
+
+  private clearDelayedBalanceTimer(): void {
+    if (this.delayedBalanceTimer === null) {
+      return;
+    }
+
+    window.clearTimeout(this.delayedBalanceTimer);
+    this.delayedBalanceTimer = null;
   }
 }

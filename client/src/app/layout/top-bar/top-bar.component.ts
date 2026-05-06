@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 
 import { AuthService } from '../../core/services/auth.service';
 import { AppBalanceBadgeComponent } from '../../shared/ui/app-balance-badge.component';
@@ -9,7 +9,8 @@ import { AppBalanceBadgeComponent } from '../../shared/ui/app-balance-badge.comp
   standalone: true,
   imports: [CommonModule, AppBalanceBadgeComponent],
   templateUrl: './top-bar.component.html',
-  styleUrl: './top-bar.component.scss'
+  styleUrl: './top-bar.component.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class TopBarComponent {
   readonly auth = inject(AuthService);

@@ -26,6 +26,18 @@ userRouter.get('/history', async (req, res, next) => {
   }
 });
 
+userRouter.patch('/me/profile', async (req, res, next) => {
+  try {
+    const user = await userService.updateProfile(req.auth!.userId, {
+      ...(req.body && 'username' in req.body ? { username: req.body.username } : {}),
+      ...(req.body && 'avatarUrl' in req.body ? { avatarUrl: req.body.avatarUrl } : {})
+    });
+    res.status(200).json(user);
+  } catch (error) {
+    next(error);
+  }
+});
+
 userRouter.get('/admin/users', adminMiddleware, async (_req, res, next) => {
   try {
     const users = await userService.listUsers();
