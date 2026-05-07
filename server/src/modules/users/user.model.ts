@@ -11,6 +11,21 @@ export interface PublicGameHistory extends Pick<GameHistory, 'id' | 'betAmount' 
   gameType: GameHistory['gameType'];
 }
 
+export interface PublicLeaderboardEntry {
+  userId: string;
+  email: string;
+  username: string | null;
+  avatarUrl: string | null;
+  metricValue: number;
+}
+
+export interface PublicLeaderboard {
+  richest: PublicLeaderboardEntry[];
+  mostLosses: PublicLeaderboardEntry[];
+  biggestWin: PublicLeaderboardEntry[];
+  refreshedAt: Date;
+}
+
 export const toPublicUser = (user: User): PublicUser => ({
   id: user.id,
   email: user.email,

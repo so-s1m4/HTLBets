@@ -4,6 +4,8 @@
         [username]="auth.currentUser()?.username || ''"
         [avatarUrl]="auth.currentUser()?.avatarUrl || null"
         [balance]="auth.currentUser()?.balance || 0"
+        [isAdmin]="auth.currentUser()?.isAdmin || false"
+        [leaderboardTags]="leaderboardTags()"
       />
 
       <app-card tone="muted">
@@ -98,15 +100,15 @@
 
             <div class="history-list">
               @for (entry of paginatedHistory(); track entry.id) {
-                <div class="history-list__item">
+                <div class="history-list__item" [class.history-list__item--admin]="isAdminAdjustment(entry)">
                   <div class="history-list__meta">
                     <strong>{{ entry.gameType | gameLabel }}</strong>
                     <p class="status-copy">{{ entry.createdAt | date: 'medium' }}</p>
                   </div>
 
                   <div class="history-list__numbers">
-                    <span class="pill">{{ entry.betAmount | credits }}</span>
-                    <span [class]="entry.balanceChange >= 0 ? 'text-success' : 'text-danger'">
+                    <span class="pill">{{ isAdminAdjustment(entry) ? 'Manual change' : (entry.betAmount | credits) }}</span>
+                    <span [class]="isAdminAdjustment(entry) ? 'history-list__adjustment' : (entry.balanceChange >= 0 ? 'text-success' : 'text-danger')">
                       {{ entry.balanceChange | credits }}
                     </span>
                   </div>

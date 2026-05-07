@@ -10,9 +10,36 @@
         </div>
 
         <div class="game-card__visual" aria-hidden="true">
-          <span class="game-card__visual-ring"></span>
-          <span class="game-card__visual-ring"></span>
-          <span class="game-card__visual-core"></span>
+          @if (theme === 'roulette') {
+            <div class="game-card__roulette">
+              <span class="game-card__roulette-wheel"></span>
+              <span class="game-card__roulette-hub"></span>
+              <span class="game-card__roulette-ball"></span>
+            </div>
+          } @else if (theme === 'blackjack') {
+            <div class="game-card__blackjack">
+              <span class="game-card__playing-card game-card__playing-card--back"></span>
+              <span class="game-card__playing-card game-card__playing-card--front">
+                <strong>A</strong>
+                <em>♠</em>
+              </span>
+              <span class="game-card__playing-card game-card__playing-card--accent">
+                <strong>K</strong>
+                <em>♥</em>
+              </span>
+            </div>
+          } @else if (theme === 'poker') {
+            <div class="game-card__poker">
+              <span class="game-card__chip game-card__chip--large"></span>
+              <span class="game-card__chip game-card__chip--small"></span>
+              <span class="game-card__poker-card">
+                <strong>Q</strong>
+                <em>♣</em>
+              </span>
+            </div>
+          } @else if (theme === 'leaderboard') {
+            <span class="game-card__visual-trophy">🏆</span>
+          }
         </div>
 
         <div class="game-card__footer">

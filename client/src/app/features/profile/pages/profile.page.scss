@@ -66,6 +66,13 @@
       margin: 0;
     }
 
+    .history-list__item--admin {
+      border-color: rgba(255, 199, 116, 0.18);
+      background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0)),
+        linear-gradient(180deg, rgba(45, 33, 14, 0.98), rgba(22, 16, 8, 0.98));
+    }
+
     .history-list__meta {
       display: grid;
       gap: 0.25rem;
@@ -77,6 +84,10 @@
       gap: 0.8rem;
       flex-wrap: wrap;
       justify-content: flex-end;
+    }
+
+    .history-list__adjustment {
+      color: #ffd18a;
     }
 
     @media (max-width: 640px) {

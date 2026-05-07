@@ -26,6 +26,15 @@ userRouter.get('/history', async (req, res, next) => {
   }
 });
 
+userRouter.get('/leaderboard', async (_req, res, next) => {
+  try {
+    const leaderboard = await userService.getLeaderboard();
+    res.status(200).json(leaderboard);
+  } catch (error) {
+    next(error);
+  }
+});
+
 userRouter.patch('/me/profile', async (req, res, next) => {
   try {
     const user = await userService.updateProfile(req.auth!.userId, {
@@ -58,7 +67,7 @@ userRouter.get('/admin/users/:userId/history', adminMiddleware, async (req, res,
 
 userRouter.patch('/admin/users/:userId/balance', adminMiddleware, async (req, res, next) => {
   try {
-    const user = await userService.setBalance(String(req.params.userId), req.body?.balance);
+    const user = await userService.setBalance(req.auth!.userId, String(req.params.userId), req.body?.balance);
     res.status(200).json(user);
   } catch (error) {
     next(error);

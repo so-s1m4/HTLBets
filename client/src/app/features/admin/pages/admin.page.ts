@@ -90,6 +90,7 @@ export class AdminPageComponent {
 
       if (this.selectedUser()?.id === user.id) {
         this.selectedUser.set(updated);
+        await this.refreshSelectedUserHistory(user.id);
       }
     } catch (error) {
       this.error.set(error instanceof Error ? error.message : 'Failed to update user balance.');
@@ -100,15 +101,23 @@ export class AdminPageComponent {
 
   async selectUser(user: User): Promise<void> {
     this.selectedUser.set(user);
+    await this.refreshSelectedUserHistory(user.id);
+  }
+
+  private async refreshSelectedUserHistory(userId: string): Promise<void> {
     this.historyLoading.set(true);
     this.error.set('');
 
     try {
-      this.selectedHistory.set(await this.adminService.getUserHistory(user.id));
+      this.selectedHistory.set(await this.adminService.getUserHistory(userId));
     } catch (error) {
       this.error.set(error instanceof Error ? error.message : 'Failed to load user history.');
     } finally {
       this.historyLoading.set(false);
     }
+  }
+
+  isAdminAdjustment(entry: GameHistoryRecord): boolean {
+    return entry.gameType === 'ADMIN' || entry.result === 'ADMIN_ADJUSTMENT';
   }
 }

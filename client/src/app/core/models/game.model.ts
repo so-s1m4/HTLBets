@@ -1,5 +1,5 @@
 export type GameSlug = 'roulette' | 'blackjack' | 'poker';
-export type GameType = 'ROULETTE' | 'BLACKJACK' | 'POKER';
+export type GameType = 'ROULETTE' | 'BLACKJACK' | 'POKER' | 'ADMIN';
 export type GameStatus = 'IDLE' | 'WAITING_ACTION' | 'COMPLETED';
 
 export interface GameOutcome {
@@ -98,5 +98,6 @@ export const gameSlugToType: Record<GameSlug, GameType> = {
 export const gameTypeLabels: Record<GameType, string> = {
   ROULETTE: 'Roulette',
   BLACKJACK: 'Blackjack',
-  POKER: 'Poker'
+  POKER: 'Poker',
+  ADMIN: 'Admin'
 };

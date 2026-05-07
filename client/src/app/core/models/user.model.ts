@@ -12,9 +12,29 @@ export interface User {
 
 export interface GameHistoryRecord {
   id: string;
-  gameType: 'ROULETTE' | 'BLACKJACK' | 'POKER';
+  gameType: 'ROULETTE' | 'BLACKJACK' | 'POKER' | 'ADMIN';
   betAmount: number;
   result: string;
   balanceChange: number;
   createdAt: string;
+}
+
+export interface LeaderboardEntry {
+  userId: string;
+  email: string;
+  username: string | null;
+  avatarUrl: string | null;
+  metricValue: number;
+}
+
+export interface LeaderboardSnapshot {
+  richest: LeaderboardEntry[];
+  mostLosses: LeaderboardEntry[];
+  biggestWin: LeaderboardEntry[];
+  refreshedAt: string;
+}
+
+export interface ProfileLeaderboardTag {
+  label: string;
+  tier: 'champion' | 'elite' | 'contender';
 }

@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, Input } from '@angular/core';
 
+import type { ProfileLeaderboardTag } from '../../../core/models/user.model';
 import { AppCardComponent } from '../../../shared/ui/app-card.component';
 import { AppBalanceBadgeComponent } from '../../../shared/ui/app-balance-badge.component';
 
@@ -16,6 +17,8 @@ export class ProfileSummaryComponent {
   @Input() username = '';
   @Input() avatarUrl: string | null = null;
   @Input() balance = 0;
+  @Input() isAdmin = false;
+  @Input() leaderboardTags: ProfileLeaderboardTag[] = [];
 
   initials(): string {
     const source = this.username.trim() || this.email.trim() || 'HB';

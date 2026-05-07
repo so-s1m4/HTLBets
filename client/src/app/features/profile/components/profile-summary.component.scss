@@ -42,3 +42,66 @@
       flex-wrap: wrap;
       align-items: center;
     }
+
+    .profile-summary__tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.55rem;
+    }
+
+    .profile-summary__title-row {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      flex-wrap: wrap;
+    }
+
+    .profile-summary__title-row h1 {
+      margin: 0;
+    }
+
+    .profile-summary__admin-tag {
+      display: inline-flex;
+      align-items: center;
+      padding: 0.26rem 0.55rem;
+      border-radius: 999px;
+      border: 1px solid rgba(255, 118, 143, 0.3);
+      background: rgba(117, 17, 35, 0.24);
+      color: #ffb8c6;
+      font-size: 0.74rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+    }
+
+    .profile-summary__leaderboard-tag {
+      display: inline-flex;
+      align-items: center;
+      min-height: 2rem;
+      padding: 0.34rem 0.7rem;
+      border-radius: 999px;
+      border: 1px solid transparent;
+      font-size: 0.76rem;
+      font-weight: 700;
+      letter-spacing: 0.03em;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+    }
+
+    .profile-summary__leaderboard-tag--champion {
+      border-color: rgba(245, 209, 94, 0.3);
+      background: linear-gradient(135deg, rgba(136, 103, 14, 0.42), rgba(69, 48, 4, 0.9));
+      color: #ffe59a;
+    }
+
+    .profile-summary__leaderboard-tag--elite {
+      border-color: rgba(103, 177, 255, 0.3);
+      background: linear-gradient(135deg, rgba(26, 84, 146, 0.34), rgba(10, 33, 59, 0.92));
+      color: #cce7ff;
+    }
+
+    .profile-summary__leaderboard-tag--contender {
+      border-color: rgba(162, 138, 108, 0.3);
+      background: linear-gradient(135deg, rgba(102, 73, 45, 0.36), rgba(45, 26, 11, 0.92));
+      color: #f1d7be;
+    }

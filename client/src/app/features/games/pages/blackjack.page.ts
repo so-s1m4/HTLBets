@@ -54,6 +54,7 @@ export class BlackjackPageComponent {
   readonly viewState = computed(() => (this.state()?.state as unknown as BlackjackViewState | null) || null);
   readonly currentBet = computed(() => this.state()?.currentBet || 0);
   readonly outcome = computed(() => this.socket.currentState()?.outcome || null);
+  readonly revealedOutcome = signal<ReturnType<typeof this.outcome> | null>(null);
   readonly displayedPlayerHand = signal<DisplayCard[]>([]);
   readonly displayedDealerHand = signal<DisplayCard[]>([]);
   readonly isDealing = signal(false);
@@ -68,7 +69,7 @@ export class BlackjackPageComponent {
   readonly displayedPlayerScore = computed(() => this.scoreHand(this.displayedPlayerHand()));
   readonly displayedDealerScore = computed(() => this.scoreHand(this.displayedDealerHand()));
   readonly resultBanner = computed(() => {
-    const outcome = this.outcome();
+    const outcome = this.revealedOutcome();
 
     if (!outcome) {
       return null;
@@ -105,6 +106,7 @@ export class BlackjackPageComponent {
     this.shouldAnimateInitialDeal = true;
     this.shouldAnimateNextStateChange = false;
     this.clearAnimationTimers();
+    this.revealedOutcome.set(null);
     this.displayedPlayerHand.set([]);
     this.displayedDealerHand.set([]);
     this.isDealing.set(true);
@@ -121,14 +123,15 @@ export class BlackjackPageComponent {
   }
 
   private syncDisplayedHands(nextView: BlackjackViewState | null): void {
-    const previousPhase = this.previousPhase;
     this.previousPhase = nextView?.phase ?? null;
+    const nextOutcome = this.outcome();
 
     if (!nextView) {
       this.clearAnimationTimers();
       this.displayedPlayerHand.set([]);
       this.displayedDealerHand.set([]);
       this.isDealing.set(false);
+      this.revealedOutcome.set(null);
       this.hasHydratedState = false;
       this.shouldAnimateInitialDeal = false;
       this.shouldAnimateNextStateChange = false;
@@ -145,6 +148,7 @@ export class BlackjackPageComponent {
       this.displayedPlayerHand.set([]);
       this.displayedDealerHand.set([]);
       this.isDealing.set(false);
+      this.revealedOutcome.set(null);
       this.shouldAnimateInitialDeal = false;
       this.shouldAnimateNextStateChange = false;
       return;
@@ -153,44 +157,61 @@ export class BlackjackPageComponent {
     if (!this.hasHydratedState) {
       this.hasHydratedState = true;
       this.applyHandsImmediately(targetPlayer, targetDealer);
+      this.revealedOutcome.set(nextOutcome);
       this.shouldAnimateInitialDeal = false;
       this.shouldAnimateNextStateChange = false;
       return;
     }
 
     const isInitialDeal =
-      nextView.phase === 'player-turn' &&
-      previousPhase !== 'player-turn' &&
+      this.shouldAnimateInitialDeal &&
+      currentPlayer.length === 0 &&
+      currentDealer.length === 0 &&
       targetPlayer.length === 2 &&
-      targetDealer.length === 2;
+      targetDealer.length === 2 &&
+      nextView.phase !== 'ready';
 
     if (isInitialDeal) {
-      if (!this.shouldAnimateInitialDeal) {
-        this.applyHandsImmediately(targetPlayer, targetDealer);
-        this.shouldAnimateNextStateChange = false;
-        return;
-      }
-
-      this.runInitialDealSequence(targetPlayer, targetDealer);
+      this.runInitialDealSequence(targetPlayer, targetDealer, nextOutcome);
       return;
     }
 
     if (this.cardsEqual(currentPlayer, targetPlayer) && this.cardsEqual(currentDealer, targetDealer)) {
+      if (this.shouldAnimateNextStateChange && nextOutcome) {
+        this.clearAnimationTimers();
+        this.isDealing.set(true);
+        this.revealedOutcome.set(null);
+        this.shouldAnimateNextStateChange = false;
+        this.queueAnimation(1200, () => {
+          this.isDealing.set(false);
+          this.revealedOutcome.set(this.outcome());
+        });
+        return;
+      }
+
       this.isDealing.set(false);
+      this.revealedOutcome.set(nextOutcome);
+      this.shouldAnimateNextStateChange = false;
       return;
     }
 
     if (!this.shouldAnimateNextStateChange) {
       this.applyHandsImmediately(targetPlayer, targetDealer);
+      this.revealedOutcome.set(nextOutcome);
       return;
     }
 
     this.runIncrementalReveal(targetPlayer, targetDealer);
   }
 
-  private runInitialDealSequence(targetPlayer: DisplayCard[], targetDealer: DisplayCard[]): void {
+  private runInitialDealSequence(
+    targetPlayer: DisplayCard[],
+    targetDealer: DisplayCard[],
+    nextOutcome: ReturnType<typeof this.outcome>
+  ): void {
     this.clearAnimationTimers();
     this.isDealing.set(true);
+    this.revealedOutcome.set(null);
     this.displayedPlayerHand.set([]);
     this.displayedDealerHand.set([]);
     this.shouldAnimateInitialDeal = false;
@@ -209,6 +230,7 @@ export class BlackjackPageComponent {
     });
     this.queueAnimation(5260, () => {
       this.isDealing.set(false);
+      this.revealedOutcome.set(nextOutcome ?? this.outcome());
       this.shouldAnimateNextStateChange = false;
     });
   }
@@ -216,6 +238,7 @@ export class BlackjackPageComponent {
   private runIncrementalReveal(targetPlayer: DisplayCard[], targetDealer: DisplayCard[]): void {
     this.clearAnimationTimers();
     this.isDealing.set(true);
+    this.revealedOutcome.set(null);
     this.shouldAnimateNextStateChange = false;
 
     let delayMs = 260;
@@ -254,6 +277,7 @@ export class BlackjackPageComponent {
 
     this.queueAnimation(delayMs + 180, () => {
       this.isDealing.set(false);
+      this.revealedOutcome.set(this.outcome());
     });
   }
 

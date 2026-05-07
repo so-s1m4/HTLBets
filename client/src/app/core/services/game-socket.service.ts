@@ -15,6 +15,11 @@ export class GameSocketService {
   private readonly auth = inject(AuthService);
   private readonly config = inject(AppConfigService);
   private readonly rouletteBalanceRevealDelayMs = 5200;
+  private readonly blackjackInitialDealRevealDelayMs = 5260;
+  private readonly blackjackOutcomeOnlyRevealDelayMs = 1200;
+  private readonly blackjackPerCardRevealDelayMs = 1200;
+  private readonly blackjackInitialCardRevealDelayMs = 260;
+  private readonly blackjackFinalRevealBufferMs = 180;
 
   private socket: Socket | null = null;
   private delayedBalanceTimer: number | null = null;
@@ -145,6 +150,17 @@ export class GameSocketService {
         return;
       }
 
+      const blackjackBalanceRevealDelay = this.getBlackjackBalanceRevealDelay(previousState, payload);
+
+      if (blackjackBalanceRevealDelay !== null) {
+        this.clearDelayedBalanceTimer();
+        this.delayedBalanceTimer = window.setTimeout(() => {
+          this.auth.updateBalance(payload.balance);
+          this.delayedBalanceTimer = null;
+        }, blackjackBalanceRevealDelay);
+        return;
+      }
+
       this.clearDelayedBalanceTimer();
       this.auth.updateBalance(payload.balance);
     });
@@ -166,5 +182,91 @@ export class GameSocketService {
 
     window.clearTimeout(this.delayedBalanceTimer);
     this.delayedBalanceTimer = null;
+  }
+
+  private getBlackjackBalanceRevealDelay(previousState: RealtimeGameState | null, nextState: RealtimeGameState): number | null {
+    if (
+      !previousState ||
+      previousState.gameType !== 'BLACKJACK' ||
+      nextState.gameType !== 'BLACKJACK' ||
+      previousState.sessionId !== nextState.sessionId ||
+      !nextState.outcome
+    ) {
+      return null;
+    }
+
+    const previousView = this.readBlackjackState(previousState);
+    const nextView = this.readBlackjackState(nextState);
+
+    if (!previousView || !nextView) {
+      return null;
+    }
+
+    const previousPlayerHand = this.readBlackjackHand(previousView['playerHand']);
+    const previousDealerHand = this.readBlackjackHand(previousView['dealerHand']);
+    const nextPlayerHand = this.readBlackjackHand(nextView['playerHand']);
+    const nextDealerHand = this.readBlackjackHand(nextView['dealerHand']);
+
+    const isInitialResolvedDeal =
+      previousPlayerHand.length === 0 &&
+      previousDealerHand.length === 0 &&
+      nextPlayerHand.length === 2 &&
+      nextDealerHand.length === 2 &&
+      typeof nextView['phase'] === 'string' &&
+      nextView['phase'] !== 'ready';
+
+    if (isInitialResolvedDeal) {
+      return this.blackjackInitialDealRevealDelayMs;
+    }
+
+    const changedCards =
+      this.countBlackjackCardChanges(previousPlayerHand, nextPlayerHand) +
+      this.countBlackjackCardChanges(previousDealerHand, nextDealerHand);
+
+    if (changedCards > 0) {
+      return (
+        this.blackjackInitialCardRevealDelayMs +
+        this.blackjackFinalRevealBufferMs +
+        this.blackjackPerCardRevealDelayMs * changedCards
+      );
+    }
+
+    return this.blackjackOutcomeOnlyRevealDelayMs;
+  }
+
+  private readBlackjackState(state: RealtimeGameState | null): Record<string, unknown> | null {
+    if (state?.state && typeof state.state === 'object') {
+      return state.state as Record<string, unknown>;
+    }
+
+    return null;
+  }
+
+  private readBlackjackHand(value: unknown): Array<Record<string, unknown>> {
+    return Array.isArray(value) ? value.filter((entry): entry is Record<string, unknown> => Boolean(entry) && typeof entry === 'object') : [];
+  }
+
+  private countBlackjackCardChanges(left: Array<Record<string, unknown>>, right: Array<Record<string, unknown>>): number {
+    const maxLength = Math.max(left.length, right.length);
+    let changes = 0;
+
+    for (let index = 0; index < maxLength; index += 1) {
+      if (this.blackjackCardSignature(left[index]) !== this.blackjackCardSignature(right[index])) {
+        changes += 1;
+      }
+    }
+
+    return changes;
+  }
+
+  private blackjackCardSignature(card: Record<string, unknown> | undefined): string {
+    if (!card) {
+      return 'missing';
+    }
+
+    const rank = typeof card['rank'] === 'string' ? card['rank'] : '?';
+    const suit = typeof card['suit'] === 'string' ? card['suit'] : '?';
+    const hidden = card['hidden'] === true ? 'hidden' : 'visible';
+    return `${rank}:${suit}:${hidden}`;
   }
 }
