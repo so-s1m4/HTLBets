@@ -1,4 +1,4 @@
-import { Component, DestroyRef, computed, effect, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, DestroyRef, computed, effect, inject, signal } from '@angular/core';
 
 import type { PokerLobbyState, PokerRealtimeState, PokerTableState } from '../../../core/models/game.model';
 import { AuthService } from '../../../core/services/auth.service';
@@ -22,7 +22,8 @@ import { PokerTableComponent } from '../poker/poker-table.component';
     PokerTableComponent
   ],
   templateUrl: './poker.page.html',
-  styleUrl: './poker.page.scss'
+  styleUrl: './poker.page.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class PokerPageComponent {
   readonly socket = inject(GameSocketService);
@@ -141,7 +142,7 @@ export class PokerPageComponent {
       this.socket.reset();
     });
 
-    const interval = window.setInterval(() => {
+    const updateTimers = () => {
       const table = this.tableState();
       const target =
         table?.phase === 'waiting'
@@ -155,7 +156,10 @@ export class PokerPageComponent {
       }
 
       this.emoteCooldownRemainingMs.set(Math.max(0, this.nextEmoteAt - Date.now()));
-    }, 100);
+    };
+
+    updateTimers();
+    const interval = window.setInterval(updateTimers, 1000);
 
     this.destroyRef.onDestroy(() => {
       window.clearInterval(interval);

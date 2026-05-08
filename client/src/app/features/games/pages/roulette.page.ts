@@ -1,4 +1,4 @@
-import { Component, DestroyRef, computed, effect, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, DestroyRef, computed, effect, inject, signal } from '@angular/core';
 
 import { GameSocketService } from '../../../core/services/game-socket.service';
 import { AppCardComponent } from '../../../shared/ui/app-card.component';
@@ -47,7 +47,8 @@ interface RouletteViewState {
     RouletteWheelComponent
   ],
   templateUrl: './roulette.page.html',
-  styleUrl: './roulette.page.scss'
+  styleUrl: './roulette.page.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class RoulettePageComponent {
   readonly socket = inject(GameSocketService);
@@ -189,7 +190,7 @@ export class RoulettePageComponent {
       }, this.spinDurationMs);
     });
 
-    const countdownTimer = window.setInterval(() => {
+    const updateCountdown = () => {
       const closesAt = this.viewState()?.bettingClosesAt;
 
       if (!closesAt) {
@@ -198,7 +199,10 @@ export class RoulettePageComponent {
       }
 
       this.countdownMs.set(new Date(closesAt).getTime() - Date.now());
-    }, 250);
+    };
+
+    updateCountdown();
+    const countdownTimer = window.setInterval(updateCountdown, 1000);
 
     this.destroyRef.onDestroy(() => {
       window.clearInterval(countdownTimer);

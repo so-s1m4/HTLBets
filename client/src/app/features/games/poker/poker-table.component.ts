@@ -1,4 +1,4 @@
-import { Component, Input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, Input } from '@angular/core';
 
 import type { PokerDisplayCard, PokerSeatView, PokerWinnerView } from '../../../core/models/game.model';
 
@@ -55,7 +55,8 @@ const orbitLayouts: Record<number, Array<{ left: number; top: number }>> = {
   selector: 'app-poker-table',
   standalone: true,
   templateUrl: './poker-table.component.html',
-  styleUrl: './poker-table.component.scss'
+  styleUrl: './poker-table.component.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class PokerTableComponent {
   @Input() tableName = 'Realtime poker';

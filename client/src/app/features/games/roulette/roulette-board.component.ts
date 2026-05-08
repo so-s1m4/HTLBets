@@ -1,12 +1,13 @@
 import { CommonModule } from '@angular/common';
-import { Component, EventEmitter, Input, Output } from '@angular/core';
+import { ChangeDetectionStrategy, Component, EventEmitter, Input, Output } from '@angular/core';
 
 @Component({
   selector: 'app-roulette-board',
   standalone: true,
   imports: [CommonModule],
   templateUrl: './roulette-board.component.html',
-  styleUrl: './roulette-board.component.scss'
+  styleUrl: './roulette-board.component.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class RouletteBoardComponent {
   @Input() selectedType: 'color' | 'number' = 'color';

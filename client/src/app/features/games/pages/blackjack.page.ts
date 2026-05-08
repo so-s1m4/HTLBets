@@ -1,4 +1,4 @@
-import { Component, DestroyRef, computed, effect, inject, signal, untracked } from '@angular/core';
+import { ChangeDetectionStrategy, Component, DestroyRef, computed, effect, inject, signal, untracked } from '@angular/core';
 
 import { GameSocketService } from '../../../core/services/game-socket.service';
 import { AppButtonComponent } from '../../../shared/ui/app-button.component';
@@ -61,7 +61,8 @@ interface DisplayPlayerHand {
     BlackjackHandComponent
   ],
   templateUrl: './blackjack.page.html',
-  styleUrl: './blackjack.page.scss'
+  styleUrl: './blackjack.page.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class BlackjackPageComponent {
   readonly socket = inject(GameSocketService);
