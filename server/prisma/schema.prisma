@@ -25,11 +25,13 @@ model User {
   username          String?
   avatarUrl         String?
   passwordHash      String?
+  lastDailyLoginAt  String?
   balance           Int                     @default(1000)
   createdAt         DateTime                @default(now())
   updatedAt         DateTime                @updatedAt
   gameSessions      GameSession[]
   gameHistory       GameHistory[]
+  dailyTaskClaims   DailyTaskClaim[]
 
   @@index([email])
 }
@@ -70,4 +72,16 @@ model GameHistory {
   createdAt     DateTime @default(now())
 
   @@index([userId, createdAt])
+}
+
+model DailyTaskClaim {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  taskKey   String
+  claimDate String
+  createdAt DateTime @default(now())
+
+  @@unique([userId, taskKey, claimDate])
+  @@index([userId, claimDate])
 }

@@ -1,23 +1,17 @@
 import { prisma } from '../../prisma/client';
 import { HttpError } from '../../utils/http-error';
+import { dailyRewardsService } from './daily-rewards.service';
 import {
   toPublicGameHistory,
   toPublicUser,
+  type PublicDailyTask,
   type PublicGameHistory,
   type PublicUser
 } from './user.model';
 
 class UserService {
   async getCurrentUser(userId: string): Promise<PublicUser> {
-    const user = await prisma.user.findUnique({
-      where: { id: userId }
-    });
-
-    if (!user) {
-      throw new HttpError(404, 'User was not found.');
-    }
-
-    return toPublicUser(user);
+    return toPublicUser(await dailyRewardsService.grantDailyLoginBonus(userId));
   }
 
   async getHistory(userId: string): Promise<PublicGameHistory[]> {
@@ -30,6 +24,14 @@ class UserService {
     });
 
     return history.map(toPublicGameHistory);
+  }
+
+  async getDailyTasks(userId: string): Promise<PublicDailyTask[]> {
+    return dailyRewardsService.getDailyTasks(userId);
+  }
+
+  async claimDailyTask(userId: string, taskKey: string): Promise<{ user: PublicUser; task: PublicDailyTask }> {
+    return dailyRewardsService.claimDailyTask(userId, taskKey);
   }
 
   async listUsers(): Promise<PublicUser[]> {
