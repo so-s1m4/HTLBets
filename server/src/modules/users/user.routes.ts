@@ -26,6 +26,21 @@ userRouter.get('/history', async (req, res, next) => {
   }
 });
 
+userRouter.get('/me/dailies', async (req, res, next) => {
+  try {
+    const tasks = await userService.getDailyTasks(req.auth!.userId);
+    res.status(200).json(tasks);
+  } catch (error) {
+    next(error);
+  }
+});
+
+userRouter.post('/me/dailies/:taskKey/claim', async (req, res, next) => {
+  try {
+    const result = await userService.claimDailyTask(req.auth!.userId, String(req.params.taskKey));
+    res.status(200).json(result);
+});
+  
 userRouter.get('/leaderboard', async (_req, res, next) => {
   try {
     const leaderboard = await userService.getLeaderboard();
