@@ -15,51 +15,60 @@
               <span class="page-heading__eyebrow">Daily rewards</span>
               <h2>Login + tasks</h2>
             </div>
-            <span class="pill">Daily login +200 cr</span>
+            <div class="section-actions">
+              <span class="pill">Daily login +200 cr</span>
+              <app-button variant="ghost" (click)="toggleDailyTasksCollapsed()">
+                {{ dailyTasksCollapsed() ? 'Expand' : 'Collapse' }}
+              </app-button>
+            </div>
           </div>
 
-          <p class="status-copy">Each new day, your first authenticated entry credits 200 demo chips automatically.</p>
+          @if (!dailyTasksCollapsed()) {
+            <p class="status-copy">Each new day, your first authenticated entry credits 200 demo chips automatically.</p>
 
-          @if (dailyError()) {
-            <p class="status-copy text-danger">{{ dailyError() }}</p>
-          } @else if (dailyNotice()) {
-            <p class="status-copy text-success">{{ dailyNotice() }}</p>
-          }
+            @if (dailyError()) {
+              <p class="status-copy text-danger">{{ dailyError() }}</p>
+            } @else if (dailyNotice()) {
+              <p class="status-copy text-success">{{ dailyNotice() }}</p>
+            }
 
-          @if (loadingDailies()) {
-            <p class="status-copy">Loading daily tasks...</p>
-          } @else {
-            <div class="daily-task-list">
-              @for (task of dailyTasks(); track task.key) {
-                <div class="daily-task">
-                  <div class="daily-task__copy">
-                    <div class="daily-task__header">
-                      <strong>{{ task.title }}</strong>
-                      <span class="pill">{{ task.reward | credits }}</span>
+            @if (loadingDailies()) {
+              <p class="status-copy">Loading daily tasks...</p>
+            } @else {
+              <div class="daily-task-list">
+                @for (task of dailyTasks(); track task.key) {
+                  <div class="daily-task">
+                    <div class="daily-task__copy">
+                      <div class="daily-task__header">
+                        <strong>{{ task.title }}</strong>
+                        <span class="pill">{{ task.reward | credits }}</span>
+                      </div>
+                      <p class="status-copy">{{ task.description }}</p>
+                      <div class="daily-task__meta">
+                        <span class="pill">{{ task.progress }} / {{ task.target }}</span>
+                        @if (task.claimed) {
+                          <span class="pill">Claimed</span>
+                        } @else if (task.completed) {
+                          <span class="pill">Ready</span>
+                        } @else {
+                          <span class="pill">In progress</span>
+                        }
+                      </div>
                     </div>
-                    <p class="status-copy">{{ task.description }}</p>
-                    <div class="daily-task__meta">
-                      <span class="pill">{{ task.progress }} / {{ task.target }}</span>
-                      @if (task.claimed) {
-                        <span class="pill">Claimed</span>
-                      } @else if (task.completed) {
-                        <span class="pill">Ready</span>
-                      } @else {
-                        <span class="pill">In progress</span>
-                      }
-                    </div>
+
+                    <app-button
+                      variant="secondary"
+                      [disabled]="task.claimed || !task.completed || claimingTaskKey() === task.key"
+                      (click)="claimDailyTask(task.key)"
+                    >
+                      {{ task.claimed ? 'Claimed' : claimingTaskKey() === task.key ? 'Claiming...' : 'Claim reward' }}
+                    </app-button>
                   </div>
-
-                  <app-button
-                    variant="secondary"
-                    [disabled]="task.claimed || !task.completed || claimingTaskKey() === task.key"
-                    (click)="claimDailyTask(task.key)"
-                  >
-                    {{ task.claimed ? 'Claimed' : claimingTaskKey() === task.key ? 'Claiming...' : 'Claim reward' }}
-                  </app-button>
-                </div>
-              }
-            </div>
+                }
+              </div>
+            }
+          } @else {
+            <p class="status-copy">Daily rewards hidden.</p>
           }
         </div>
       </app-card>
@@ -137,10 +146,17 @@
               <h2>Session history</h2>
             </div>
 
-            <app-button variant="secondary" (click)="refresh()">Refresh</app-button>
+            <div class="section-actions">
+              <app-button variant="ghost" (click)="toggleHistoryCollapsed()">
+                {{ historyCollapsed() ? 'Expand' : 'Collapse' }}
+              </app-button>
+              <app-button variant="secondary" (click)="refresh()">Refresh</app-button>
+            </div>
           </div>
 
-          @if (loading()) {
+          @if (historyCollapsed()) {
+            <p class="status-copy">History hidden.</p>
+          } @else if (loading()) {
             <p class="status-copy">Loading history...</p>
           } @else if (history().length === 0) {
             <p class="status-copy">No rounds recorded yet. Jump into the lobby and play a demo game.</p>
