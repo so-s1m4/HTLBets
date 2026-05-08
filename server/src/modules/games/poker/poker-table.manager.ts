@@ -14,7 +14,7 @@ import {
 type PokerTableVisibility = 'public' | 'private';
 type PokerPhase = 'waiting' | 'preflop' | 'flop' | 'turn' | 'river' | 'showdown' | 'resolved';
 type PokerSeatStatus = 'waiting' | 'active' | 'folded' | 'all-in' | 'busted';
-type PokerAction = 'check' | 'call' | 'raise' | 'all-in' | 'fold';
+type PokerAction = 'check' | 'call' | 'raise' | 'all-in' | 'fold' | 'emote';
 
 interface PokerDisplayCard {
   hidden?: boolean;
@@ -31,6 +31,9 @@ interface PokerWinnerView {
 interface PokerSeatView {
   userId: string;
   playerLabel: string;
+  avatarUrl?: string | null;
+  emoteText?: string | null;
+  isReady?: boolean;
   buyIn: number;
   stackRemaining: number;
   totalContribution: number;
@@ -98,6 +101,9 @@ export interface PokerPlayerEnvelope {
 interface InternalSeat {
   userId: string;
   playerLabel: string;
+  avatarUrl: string | null;
+  emoteText: string | null;
+  readyForNextHand: boolean;
   seatIndex: number;
   buyIn: number;
   stackRemaining: number;
@@ -109,6 +115,8 @@ interface InternalSeat {
   lastAction?: string;
   actedThisStreet: boolean;
   pendingRemoval: boolean;
+  lastEmoteAt?: number;
+  emoteTimer: NodeJS.Timeout | null;
 }
 
 interface NormalizedTableConfig {
@@ -121,12 +129,16 @@ interface NormalizedTableConfig {
 }
 
 const LOBBY_SESSION_ID = 'poker-lobby';
-const START_DELAY_MS = 6_000;
-const TURN_TIMEOUT_MS = 40_000;
+const START_DELAY_MS = 20_000;
+const TURN_TIMEOUT_MS = 20_000;
+const WAITING_TURN_TIMEOUT_MS = 30_000;
+const EMOTE_COOLDOWN_MS = 5_000;
+const EMOTE_DURATION_MS = 3_500;
 const RUNOUT_STEP_MS = 1_900;
 const SHOWDOWN_DELAY_MS = 6_500;
 const MIN_TABLE_BUY_IN = 100;
 const MAX_TABLES = 40;
+const ALLOWED_EMOTES = new Set(['Good luck', 'Nice hand', 'Oops', 'Wow', 'gg']);
 
 const formatPlayerLabel = (email: string, username?: string | null): string => {
   const normalizedUsername = String(username || '').trim();
@@ -200,6 +212,16 @@ const normalizeJoinConfig = (payload?: Record<string, unknown>): { sessionId?: s
   };
 };
 
+const normalizeSpectateConfig = (payload?: Record<string, unknown>): { sessionId?: string; password?: string } => {
+  const sessionId = typeof payload?.sessionId === 'string' && payload.sessionId.trim() ? payload.sessionId.trim() : undefined;
+  const password = typeof payload?.password === 'string' && payload.password.trim() ? payload.password.trim() : undefined;
+
+  return {
+    sessionId,
+    password
+  };
+};
+
 const buildTableId = (): string => `poker-${Math.random().toString(36).slice(2, 10)}`;
 
 class PokerTableInstance {
@@ -228,6 +250,8 @@ class PokerTableInstance {
   private turnTimer: NodeJS.Timeout | null = null;
   private runoutTimer: NodeJS.Timeout | null = null;
   private showdownTimer: NodeJS.Timeout | null = null;
+  private waitingQueue: string[] = [];
+  private pendingWaitingReset = false;
 
   constructor(
     config: {
@@ -287,7 +311,7 @@ class PokerTableInstance {
     };
   }
 
-  addSeat(userId: string, playerLabel: string, buyIn: number): void {
+  addSeat(userId: string, playerLabel: string, avatarUrl: string | null, buyIn: number): void {
     if (this.hasUser(userId)) {
       throw new HttpError(400, 'You are already seated at this table.');
     }
@@ -299,6 +323,7 @@ class PokerTableInstance {
     this.seats.push({
       userId,
       playerLabel,
+      avatarUrl,
       seatIndex: this.seats.length,
       buyIn,
       stackRemaining: buyIn,
@@ -309,11 +334,26 @@ class PokerTableInstance {
       evaluation: null,
       actedThisStreet: false,
       pendingRemoval: false,
-      lastAction: 'Seated'
+      lastAction: 'Seated',
+      emoteText: null,
+      emoteTimer: null,
+      readyForNextHand: false
     });
 
-    this.scheduleNextHandIfReady();
-    this.emit();
+    if (this.phase === 'waiting') {
+      if (this.eligibleWaitingSeatCount() >= 2) {
+        this.beginWaitingConfirmation('A player joined the table. Everyone gets a turn to ready up or stay out.');
+      } else {
+        this.clearStartTimer();
+        this.dealStartsAt = undefined;
+        this.notes = 'Waiting for another seated player before the next hand can be prepared.';
+        this.emit();
+      }
+    } else {
+      this.pendingWaitingReset = true;
+      this.notes = 'Table lineup changed. Everyone will confirm for the next hand after this round.';
+      this.emit();
+    }
   }
 
   leaveSeat(userId: string): { refundAmount: number } {
@@ -332,6 +372,7 @@ class PokerTableInstance {
     seat.status = 'folded';
     seat.lastAction = 'Left table';
     seat.actedThisStreet = true;
+    this.pendingWaitingReset = true;
 
     if (this.actingUserId === userId) {
       void this.continueAfterAction(userId);
@@ -368,6 +409,9 @@ class PokerTableInstance {
         .map((seat) => ({
           userId: seat.userId,
           playerLabel: seat.playerLabel,
+          avatarUrl: seat.avatarUrl,
+          emoteText: seat.emoteText,
+          isReady: seat.readyForNextHand,
           buyIn: seat.buyIn,
           stackRemaining: seat.stackRemaining,
           totalContribution: seat.totalContribution,
@@ -400,6 +444,13 @@ class PokerTableInstance {
 
   async performAction(userId: string, action: string, payload?: Record<string, unknown>): Promise<void> {
     const seat = this.getSeat(userId);
+    const normalized = action.toLowerCase() as PokerAction;
+
+    if (normalized === 'emote') {
+      this.applyEmote(seat, payload);
+      this.emit();
+      return;
+    }
 
     if (this.phase === 'waiting' || this.phase === 'showdown' || this.phase === 'resolved') {
       throw new HttpError(400, 'There is no live poker hand to act on right now.');
@@ -409,7 +460,6 @@ class PokerTableInstance {
       throw new HttpError(400, 'It is not your turn.');
     }
 
-    const normalized = action.toLowerCase() as PokerAction;
     const callAmount = Math.max(0, this.currentBet - seat.streetContribution);
 
     if (normalized === 'check') {
@@ -546,15 +596,21 @@ class PokerTableInstance {
     return actions;
   }
 
-  private scheduleNextHandIfReady(): void {
+  private scheduleNextHandIfReady(delayMs = START_DELAY_MS): void {
     if (this.phase !== 'waiting') {
+      return;
+    }
+
+    if (this.actingUserId || this.waitingQueue.length) {
       return;
     }
 
     if (this.seatedPlayableSeats().length < 2) {
       this.clearStartTimer();
       this.dealStartsAt = undefined;
-      this.notes = 'Need at least two seated players to start dealing.';
+      this.notes = this.seats.some((seat) => !seat.pendingRemoval && seat.stackRemaining > 0)
+        ? 'Need at least two ready players to start dealing.'
+        : 'Seat at the table to join the next hand.';
       return;
     }
 
@@ -562,12 +618,12 @@ class PokerTableInstance {
       return;
     }
 
-    this.dealStartsAt = Date.now() + START_DELAY_MS;
-    this.notes = 'Next hand is queued. Top up your stack or wait for the deal.';
+    this.dealStartsAt = Date.now() + delayMs;
+    this.notes = 'Next hand is queued. Ready players will be dealt in when the timer ends.';
     this.startTimer = setTimeout(() => {
       this.startTimer = null;
       void this.startHand();
-    }, START_DELAY_MS);
+    }, delayMs);
   }
 
   private async startHand(): Promise<void> {
@@ -575,7 +631,7 @@ class PokerTableInstance {
     if (participants.length < 2) {
       this.phase = 'waiting';
       this.dealStartsAt = undefined;
-      this.notes = 'Need at least two seated players to start dealing.';
+      this.notes = 'Need at least two ready players to start dealing.';
       this.emit();
       return;
     }
@@ -583,6 +639,7 @@ class PokerTableInstance {
     this.clearTurnTimer();
     this.clearRunoutTimer();
     this.clearShowdownTimer();
+    this.clearStartTimer();
     this.lastOutcomeByUser.clear();
     this.winners = [];
     this.communityCards = [];
@@ -594,6 +651,8 @@ class PokerTableInstance {
     this.dealStartsAt = undefined;
     this.phaseEndsAt = undefined;
     this.notes = 'Cards are live. Build the pot or check it down.';
+    this.waitingQueue = [];
+    this.pendingWaitingReset = false;
 
     for (const seat of this.seats) {
       seat.cards = [];
@@ -604,9 +663,14 @@ class PokerTableInstance {
       seat.pendingRemoval = false;
 
       if (seat.stackRemaining > 0) {
-        seat.cards = [drawCard(this.deck), drawCard(this.deck)];
-        seat.status = 'active';
-        seat.lastAction = 'Dealt in';
+        if (seat.readyForNextHand) {
+          seat.cards = [drawCard(this.deck), drawCard(this.deck)];
+          seat.status = 'active';
+          seat.lastAction = 'Dealt in';
+        } else {
+          seat.status = 'waiting';
+          seat.lastAction = 'Waiting';
+        }
       } else {
         seat.status = 'busted';
         seat.lastAction = 'Busted';
@@ -640,6 +704,100 @@ class PokerTableInstance {
     this.turnTimer = setTimeout(() => {
       void this.handleTurnTimeout(nextSeat.userId);
     }, TURN_TIMEOUT_MS);
+  }
+
+  private beginWaitingConfirmation(note: string): void {
+    this.clearStartTimer();
+    this.clearTurnTimer();
+    this.waitingQueue = [];
+    this.actingUserId = undefined;
+    this.phaseEndsAt = undefined;
+    this.dealStartsAt = undefined;
+    this.pendingWaitingReset = false;
+    this.phase = 'waiting';
+    this.currentBet = 0;
+    this.minRaiseTo = undefined;
+
+    for (const seat of this.seats) {
+      seat.cards = [];
+      seat.evaluation = null;
+      seat.totalContribution = 0;
+      seat.streetContribution = 0;
+      seat.actedThisStreet = false;
+
+      if (seat.pendingRemoval || seat.stackRemaining <= 0) {
+        seat.readyForNextHand = false;
+        seat.status = 'busted';
+        seat.lastAction = 'Busted';
+        continue;
+      }
+
+      seat.readyForNextHand = false;
+      seat.status = 'waiting';
+      seat.lastAction = 'Waiting';
+      this.waitingQueue.push(seat.userId);
+    }
+
+    this.notes = note;
+    this.advanceWaitingTurn();
+  }
+
+  private advanceWaitingTurn(): void {
+    this.clearTurnTimer();
+    this.actingUserId = undefined;
+    this.phaseEndsAt = undefined;
+
+    while (this.waitingQueue.length) {
+      const nextUserId = this.waitingQueue.shift();
+      if (!nextUserId) {
+        continue;
+      }
+
+      const seat = this.findSeat(nextUserId);
+      if (!seat || seat.stackRemaining <= 0 || seat.pendingRemoval) {
+        continue;
+      }
+
+      this.actingUserId = seat.userId;
+      this.phaseEndsAt = Date.now() + WAITING_TURN_TIMEOUT_MS;
+      this.notes = `${seat.playerLabel} is up. Ready for the next hand or stay out as a spectator.`;
+      this.turnTimer = setTimeout(() => {
+        void this.handleWaitingTurnTimeout(seat.userId);
+      }, WAITING_TURN_TIMEOUT_MS);
+      this.emit();
+      return;
+    }
+
+    if (this.seatedPlayableSeats().length >= 2) {
+      this.notes = 'Ready players confirmed. Dealing the next hand now.';
+      this.emit();
+      void this.startHand();
+      return;
+    }
+
+    this.notes = this.eligibleWaitingSeatCount() >= 2
+      ? 'Need at least two ready players to start dealing.'
+      : 'Waiting for another seated player before the next hand can be prepared.';
+    this.emit();
+  }
+
+  private async handleWaitingTurnTimeout(userId: string): Promise<void> {
+    const seat = this.findSeat(userId);
+    if (!seat || this.phase !== 'waiting' || this.actingUserId !== userId) {
+      return;
+    }
+
+    const { refundAmount } = this.leaveSeat(userId);
+    if (refundAmount > 0) {
+      await prisma.user.update({
+        where: { id: userId },
+        data: {
+          balance: {
+            increment: refundAmount
+          }
+        }
+      });
+    }
   }
 
   private async handleTurnTimeout(userId: string): Promise<void> {
@@ -957,11 +1115,22 @@ class PokerTableInstance {
     }
 
     this.removeEmptySeats();
-    this.scheduleNextHandIfReady();
+    if (this.pendingWaitingReset) {
+      this.beginWaitingConfirmation('Before the next hand starts, each seated player gets a turn to ready up or stay out.');
+      return;
+    }
+
+    this.scheduleNextHandIfReady(START_DELAY_MS);
     this.emit();
   }
 
   private removeEmptySeats(): void {
+    for (const seat of this.seats) {
+      if (seat.pendingRemoval || seat.stackRemaining <= 0) {
+        this.clearSeatEmote(seat);
+      }
+    }
+
     const remaining = this.seats.filter((seat) => !seat.pendingRemoval && seat.stackRemaining > 0);
     this.seats.splice(0, this.seats.length, ...remaining);
     this.reindexSeats();
@@ -969,11 +1138,33 @@ class PokerTableInstance {
   }
 
   private removeSeat(userId: string): void {
+    const seat = this.findSeat(userId);
+    if (seat) {
+      this.clearSeatEmote(seat);
+    }
+
     const nextSeats = this.seats.filter((seat) => seat.userId !== userId);
     this.seats.splice(0, this.seats.length, ...nextSeats);
     this.reindexSeats();
     this.ownerUserId = this.seats[0]?.userId || this.ownerUserId;
-    this.scheduleNextHandIfReady();
+
+    if (this.phase === 'waiting') {
+      if (this.eligibleWaitingSeatCount() >= 2) {
+        this.beginWaitingConfirmation('A player left the table. Everyone gets a fresh ready check for the next hand.');
+      } else {
+        this.clearStartTimer();
+        this.clearTurnTimer();
+        this.waitingQueue = [];
+        this.actingUserId = undefined;
+        this.phaseEndsAt = undefined;
+        this.dealStartsAt = undefined;
+        this.notes = 'Waiting for another seated player before the next hand can be prepared.';
+        this.emit();
+      }
+      return;
+    }
+
+    this.pendingWaitingReset = true;
     this.emit();
   }
 
@@ -984,7 +1175,11 @@ class PokerTableInstance {
   }
 
   private seatedPlayableSeats(): InternalSeat[] {
-    return this.seats.filter((seat) => !seat.pendingRemoval && seat.stackRemaining > 0);
+    return this.seats.filter((seat) => !seat.pendingRemoval && seat.stackRemaining > 0 && seat.readyForNextHand);
+  }
+
+  private eligibleWaitingSeatCount(): number {
+    return this.seats.filter((seat) => !seat.pendingRemoval && seat.stackRemaining > 0).length;
   }
 
   private activeBettingSeats(): InternalSeat[] {
@@ -1007,6 +1202,28 @@ class PokerTableInstance {
 
   private findSeat(userId: string): InternalSeat | undefined {
     return this.seats.find((seat) => seat.userId === userId && !seat.pendingRemoval);
+  }
+
+  private applyEmote(seat: InternalSeat, payload?: Record<string, unknown>): void {
+    const emote = typeof payload?.emote === 'string' ? payload.emote.trim() : '';
+
+    if (!ALLOWED_EMOTES.has(emote)) {
+      throw new HttpError(400, 'Unsupported emote.');
+    }
+
+    const now = Date.now();
+    if (seat.lastEmoteAt && now - seat.lastEmoteAt < EMOTE_COOLDOWN_MS) {
+      throw new HttpError(400, 'Wait 5 seconds before using another emote.');
+    }
+
+    this.clearSeatEmote(seat);
+    seat.emoteText = emote;
+    seat.lastEmoteAt = now;
+    seat.emoteTimer = setTimeout(() => {
+      seat.emoteTimer = null;
+      seat.emoteText = null;
+      this.emit();
+    }, EMOTE_DURATION_MS);
   }
 
   private clearStartTimer(): void {
@@ -1045,6 +1262,15 @@ class PokerTableInstance {
     this.showdownTimer = null;
   }
 
+  private clearSeatEmote(seat: InternalSeat): void {
+    if (seat.emoteTimer) {
+      clearTimeout(seat.emoteTimer);
+      seat.emoteTimer = null;
+    }
+
+    seat.emoteText = null;
+  }
+
   private async persistHistory(
     rows: Array<{
       userId: string;
@@ -1065,6 +1291,39 @@ class PokerTableInstance {
 
   private emit(): void {
     this.onStateChange();
+  }
+
+  emitEmote(userId: string, payload?: Record<string, unknown>): void {
+    const seat = this.getSeat(userId);
+    this.applyEmote(seat, payload);
+    this.emit();
+  }
+
+  readySeat(userId: string): void {
+    const seat = this.getSeat(userId);
+
+    if (seat.stackRemaining <= 0) {
+      throw new HttpError(400, 'You need chips at the table before you can ready up.');
+    }
+
+    if (this.phase !== 'waiting') {
+      throw new HttpError(400, 'You can only ready up while waiting for the next hand.');
+    }
+
+    if (this.actingUserId !== userId) {
+      throw new HttpError(400, 'It is not your ready turn.');
+    }
+
+    seat.readyForNextHand = true;
+    seat.lastAction = 'Ready';
+
+    if (this.actingUserId === userId) {
+      this.advanceWaitingTurn();
+      return;
+    }
+
+    this.scheduleNextHandIfReady();
+    this.emit();
   }
 }
 
@@ -1155,10 +1414,24 @@ class PokerTableManager {
     );
 
     this.tables.set(table.sessionId, table);
-    table.addSeat(userId, formatPlayerLabel(user.email, user.username), Number(config.buyIn));
+    table.addSeat(userId, formatPlayerLabel(user.email, user.username), user.avatarUrl, Number(config.buyIn));
     this.userTable.set(userId, table.sessionId);
     this.emitStateChange();
 
+    return table.sessionId;
+  }
+
+  async spectateTable(userId: string, payload?: Record<string, unknown>): Promise<string> {
+    if (this.userTable.has(userId)) {
+      throw new HttpError(400, 'Leave your current seat before watching another table.');
+    }
+
+    const config = normalizeSpectateConfig(payload);
+    const table = this.resolveJoinTarget({
+      sessionId: config.sessionId,
+      password: config.password,
+      buyIn: 0
+    });
     return table.sessionId;
   }
 
@@ -1179,7 +1452,7 @@ class PokerTableManager {
     }
 
     const user = await this.reserveBalance(userId, config.buyIn);
-    table.addSeat(userId, formatPlayerLabel(user.email, user.username), config.buyIn);
+    table.addSeat(userId, formatPlayerLabel(user.email, user.username), user.avatarUrl, config.buyIn);
     this.userTable.set(userId, table.sessionId);
     this.emitStateChange();
 
@@ -1223,6 +1496,28 @@ class PokerTableManager {
   async performAction(userId: string, sessionId: string | undefined, action: string, payload?: Record<string, unknown>): Promise<void> {
     const table = this.requireTable(sessionId || this.userTable.get(userId));
     await table.performAction(userId, action, payload);
+
+    if (table.isEmpty()) {
+      this.tables.delete(table.sessionId);
+    }
+
+    this.emitStateChange();
+  }
+
+  async emitEmote(userId: string, sessionId: string | undefined, payload?: Record<string, unknown>): Promise<void> {
+    const table = this.requireTable(sessionId || this.userTable.get(userId));
+    table.emitEmote(userId, payload);
+
+    if (table.isEmpty()) {
+      this.tables.delete(table.sessionId);
+    }
+
+    this.emitStateChange();
+  }
+
+  async readySeat(userId: string, sessionId: string | undefined): Promise<void> {
+    const table = this.requireTable(sessionId || this.userTable.get(userId));
+    table.readySeat(userId);
 
     if (table.isEmpty()) {
       this.tables.delete(table.sessionId);
@@ -1322,6 +1617,19 @@ class PokerTableManager {
   }
 
   private emitStateChange(): void {
+    for (const [sessionId, table] of this.tables) {
+      if (table.isEmpty()) {
+        this.tables.delete(sessionId);
+      }
+    }
+
+    for (const [userId, sessionId] of this.userTable) {
+      const table = this.tables.get(sessionId);
+      if (!table || !table.hasUser(userId)) {
+        this.userTable.delete(userId);
+      }
+    }
+
     for (const listener of this.listeners) {
       listener();
     }

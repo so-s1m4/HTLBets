@@ -8,14 +8,30 @@ import { CreditsPipe } from '../../../shared/pipes/credits.pipe';
 import { GameShellComponent } from '../components/game-shell.component';
 import { BlackjackHandComponent } from '../blackjack/blackjack-hand.component';
 
+interface BlackjackHandViewState {
+  cards: Array<Record<string, string | boolean>>;
+  score: number;
+  betAmount: number;
+  doubledDown: boolean;
+  finished: boolean;
+  active: boolean;
+  outcome: string | null;
+}
+
 interface BlackjackViewState {
-  phase: 'ready' | 'player-turn' | 'dealer-turn' | 'resolved';
+  phase: 'ready' | 'insurance' | 'player-turn' | 'dealer-turn' | 'resolved';
   playerHand: Array<Record<string, string | boolean>>;
+  playerHands?: BlackjackHandViewState[];
+  activeHandIndex: number;
   dealerHand: Array<Record<string, string | boolean>>;
   playerScore: number;
   dealerScore: number;
   doubledDown: boolean;
   canDouble: boolean;
+  canSplit: boolean;
+  canInsurance: boolean;
+  insuranceBet: number;
+  totalWager: number;
   message: string;
 }
 
@@ -23,6 +39,14 @@ interface DisplayCard {
   hidden?: boolean;
   rank?: string;
   suit?: string;
+}
+
+interface DisplayPlayerHand {
+  cards: DisplayCard[];
+  score: number;
+  betAmount: number;
+  active: boolean;
+  outcome: string | null;
 }
 
 @Component({
@@ -44,7 +68,6 @@ export class BlackjackPageComponent {
 
   private readonly destroyRef = inject(DestroyRef);
   private readonly animationTimers = new Set<number>();
-  private previousPhase: BlackjackViewState['phase'] | null = null;
   private shouldAnimateInitialDeal = false;
   private shouldAnimateNextStateChange = false;
   private hasHydratedState = false;
@@ -55,18 +78,35 @@ export class BlackjackPageComponent {
   readonly currentBet = computed(() => this.state()?.currentBet || 0);
   readonly outcome = computed(() => this.socket.currentState()?.outcome || null);
   readonly revealedOutcome = signal<ReturnType<typeof this.outcome> | null>(null);
-  readonly displayedPlayerHand = signal<DisplayCard[]>([]);
+  readonly displayedPlayerHands = signal<DisplayPlayerHand[]>([]);
   readonly displayedDealerHand = signal<DisplayCard[]>([]);
   readonly isDealing = signal(false);
+  readonly hasPlayerHands = computed(() => this.displayedPlayerHands().length > 0);
+  readonly isSplitView = computed(() => this.displayedPlayerHands().length > 1);
+  readonly dealerHandHidden = computed(() => this.displayedDealerHand().length === 0 && !this.isRoundActive());
+  readonly playerHandsHidden = computed(() => !this.hasPlayerHands() && !this.isRoundActive());
+  readonly canTakeInsurance = computed(() => Boolean(this.viewState()?.canInsurance));
+  readonly canDouble = computed(() => Boolean(this.viewState()?.canDouble));
+  readonly canSplit = computed(() => Boolean(this.viewState()?.canSplit));
+  readonly statusMessage = computed(() => this.viewState()?.message || 'Place a bet to begin.');
+  readonly isInsuranceDecision = computed(() => this.viewState()?.phase === 'insurance' && !this.isDealing());
   readonly isRoundActive = computed(() => this.viewState()?.phase === 'player-turn' && !this.isDealing());
   readonly statusLabel = computed(() => {
     if (this.isDealing()) {
       return 'Dealing';
     }
 
-    return this.viewState()?.phase === 'player-turn' ? 'Player turn' : 'Ready';
+    const phase = this.viewState()?.phase;
+    if (phase === 'insurance') {
+      return 'Insurance';
+    }
+
+    if (phase === 'dealer-turn') {
+      return 'Dealer turn';
+    }
+
+    return phase === 'player-turn' ? 'Player turn' : 'Ready';
   });
-  readonly displayedPlayerScore = computed(() => this.scoreHand(this.displayedPlayerHand()));
   readonly displayedDealerScore = computed(() => this.scoreHand(this.displayedDealerHand()));
   readonly resultBanner = computed(() => {
     const outcome = this.revealedOutcome();
@@ -107,13 +147,13 @@ export class BlackjackPageComponent {
     this.shouldAnimateNextStateChange = false;
     this.clearAnimationTimers();
     this.revealedOutcome.set(null);
-    this.displayedPlayerHand.set([]);
+    this.displayedPlayerHands.set([]);
     this.displayedDealerHand.set([]);
     this.isDealing.set(true);
     this.socket.placeBet('blackjack', amount);
   }
 
-  action(action: 'hit' | 'stand' | 'double'): void {
+  action(action: 'hit' | 'stand' | 'double' | 'split' | 'insurance' | 'skip-insurance'): void {
     if (this.isDealing()) {
       return;
     }
@@ -122,13 +162,28 @@ export class BlackjackPageComponent {
     this.socket.sendAction('blackjack', action);
   }
 
+  playerHandLabel(index: number): string {
+    return this.displayedPlayerHands().length > 1 ? `Hand ${index + 1}` : 'Player';
+  }
+
+  playerHandCaption(hand: DisplayPlayerHand): string {
+    const parts = [`Bet ${hand.betAmount} cr`];
+
+    if (hand.outcome) {
+      parts.push(hand.outcome);
+    } else if (hand.active && this.viewState()?.phase === 'player-turn') {
+      parts.push('Active');
+    }
+
+    return parts.join(' · ');
+  }
+
   private syncDisplayedHands(nextView: BlackjackViewState | null): void {
-    this.previousPhase = nextView?.phase ?? null;
     const nextOutcome = this.outcome();
 
     if (!nextView) {
       this.clearAnimationTimers();
-      this.displayedPlayerHand.set([]);
+      this.displayedPlayerHands.set([]);
       this.displayedDealerHand.set([]);
       this.isDealing.set(false);
       this.revealedOutcome.set(null);
@@ -138,14 +193,14 @@ export class BlackjackPageComponent {
       return;
     }
 
-    const targetPlayer = nextView.playerHand as DisplayCard[];
+    const targetPlayerHands = this.normalizePlayerHands(nextView);
     const targetDealer = nextView.dealerHand as DisplayCard[];
-    const currentPlayer = untracked(() => this.displayedPlayerHand());
+    const currentPlayerHands = untracked(() => this.displayedPlayerHands());
     const currentDealer = untracked(() => this.displayedDealerHand());
 
-    if (nextView.phase === 'ready' && targetPlayer.length === 0 && targetDealer.length === 0) {
+    if (nextView.phase === 'ready' && targetPlayerHands.length === 0 && targetDealer.length === 0) {
       this.clearAnimationTimers();
-      this.displayedPlayerHand.set([]);
+      this.displayedPlayerHands.set([]);
       this.displayedDealerHand.set([]);
       this.isDealing.set(false);
       this.revealedOutcome.set(null);
@@ -156,7 +211,7 @@ export class BlackjackPageComponent {
 
     if (!this.hasHydratedState) {
       this.hasHydratedState = true;
-      this.applyHandsImmediately(targetPlayer, targetDealer);
+      this.applyHandsImmediately(targetPlayerHands, targetDealer);
       this.revealedOutcome.set(nextOutcome);
       this.shouldAnimateInitialDeal = false;
       this.shouldAnimateNextStateChange = false;
@@ -165,18 +220,19 @@ export class BlackjackPageComponent {
 
     const isInitialDeal =
       this.shouldAnimateInitialDeal &&
-      currentPlayer.length === 0 &&
+      currentPlayerHands.length === 0 &&
+      targetPlayerHands.length === 1 &&
+      targetPlayerHands[0]?.cards.length === 2 &&
       currentDealer.length === 0 &&
-      targetPlayer.length === 2 &&
       targetDealer.length === 2 &&
       nextView.phase !== 'ready';
 
     if (isInitialDeal) {
-      this.runInitialDealSequence(targetPlayer, targetDealer, nextOutcome);
+      this.runInitialDealSequence(targetPlayerHands[0], targetDealer, nextOutcome);
       return;
     }
 
-    if (this.cardsEqual(currentPlayer, targetPlayer) && this.cardsEqual(currentDealer, targetDealer)) {
+    if (this.handsEqual(currentPlayerHands, targetPlayerHands) && this.cardsEqual(currentDealer, targetDealer)) {
       if (this.shouldAnimateNextStateChange && nextOutcome) {
         this.clearAnimationTimers();
         this.isDealing.set(true);
@@ -195,35 +251,42 @@ export class BlackjackPageComponent {
       return;
     }
 
-    if (!this.shouldAnimateNextStateChange) {
-      this.applyHandsImmediately(targetPlayer, targetDealer);
-      this.revealedOutcome.set(nextOutcome);
+    const canUseRevealAnimation =
+      this.shouldAnimateNextStateChange &&
+      currentPlayerHands.length > 0 &&
+      currentPlayerHands.length === targetPlayerHands.length;
+
+    if (canUseRevealAnimation) {
+      this.runHandSetReveal(targetPlayerHands, targetDealer);
       return;
     }
 
-    this.runIncrementalReveal(targetPlayer, targetDealer);
+    this.applyHandsImmediately(targetPlayerHands, targetDealer);
+    this.revealedOutcome.set(nextOutcome);
+    this.shouldAnimateInitialDeal = false;
+    this.shouldAnimateNextStateChange = false;
   }
 
   private runInitialDealSequence(
-    targetPlayer: DisplayCard[],
+    targetPlayerHand: DisplayPlayerHand,
     targetDealer: DisplayCard[],
     nextOutcome: ReturnType<typeof this.outcome>
   ): void {
     this.clearAnimationTimers();
     this.isDealing.set(true);
     this.revealedOutcome.set(null);
-    this.displayedPlayerHand.set([]);
+    this.displayedPlayerHands.set([]);
     this.displayedDealerHand.set([]);
     this.shouldAnimateInitialDeal = false;
 
     this.queueAnimation(260, () => {
-      this.displayedPlayerHand.set([targetPlayer[0]]);
+      this.displayedPlayerHands.set([{ ...targetPlayerHand, cards: [targetPlayerHand.cards[0]] }]);
     });
     this.queueAnimation(1460, () => {
       this.displayedDealerHand.set([targetDealer[0]]);
     });
     this.queueAnimation(2660, () => {
-      this.displayedPlayerHand.set([targetPlayer[0], targetPlayer[1]]);
+      this.displayedPlayerHands.set([{ ...targetPlayerHand, cards: [targetPlayerHand.cards[0], targetPlayerHand.cards[1]] }]);
     });
     this.queueAnimation(3860, () => {
       this.displayedDealerHand.set([targetDealer[0], targetDealer[1]]);
@@ -235,25 +298,33 @@ export class BlackjackPageComponent {
     });
   }
 
-  private runIncrementalReveal(targetPlayer: DisplayCard[], targetDealer: DisplayCard[]): void {
+  private runHandSetReveal(targetPlayerHands: DisplayPlayerHand[], targetDealer: DisplayCard[]): void {
     this.clearAnimationTimers();
     this.isDealing.set(true);
     this.revealedOutcome.set(null);
     this.shouldAnimateNextStateChange = false;
 
     let delayMs = 260;
-    let workingPlayer = [...untracked(() => this.displayedPlayerHand())];
+    const currentPlayerHands = untracked(() => this.displayedPlayerHands());
+    let workingPlayerHands = currentPlayerHands.map((hand, index) => ({
+      ...targetPlayerHands[index],
+      cards: [...hand.cards]
+    }));
     let workingDealer = [...untracked(() => this.displayedDealerHand())];
+    let hasCardChanges = false;
+
+    this.displayedPlayerHands.set(workingPlayerHands);
 
     const queueCardUpdates = (currentCards: DisplayCard[], targetCards: DisplayCard[], apply: (cards: DisplayCard[]) => void) => {
       for (let index = 0; index < targetCards.length; index += 1) {
         const currentCard = currentCards[index];
         const nextCard = targetCards[index];
 
-        if (currentCard && this.cardSignature(currentCard) === this.cardSignature(nextCard)) {
+        if (this.cardSignature(currentCard) === this.cardSignature(nextCard)) {
           continue;
         }
 
+        hasCardChanges = true;
         const nextCards = [...currentCards];
         nextCards[index] = nextCard;
         currentCards = nextCards;
@@ -266,24 +337,55 @@ export class BlackjackPageComponent {
       }
     };
 
-    queueCardUpdates(workingPlayer, targetPlayer, (cards) => {
-      workingPlayer = cards;
-      this.displayedPlayerHand.set(cards);
+    workingPlayerHands.forEach((hand, handIndex) => {
+      queueCardUpdates(hand.cards, targetPlayerHands[handIndex].cards, (cards) => {
+        workingPlayerHands = workingPlayerHands.map((entry, index) =>
+          index === handIndex ? { ...targetPlayerHands[handIndex], cards } : entry
+        );
+        this.displayedPlayerHands.set(workingPlayerHands);
+      });
     });
+
     queueCardUpdates(workingDealer, targetDealer, (cards) => {
       workingDealer = cards;
       this.displayedDealerHand.set(cards);
     });
 
-    this.queueAnimation(delayMs + 180, () => {
+    this.queueAnimation((hasCardChanges ? delayMs : 260) + 180, () => {
+      this.displayedPlayerHands.set(targetPlayerHands);
+      this.displayedDealerHand.set(targetDealer);
       this.isDealing.set(false);
       this.revealedOutcome.set(this.outcome());
     });
   }
 
-  private applyHandsImmediately(targetPlayer: DisplayCard[], targetDealer: DisplayCard[]): void {
+  private normalizePlayerHands(view: BlackjackViewState): DisplayPlayerHand[] {
+    const hands = Array.isArray(view.playerHands) && view.playerHands.length
+      ? view.playerHands
+      : [
+          {
+            cards: view.playerHand,
+            score: view.playerScore,
+            betAmount: view.totalWager || this.currentBet(),
+            doubledDown: view.doubledDown,
+            finished: view.phase === 'resolved',
+            active: true,
+            outcome: this.outcome()?.result || null
+          }
+        ];
+
+    return hands.map((hand) => ({
+      cards: (hand.cards || []) as DisplayCard[],
+      score: hand.score,
+      betAmount: hand.betAmount,
+      active: hand.active,
+      outcome: hand.outcome
+    }));
+  }
+
+  private applyHandsImmediately(targetPlayerHands: DisplayPlayerHand[], targetDealer: DisplayCard[]): void {
     this.clearAnimationTimers();
-    this.displayedPlayerHand.set([...targetPlayer]);
+    this.displayedPlayerHands.set(targetPlayerHands.map((hand) => ({ ...hand, cards: [...hand.cards] })));
     this.displayedDealerHand.set([...targetDealer]);
     this.isDealing.set(false);
   }
@@ -303,6 +405,31 @@ export class BlackjackPageComponent {
     }, delayMs);
 
     this.animationTimers.add(timer);
+  }
+
+  private handsEqual(left: DisplayPlayerHand[], right: DisplayPlayerHand[]): boolean {
+    if (left.length !== right.length) {
+      return false;
+    }
+
+    return left.every((hand, index) => this.handEqual(hand, right[index]));
+  }
+
+  private handEqual(left: DisplayPlayerHand | undefined, right: DisplayPlayerHand | undefined): boolean {
+    if (!left || !right) {
+      return false;
+    }
+
+    return this.handMetaEqual(left, right) && this.cardsEqual(left.cards, right.cards);
+  }
+
+  private handMetaEqual(left: DisplayPlayerHand, right: DisplayPlayerHand): boolean {
+    return (
+      left.score === right.score &&
+      left.betAmount === right.betAmount &&
+      left.active === right.active &&
+      left.outcome === right.outcome
+    );
   }
 
   private cardsEqual(left: DisplayCard[], right: DisplayCard[]): boolean {

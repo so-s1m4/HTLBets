@@ -144,13 +144,15 @@
 
   @if (tableState(); as table) {
     <app-card table>
-      <div class="page-stack">
+      <div class="page-stack poker-table-shell">
         <app-poker-table
           [tableName]="table.tableName"
           [phase]="table.phase"
           [pot]="table.pot"
           [currentBet]="table.currentBet"
           [actingUserId]="table.actingUserId || null"
+          [actingCountdownMs]="countdownMs()"
+          [actingTurnDurationMs]="actingTurnDurationMs()"
           [seats]="table.players"
           [communityCards]="table.communityCards"
           [winners]="table.winners || null"
@@ -166,13 +168,44 @@
             <p class="status-copy">{{ table.notes }}</p>
           </div>
         </app-card>
+
+        @if (table.isSeated) {
+          <div class="poker-board-emote-overlay">
+            @if (emotePanelOpen()) {
+              <div class="poker-emote-panel">
+                <div class="utility-row">
+                  <span class="pill">Emotes</span>
+                  <span class="pill">
+                    @if (emoteCooldownRemainingMs() > 0) {
+                      {{ emoteCooldownSeconds() }}s cooldown
+                    } @else {
+                      Ready
+                    }
+                  </span>
+                </div>
+
+                <div class="poker-emote-grid">
+                  @for (emote of emotes; track emote) {
+                    <button type="button" class="poker-emote-button" [disabled]="emoteCooldownRemainingMs() > 0" (click)="sendEmote(emote)">
+                      {{ emote }}
+                    </button>
+                  }
+                </div>
+              </div>
+            }
+
+            <button type="button" class="poker-emote-fab" [class.poker-emote-fab--open]="emotePanelOpen()" (click)="toggleEmotePanel()">
+              :)
+            </button>
+          </div>
+        }
       </div>
     </app-card>
   }
 
   @if (tableState(); as table) {
     <app-card sidebar>
-      <div class="page-stack">
+      <div class="page-stack poker-sidebar">
         <div class="glass-stat-grid">
           <div class="glass-stat">
             <span class="glass-stat__label">Seats</span>
@@ -205,8 +238,24 @@
         } @else if (table.phase === 'waiting') {
           <app-card tone="muted">
             <div class="page-stack">
-              <span class="pill">Seated</span>
-              <p class="status-copy">Your chips stay on the felt. The next hand starts automatically when enough players are ready.</p>
+              <span class="pill">{{ isSelfWaitingTurn() ? 'Your turn' : isSelfReady() ? 'Ready' : 'Seated' }}</span>
+              @if (isSelfWaitingTurn()) {
+                <p class="status-copy">Your ready check is live. Choose whether to join the next hand or leave the table before the timer runs out.</p>
+                <app-button block [disabled]="isSelfReady()" (click)="readyTable()">
+                  {{ isSelfReady() ? 'Ready' : 'Ready up' }}
+                </app-button>
+                <app-button variant="ghost" block (click)="leaveTable()">Leave table</app-button>
+              } @else {
+                <p class="status-copy">
+                  @if (table.actingUserId) {
+                    {{ actingLabel() }} is making their ready choice. When your turn comes up, you can ready up or leave.
+                  } @else if (isSelfReady()) {
+                    You are locked in for the next hand. The next round will auto-start after the intermission timer.
+                  } @else {
+                    You are seated as a spectator. A ready check only appears when the table roster changes.
+                  }
+                </p>
+              }
             </div>
           </app-card>
         } @else {
@@ -239,16 +288,18 @@
           </div>
         }
 
-        <app-button variant="ghost" block (click)="leaveTable()">{{ table.isSeated ? 'Leave table' : 'Back to lobby' }}</app-button>
+        @if (!table.isSeated || table.phase !== 'waiting' || !isSelfWaitingTurn()) {
+          <app-button variant="ghost" block (click)="leaveTable()">{{ table.isSeated ? 'Leave table' : 'Back to lobby' }}</app-button>
+        }
 
         @if (socket.currentState()?.outcome; as result) {
           <div class="page-stack">
             <span class="pill">{{ result.result }}</span>
             <p [class]="result.balanceChange >= 0 ? 'text-success' : 'text-danger'">
-              {{ result.balanceChange | credits }}
-            </p>
-          </div>
-        }
+            {{ result.balanceChange | credits }}
+          </p>
+        </div>
+      }
       </div>
     </app-card>
   }

@@ -176,6 +176,14 @@ export class PokerEngine implements GameEngine<PokerState> {
       };
     }
 
+    if (action === 'emote') {
+      return {
+        state,
+        currentBet: context.currentBet,
+        status: GameSessionStatus.WAITING_ACTION
+      };
+    }
+
     throw new HttpError(400, `Unsupported poker action: ${request.action}`);
   }
 

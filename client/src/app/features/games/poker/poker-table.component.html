@@ -55,9 +55,29 @@
         [style.left.%]="entry.left"
         [style.top.%]="entry.top"
       >
-        <div class="poker-seat__meta">
-          <strong>{{ entry.seat.playerLabel }}</strong>
-            <span  class="poker-seat__info">{{ entry.seat.stackRemaining }}$</span>
+        <div class="poker-seat__identity">
+          <div class="poker-seat__avatar-shell">
+            @if (entry.seat.emoteText) {
+              <span class="poker-seat__bubble">{{ entry.seat.emoteText }}</span>
+            }
+
+            @if (actingUserId === entry.seat.userId) {
+              <span class="poker-seat__turn-ring" [style.background]="turnRingStyle(entry.seat.userId)"></span>
+            }
+
+            <div class="poker-seat__avatar">
+              @if (entry.seat.avatarUrl) {
+                <img [src]="entry.seat.avatarUrl" [alt]="entry.seat.playerLabel + ' profile picture'" loading="lazy" decoding="async" referrerpolicy="no-referrer" />
+              } @else {
+                <span>{{ avatarInitial(entry.seat.playerLabel) }}</span>
+              }
+            </div>
+          </div>
+
+          <div class="poker-seat__meta">
+            <strong>{{ entry.seat.playerLabel }}</strong>
+            <span class="poker-seat__info">{{ entry.seat.stackRemaining }}$</span>
+          </div>
         </div>
 
         <div class="poker-seat__cards">
@@ -85,15 +105,39 @@
 
     @if (selfSeat(); as self) {
       <section class="poker-seat poker-seat--self" [class.active]="self.status === 'active'" [class.acting]="actingUserId === self.userId">
-        <div class="poker-seat__meta">
-          <strong>You</strong>
-            <span class="poker-seat__info">{{ self.stackRemaining }} $</span>
+        <div class="poker-seat__identity">
+          <div class="poker-seat__avatar-shell">
+            @if (self.emoteText) {
+              <span class="poker-seat__bubble">{{ self.emoteText }}</span>
+            }
 
+            @if (actingUserId === self.userId) {
+              <span class="poker-seat__turn-ring" [style.background]="turnRingStyle(self.userId)"></span>
+            }
+
+            <div class="poker-seat__avatar">
+              @if (self.avatarUrl) {
+                <img [src]="self.avatarUrl" [alt]="self.playerLabel + ' profile picture'" loading="lazy" decoding="async" referrerpolicy="no-referrer" />
+              } @else {
+                <span>{{ avatarInitial(self.playerLabel) }}</span>
+              }
+            </div>
+          </div>
+
+          <div class="poker-seat__meta">
+            <strong>You</strong>
+            <span class="poker-seat__info">{{ self.stackRemaining }} $</span>
+          </div>
         </div>
+
         <div class="poker-seat__cards poker-seat__cards--self">
           @for (card of self.cards; track $index) {
-            <div class="poker-card" [style.animation-delay]="animationDelay($index, 240)">
+            <div class="poker-card" [class.hidden]="card.hidden" [style.animation-delay]="animationDelay($index, 240)">
               <div class="poker-card__inner">
+                <div class="poker-card__face poker-card__face--back">
+                  <span>??</span>
+                </div>
+
                 <div class="poker-card__face poker-card__face--front">
                   <strong [style.color]="color(card.suit)">{{ card.rank }}</strong>
                   <span [style.color]="color(card.suit)">{{ symbol(card.suit) }}</span>

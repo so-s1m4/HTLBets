@@ -17,6 +17,9 @@ export interface PokerDisplayCard {
 export interface PokerSeatView {
   userId: string;
   playerLabel: string;
+  avatarUrl?: string | null;
+  emoteText?: string | null;
+  isReady?: boolean;
   buyIn: number;
   stackRemaining: number;
   totalContribution: number;

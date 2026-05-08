@@ -26,6 +26,9 @@ import { PokerTableComponent } from '../poker/poker-table.component';
 })
 export class PokerPageComponent {
   readonly socket = inject(GameSocketService);
+  readonly turnDurationMs = 20_000;
+  readonly waitingTurnDurationMs = 30_000;
+  readonly emoteCooldownMs = 5_000;
   readonly auth = inject(AuthService);
 
   private readonly destroyRef = inject(DestroyRef);
@@ -42,6 +45,11 @@ export class PokerPageComponent {
   readonly privatePassword = signal('');
   readonly raiseAmount = signal('');
   readonly countdownMs = signal(0);
+  readonly emoteCooldownRemainingMs = signal(0);
+  readonly emotePanelOpen = signal(false);
+  readonly selectedTableId = signal<string | null>(null);
+  readonly emotes = ['Good luck', 'Nice hand', 'Oops', 'Wow', 'gg'] as const;
+  private nextEmoteAt = 0;
 
   readonly state = computed(() => this.socket.currentState());
   readonly pokerState = computed(() => (this.state()?.state as unknown as PokerRealtimeState | null) || null);
@@ -49,6 +57,17 @@ export class PokerPageComponent {
   readonly tableState = computed(() => (this.pokerState()?.kind === 'table' ? (this.pokerState() as PokerTableState) : null));
   readonly currentBet = computed(() => this.state()?.currentBet || 0);
   readonly selfSeat = computed(() => this.tableState()?.players.find((seat) => seat.isSelf) || null);
+  readonly isSelfReady = computed(() => Boolean(this.selfSeat()?.isReady));
+  readonly selectedTable = computed(() => this.lobbyState()?.tables.find((table) => table.sessionId === this.selectedTableId()) || null);
+  readonly actingTurnDurationMs = computed(() =>
+    this.tableState()?.phase === 'waiting' ? this.waitingTurnDurationMs : this.turnDurationMs
+  );
+  readonly isSelfWaitingTurn = computed(() => {
+    const table = this.tableState();
+    const seat = this.selfSeat();
+
+    return Boolean(table && seat && table.phase === 'waiting' && table.actingUserId === seat.userId);
+  });
   readonly publicTables = computed(() => this.lobbyState()?.tables.filter((table) => table.visibility === 'public') || []);
   readonly recommendedPublicTable = computed(() => {
     const tables = this.publicTables();
@@ -99,7 +118,7 @@ export class PokerPageComponent {
   readonly actingLabel = computed(() => {
     const table = this.tableState();
     const actor = table?.players.find((player) => player.userId === table?.actingUserId);
-    return actor?.playerLabel || (table?.phase === 'waiting' ? 'Waiting for seats' : 'Runout');
+    return actor?.playerLabel || (table?.phase === 'waiting' ? 'Waiting for ready checks' : 'Runout');
   });
   readonly callAmount = computed(() => {
     const seat = this.selfSeat();
@@ -126,15 +145,19 @@ export class PokerPageComponent {
 
     const interval = window.setInterval(() => {
       const table = this.tableState();
-      const target = table?.phase === 'waiting' ? table.dealStartsAt : table?.phaseEndsAt;
+      const target =
+        table?.phase === 'waiting'
+          ? table.phaseEndsAt || table.dealStartsAt
+          : table?.phaseEndsAt;
 
       if (!target) {
         this.countdownMs.set(0);
-        return;
+      } else {
+        this.countdownMs.set(Math.max(0, new Date(target).getTime() - Date.now()));
       }
 
-      this.countdownMs.set(Math.max(0, new Date(target).getTime() - Date.now()));
-    }, 1000);
+      this.emoteCooldownRemainingMs.set(Math.max(0, this.nextEmoteAt - Date.now()));
+    }, 100);
 
     this.destroyRef.onDestroy(() => {
       window.clearInterval(interval);
@@ -197,6 +220,14 @@ export class PokerPageComponent {
       return;
     }
 
+    this.emotePanelOpen.set(false);
+    this.socket.joinGame('poker', table.sessionId);
+  }
+
+  joinPrivateTable(): void {
+    this.emotePanelOpen.set(false);
+    this.socket.sendAction('poker', 'spectate-table', {
+      password: this.privatePassword().trim()
     this.socket.sendAction('poker', 'join-table', {
       sessionId: table.sessionId,
       buyIn: Math.max(table.minBuyIn, this.publicJoinBuyInNumber())
@@ -223,7 +254,17 @@ export class PokerPageComponent {
   }
 
   leaveTable(): void {
+    this.emotePanelOpen.set(false);
     this.socket.sendAction('poker', 'leave-table');
+  }
+
+  readyTable(): void {
+    const table = this.tableState();
+    if (!table?.isSeated) {
+      return;
+    }
+
+    this.socket.sendAction('poker', 'ready-table');
   }
 
   can(action: 'check' | 'call' | 'raise' | 'all-in' | 'fold'): boolean {
@@ -243,6 +284,27 @@ export class PokerPageComponent {
     this.socket.sendAction('poker', action);
   }
 
+  sendEmote(emote: (typeof this.emotes)[number]): void {
+    if (!this.tableState()?.isSeated || this.emoteCooldownRemainingMs() > 0) {
+      return;
+    }
+
+    this.nextEmoteAt = Date.now() + this.emoteCooldownMs;
+    this.emoteCooldownRemainingMs.set(this.emoteCooldownMs);
+    this.emotePanelOpen.set(false);
+    this.socket.sendAction('poker', 'emote', { emote });
+  }
+
+  emoteCooldownSeconds(): number {
+    return Math.ceil(this.emoteCooldownRemainingMs() / 1000);
+  }
+
+  toggleEmotePanel(): void {
+    if (!this.tableState()?.isSeated) {
+      return;
+    }
+
+    this.emotePanelOpen.update((open) => !open);
   setCreateBuyInFromSlider(value: string): void {
     const next = Math.max(this.createBuyInSliderMin(), Number(value) || this.createBuyInSliderMin());
     this.createBuyIn.set(String(next));

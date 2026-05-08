@@ -63,6 +63,8 @@ export class PokerTableComponent {
   @Input() pot = 0;
   @Input() currentBet = 0;
   @Input() actingUserId: string | null = null;
+  @Input() actingCountdownMs = 0;
+  @Input() actingTurnDurationMs = 20_000;
   @Input() seats: PokerSeatView[] = [];
   @Input() communityCards: PokerDisplayCard[] = [];
   @Input() winners: PokerWinnerView[] | null = null;
@@ -121,5 +123,27 @@ export class PokerTableComponent {
       default:
         return '#0b2038';
     }
+  }
+
+  avatarInitial(name: string): string {
+    return name.trim().charAt(0).toUpperCase() || 'P';
+  }
+
+  turnProgressFor(userId: string): number {
+    if (this.actingUserId !== userId || this.actingTurnDurationMs <= 0) {
+      return 0;
+    }
+
+    return Math.max(0, Math.min(1, this.actingCountdownMs / this.actingTurnDurationMs));
+  }
+
+  turnRingStyle(userId: string): string | null {
+    if (this.actingUserId !== userId) {
+      return null;
+    }
+
+    const progress = this.turnProgressFor(userId);
+    const degrees = `${Math.round(progress * 360)}deg`;
+    return `conic-gradient(from -90deg, rgba(108, 255, 176, 0.98) 0deg ${degrees}, rgba(108, 255, 176, 0.18) ${degrees} 360deg)`;
   }
 }

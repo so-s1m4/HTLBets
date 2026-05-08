@@ -19,10 +19,13 @@ export class BlackjackHandComponent {
   @Input() label = '';
   @Input() score = 0;
   @Input() cards: DisplayCard[] = [];
+  @Input() caption = '';
   @HostBinding('class.hidden')
   @Input() hidden = false;
 
   @Input() isDealer = false;
+  @HostBinding('class.active')
+  @Input() active = false;
 
   isHidden(card: DisplayCard): boolean {
     return Boolean(card.hidden);
