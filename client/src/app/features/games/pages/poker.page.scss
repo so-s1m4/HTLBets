@@ -229,10 +229,7 @@
   box-shadow: 0 14px 28px rgba(5, 9, 18, 0.18);
 }
 
-@media (min-width: 1040px) {
-  .lobby-grid {
-    grid-template-columns: minmax(0, 1.08fr) minmax(0, 1fr);
-.buyin-slider-card {
+ .buyin-slider-card {
   display: grid;
   gap: 1rem;
   padding: 1rem 1.05rem;
@@ -300,6 +297,12 @@
 
 .room-modal {
   width: min(42rem, 100%);
+}
+
+@media (min-width: 1040px) {
+  .lobby-grid {
+    grid-template-columns: minmax(0, 1.08fr) minmax(0, 1fr);
+  }
 }
 
 @media (min-width: 1120px) {
