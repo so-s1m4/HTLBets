@@ -37,10 +37,17 @@ userRouter.get('/leaderboard', async (_req, res, next) => {
 
 userRouter.patch('/me/profile', async (req, res, next) => {
   try {
-    const user = await userService.updateProfile(req.auth!.userId, {
-      ...(req.body && 'username' in req.body ? { username: req.body.username } : {}),
-      ...(req.body && 'avatarUrl' in req.body ? { avatarUrl: req.body.avatarUrl } : {})
-    });
+    const input: { username?: unknown; avatarUrl?: unknown } = {};
+
+    if (req.body && 'username' in req.body) {
+      input.username = req.body.username;
+    }
+
+    if (req.body && 'avatarUrl' in req.body) {
+      input.avatarUrl = req.body.avatarUrl;
+    }
+
+    const user = await userService.updateProfile(req.auth!.userId, input);
     res.status(200).json(user);
   } catch (error) {
     next(error);
