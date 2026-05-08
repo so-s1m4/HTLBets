@@ -6,6 +6,7 @@ import { HttpError } from '../../utils/http-error';
 import { signAccessToken } from '../../utils/jwt';
 import { hashPassword, verifyPassword } from '../../utils/password';
 import { toPublicUser, type PublicUser } from '../users/user.model';
+import { dailyRewardsService } from '../users/daily-rewards.service';
 
 interface AuthResponse {
   accessToken: string;
@@ -118,7 +119,7 @@ class AuthService {
       throw new HttpError(400, 'Incorrect password.');
     }
 
-    return this.buildAuthResponse(user);
+    return this.buildAuthResponse(await dailyRewardsService.grantDailyLoginBonus(user.id));
   }
 
   async setPassword(userId: string, password: string): Promise<PublicUser> {
@@ -138,7 +139,7 @@ class AuthService {
       create: { email }
     });
 
-    return this.buildAuthResponse(user);
+    return this.buildAuthResponse(await dailyRewardsService.grantDailyLoginBonus(user.id));
   }
 
   private buildAuthResponse(user: {
@@ -147,6 +148,7 @@ class AuthService {
     username: string | null;
     avatarUrl: string | null;
     passwordHash: string | null;
+    lastDailyLoginAt: string | null;
     balance: number;
     createdAt: Date;
     updatedAt: Date;

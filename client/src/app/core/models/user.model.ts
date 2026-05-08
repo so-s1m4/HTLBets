@@ -10,6 +10,22 @@ export interface User {
   updatedAt: string;
 }
 
+export interface DailyTask {
+  key: string;
+  title: string;
+  description: string;
+  reward: number;
+  progress: number;
+  target: number;
+  completed: boolean;
+  claimed: boolean;
+}
+
+export interface DailyTaskClaimResponse {
+  user: User;
+  task: DailyTask;
+}
+
 export interface GameHistoryRecord {
   id: string;
   gameType: 'ROULETTE' | 'BLACKJACK' | 'POKER' | 'ADMIN';

@@ -4,9 +4,11 @@ import { Router } from '@angular/router';
 import { RouterLink } from '@angular/router';
 
 import { AuthService } from '../../../core/services/auth.service';
+import { DailyRewardsService } from '../../../core/services/daily-rewards.service';
 import { GameSocketService } from '../../../core/services/game-socket.service';
 import { HistoryService } from '../../../core/services/history.service';
-import type { GameHistoryRecord, LeaderboardEntry, LeaderboardSnapshot, ProfileLeaderboardTag } from '../../../core/models/user.model';
+import type { DailyTask, GameHistoryRecord, LeaderboardEntry, LeaderboardSnapshot, ProfileLeaderboardTag } from '../../../core/models/user.model';
+
 import { AppButtonComponent } from '../../../shared/ui/app-button.component';
 import { AppCardComponent } from '../../../shared/ui/app-card.component';
 import { AppInputComponent } from '../../../shared/ui/app-input.component';
@@ -35,6 +37,7 @@ export class ProfilePageComponent {
   readonly auth = inject(AuthService);
 
   private readonly router = inject(Router);
+  private readonly dailyRewardsService = inject(DailyRewardsService);
   private readonly destroyRef = inject(DestroyRef);
   private readonly historyService = inject(HistoryService);
   private readonly leaderboardService = inject(LeaderboardService);
@@ -42,8 +45,13 @@ export class ProfilePageComponent {
   private readonly refreshIntervalMs = 5 * 60 * 1000;
 
   readonly history = signal<GameHistoryRecord[]>([]);
+  readonly dailyTasks = signal<DailyTask[]>([]);
   readonly leaderboard = signal<LeaderboardSnapshot | null>(null);
   readonly loading = signal(true);
+  readonly loadingDailies = signal(true);
+  readonly claimingTaskKey = signal<string | null>(null);
+  readonly dailyError = signal('');
+  readonly dailyNotice = signal('');
   readonly savingUsername = signal(false);
   readonly savingAvatar = signal(false);
   readonly profileError = signal('');
@@ -107,16 +115,35 @@ export class ProfilePageComponent {
 
   async refresh(): Promise<void> {
     this.loading.set(true);
+    this.loadingDailies.set(true);
 
     try {
-      const [history] = await Promise.all([
-        this.historyService.getHistory(),
-        this.refreshLeaderboard()
-      ]);
+      const [history, dailyTasks] = await Promise.all([this.historyService.getHistory(), this.dailyRewardsService.getTasks()]);
       this.history.set(history);
+      this.dailyTasks.set(dailyTasks);
       this.currentPage.set(1);
     } finally {
       this.loading.set(false);
+      this.loadingDailies.set(false);
+    }
+  }
+
+  async claimDailyTask(taskKey: string): Promise<void> {
+    this.claimingTaskKey.set(taskKey);
+    this.dailyError.set('');
+    this.dailyNotice.set('');
+
+    try {
+      const response = await this.dailyRewardsService.claimTask(taskKey);
+      this.auth.updateBalance(response.user.balance);
+      this.dailyTasks.update((tasks) =>
+        tasks.map((task) => (task.key === taskKey ? { ...task, claimed: true } : task))
+      );
+      this.dailyNotice.set(`Claimed ${response.task.reward} credits.`);
+    } catch (error) {
+      this.dailyError.set(error instanceof Error ? error.message : 'Failed to claim daily reward.');
+    } finally {
+      this.claimingTaskKey.set(null);
     }
   }
 
