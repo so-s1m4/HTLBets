@@ -17,15 +17,21 @@ export class RouletteWheelComponent {
 
   readonly wheel = wheelOrder;
   private readonly slotStep = 360 / this.wheel.length;
-
-  labelTransform(index: number): string {
+  readonly labelTransforms = this.wheel.map((_, index) => {
     const angle = this.slotCenterAngle(index);
     return `translate(-50%, -50%) rotate(${angle}deg) translateX(-6.18rem)`;
+  });
+  readonly labelTextTransforms = this.wheel.map((_, index) => {
+    const angle = this.slotCenterAngle(index);
+    return `rotate(${-angle}deg)`;
+  });
+
+  labelTransform(index: number): string {
+    return this.labelTransforms[index] || '';
   }
 
   labelTextTransform(index: number): string {
-    const angle = this.slotCenterAngle(index);
-    return `rotate(${-angle}deg)`;
+    return this.labelTextTransforms[index] || '';
   }
 
   private slotCenterAngle(index: number): number {

@@ -59,6 +59,12 @@ const orbitLayouts: Record<number, Array<{ left: number; top: number }>> = {
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class PokerTableComponent {
+  private seatsValue: PokerSeatView[] = [];
+  private selfSeatValue: PokerSeatView | null = null;
+  private orbitSeatValues: PositionedSeat[] = [];
+  private communityCardsValue: PokerDisplayCard[] = [];
+  private displayBoardCardsValue: PokerDisplayCard[] = [];
+
   @Input() tableName = 'Realtime poker';
   @Input() phase = 'waiting';
   @Input() pot = 0;
@@ -66,8 +72,37 @@ export class PokerTableComponent {
   @Input() actingUserId: string | null = null;
   @Input() actingCountdownMs = 0;
   @Input() actingTurnDurationMs = 20_000;
-  @Input() seats: PokerSeatView[] = [];
-  @Input() communityCards: PokerDisplayCard[] = [];
+  @Input()
+  set seats(value: PokerSeatView[]) {
+    this.seatsValue = value || [];
+    this.selfSeatValue = this.seatsValue.find((seat) => seat.isSelf) || null;
+
+    const others = this.seatsValue.filter((seat) => !seat.isSelf);
+    const layout = orbitLayouts[others.length] || orbitLayouts[7];
+    this.orbitSeatValues = others.map((seat, index) => ({
+      seat,
+      left: layout[index]?.left || 50,
+      top: layout[index]?.top || 12
+    }));
+  }
+
+  get seats(): PokerSeatView[] {
+    return this.seatsValue;
+  }
+
+  @Input()
+  set communityCards(value: PokerDisplayCard[]) {
+    this.communityCardsValue = value || [];
+    this.displayBoardCardsValue = [...this.communityCardsValue];
+    while (this.displayBoardCardsValue.length < 5) {
+      this.displayBoardCardsValue.push({ hidden: true });
+    }
+  }
+
+  get communityCards(): PokerDisplayCard[] {
+    return this.communityCardsValue;
+  }
+
   @Input() winners: PokerWinnerView[] | null = null;
 
   animationDelay(index: number, base = 0): string {
@@ -75,27 +110,15 @@ export class PokerTableComponent {
   }
 
   selfSeat(): PokerSeatView | null {
-    return this.seats.find((seat) => seat.isSelf) || null;
+    return this.selfSeatValue;
   }
 
   orbitSeats(): PositionedSeat[] {
-    const others = this.seats.filter((seat) => !seat.isSelf);
-    const layout = orbitLayouts[others.length] || orbitLayouts[7];
-
-    return others.map((seat, index) => ({
-      seat,
-      left: layout[index]?.left || 50,
-      top: layout[index]?.top || 12
-    }));
+    return this.orbitSeatValues;
   }
 
   displayBoardCards(): PokerDisplayCard[] {
-    const cards = [...this.communityCards];
-    while (cards.length < 5) {
-      cards.push({ hidden: true });
-    }
-
-    return cards;
+    return this.displayBoardCardsValue;
   }
 
   symbol(suit: string | undefined): string {

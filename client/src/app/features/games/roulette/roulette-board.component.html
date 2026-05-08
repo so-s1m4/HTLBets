@@ -9,7 +9,7 @@
             0
             @if (getAggregate('number', 0); as aggregate) {
               <span class="roulette-board__chips">
-                @for (chip of buildChips(aggregate.totalAmount, aggregate.playerCount); track $index) {
+                @for (chip of chipsFor('number', 0, aggregate.totalAmount, aggregate.playerCount); track $index) {
                   <span class="roulette-board__chip" [style.--chip-color]="chip"></span>
                 }
               </span>
@@ -29,7 +29,7 @@
                     {{ number }}
                     @if (getAggregate('number', number); as aggregate) {
                       <span class="roulette-board__chips">
-                        @for (chip of buildChips(aggregate.totalAmount, aggregate.playerCount); track $index) {
+                        @for (chip of chipsFor('number', number, aggregate.totalAmount, aggregate.playerCount); track $index) {
                           <span class="roulette-board__chip" [style.--chip-color]="chip"></span>
                         }
                       </span>
@@ -51,7 +51,7 @@
           Red
           @if (getAggregate('color', 'red'); as aggregate) {
             <span class="roulette-board__chips roulette-board__chips--choice">
-              @for (chip of buildChips(aggregate.totalAmount, aggregate.playerCount); track $index) {
+              @for (chip of chipsFor('color', 'red', aggregate.totalAmount, aggregate.playerCount); track $index) {
                 <span class="roulette-board__chip" [style.--chip-color]="chip"></span>
               }
             </span>
@@ -65,7 +65,7 @@
           Black
           @if (getAggregate('color', 'black'); as aggregate) {
             <span class="roulette-board__chips roulette-board__chips--choice">
-              @for (chip of buildChips(aggregate.totalAmount, aggregate.playerCount); track $index) {
+              @for (chip of chipsFor('color', 'black', aggregate.totalAmount, aggregate.playerCount); track $index) {
                 <span class="roulette-board__chip" [style.--chip-color]="chip"></span>
               }
             </span>
