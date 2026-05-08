@@ -1,6 +1,6 @@
 import { Component, DestroyRef, computed, effect, inject, signal } from '@angular/core';
 
-import type { PokerLobbyState, PokerRealtimeState, PokerTableState, PokerTableSummary } from '../../../core/models/game.model';
+import type { PokerLobbyState, PokerRealtimeState, PokerTableState } from '../../../core/models/game.model';
 import { AuthService } from '../../../core/services/auth.service';
 import { GameSocketService } from '../../../core/services/game-socket.service';
 import { CreditsPipe } from '../../../shared/pipes/credits.pipe';
@@ -31,17 +31,17 @@ export class PokerPageComponent {
   private readonly destroyRef = inject(DestroyRef);
 
   readonly createTableName = signal('Skyline No-Limit');
+  readonly createVisibility = signal<'public' | 'private'>('public');
   readonly createPassword = signal('');
   readonly createMinBuyIn = signal('200');
   readonly createMaxPlayers = signal('6');
   readonly createBuyIn = signal('400');
   readonly publicJoinBuyIn = signal('200');
   readonly privateJoinBuyIn = signal('200');
-  readonly showPrivateCreateModal = signal(false);
+  readonly showCreateRoomModal = signal(false);
   readonly privatePassword = signal('');
   readonly raiseAmount = signal('');
   readonly countdownMs = signal(0);
-  readonly selectedTableId = signal<string | null>(null);
 
   readonly state = computed(() => this.socket.currentState());
   readonly pokerState = computed(() => (this.state()?.state as unknown as PokerRealtimeState | null) || null);
@@ -49,13 +49,37 @@ export class PokerPageComponent {
   readonly tableState = computed(() => (this.pokerState()?.kind === 'table' ? (this.pokerState() as PokerTableState) : null));
   readonly currentBet = computed(() => this.state()?.currentBet || 0);
   readonly selfSeat = computed(() => this.tableState()?.players.find((seat) => seat.isSelf) || null);
-  readonly selectedTable = computed(() => this.lobbyState()?.tables.find((table) => table.sessionId === this.selectedTableId()) || null);
+  readonly publicTables = computed(() => this.lobbyState()?.tables.filter((table) => table.visibility === 'public') || []);
+  readonly recommendedPublicTable = computed(() => {
+    const tables = this.publicTables();
+    if (tables.length === 0) {
+      return null;
+    }
+
+    return [...tables].sort((left, right) => left.minBuyIn - right.minBuyIn)[0] || null;
+  });
   readonly createBuyInNumber = computed(() => this.asWholeNumber(this.createBuyIn(), 400));
   readonly createMinBuyInNumber = computed(() => this.asWholeNumber(this.createMinBuyIn(), 200));
-  readonly publicJoinBuyInNumber = computed(() => this.asWholeNumber(this.publicJoinBuyIn(), this.selectedTable()?.minBuyIn || 200));
+  readonly publicJoinBuyInNumber = computed(() =>
+    this.asWholeNumber(this.publicJoinBuyIn(), this.recommendedPublicTable()?.minBuyIn || 200)
+  );
   readonly privateJoinBuyInNumber = computed(() => this.asWholeNumber(this.privateJoinBuyIn(), 200));
   readonly createBuyInSliderMin = computed(() => Math.max(100, this.createMinBuyInNumber()));
   readonly createBuyInSliderMax = computed(() => Math.max(this.createBuyInSliderMin() + 400, 5000));
+  readonly publicJoinBuyInSliderMin = computed(() => Math.max(100, this.recommendedPublicTable()?.minBuyIn || 100));
+  readonly publicJoinBuyInSliderMax = computed(() =>
+    Math.max(
+      this.publicJoinBuyInSliderMin() + 600,
+      Math.min(Math.max(this.auth.currentUser()?.balance || 0, this.publicJoinBuyInSliderMin() + 600), 10000)
+    )
+  );
+  readonly privateJoinBuyInSliderMin = computed(() => 100);
+  readonly privateJoinBuyInSliderMax = computed(() =>
+    Math.max(
+      this.privateJoinBuyInSliderMin() + 600,
+      Math.min(Math.max(this.auth.currentUser()?.balance || 0, this.privateJoinBuyInSliderMin() + 600), 10000)
+    )
+  );
   readonly timerLabel = computed(() => {
     const state = this.tableState();
     if (!state) {
@@ -117,20 +141,9 @@ export class PokerPageComponent {
     });
 
     effect(() => {
-      const selected = this.selectedTable();
-      if (selected) {
-        this.publicJoinBuyIn.set(String(Math.max(selected.minBuyIn, Number(this.publicJoinBuyIn()) || 0)));
-      }
-    });
-
-    effect(() => {
-      const lobby = this.lobbyState();
-      if (!lobby) {
-        return;
-      }
-
-      if (!this.selectedTableId() || !lobby.tables.some((table) => table.sessionId === this.selectedTableId())) {
-        this.selectedTableId.set(lobby.tables[0]?.sessionId || null);
+      const publicTable = this.recommendedPublicTable();
+      if (publicTable) {
+        this.publicJoinBuyIn.set(String(Math.max(publicTable.minBuyIn, Number(this.publicJoinBuyIn()) || 0)));
       }
     });
 
@@ -148,35 +161,38 @@ export class PokerPageComponent {
     });
   }
 
-  selectPublicTable(table: PokerTableSummary): void {
-    this.selectedTableId.set(table.sessionId);
-    this.publicJoinBuyIn.set(String(table.minBuyIn));
-  }
-
-  openPrivateCreateModal(): void {
-    this.showPrivateCreateModal.set(true);
+  openCreateRoomModal(): void {
+    this.showCreateRoomModal.set(true);
     this.createPassword.set('');
   }
 
-  closePrivateCreateModal(): void {
-    this.showPrivateCreateModal.set(false);
+  closeCreateRoomModal(): void {
+    this.showCreateRoomModal.set(false);
   }
 
-  createPrivateTable(): void {
+  createRoom(): void {
     this.socket.sendAction('poker', 'create-table', {
       tableName: this.createTableName().trim(),
-      visibility: 'private',
-      password: this.createPassword().trim(),
+      visibility: this.createVisibility(),
+      password: this.createVisibility() === 'private' ? this.createPassword().trim() : undefined,
       minBuyIn: this.createMinBuyInNumber(),
       maxPlayers: Number(this.createMaxPlayers()),
       buyIn: Math.max(this.createMinBuyInNumber(), this.createBuyInNumber())
     });
 
-    this.closePrivateCreateModal();
+    this.closeCreateRoomModal();
   }
 
   joinSelectedPublicTable(): void {
-    const table = this.selectedTable();
+    const tables = this.publicTables();
+    if (tables.length === 0) {
+      return;
+    }
+
+    const eligibleTables = tables.filter((table) => table.playerCount < table.maxPlayers);
+    const pool = eligibleTables.length > 0 ? eligibleTables : tables;
+    const table = pool[Math.floor(Math.random() * pool.length)];
+
     if (!table) {
       return;
     }
@@ -230,6 +246,16 @@ export class PokerPageComponent {
   setCreateBuyInFromSlider(value: string): void {
     const next = Math.max(this.createBuyInSliderMin(), Number(value) || this.createBuyInSliderMin());
     this.createBuyIn.set(String(next));
+  }
+
+  setPublicJoinBuyInFromSlider(value: string): void {
+    const next = Math.max(this.publicJoinBuyInSliderMin(), Number(value) || this.publicJoinBuyInSliderMin());
+    this.publicJoinBuyIn.set(String(next));
+  }
+
+  setPrivateJoinBuyInFromSlider(value: string): void {
+    const next = Math.max(this.privateJoinBuyInSliderMin(), Number(value) || this.privateJoinBuyInSliderMin());
+    this.privateJoinBuyIn.set(String(next));
   }
 
   private asWholeNumber(value: string, fallback: number): number {

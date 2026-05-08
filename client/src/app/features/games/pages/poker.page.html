@@ -15,52 +15,53 @@
               <div class="page-heading">
                 <span class="page-heading__eyebrow">Public lobby</span>
                 <h2>Join open tables</h2>
-                <p class="status-copy">Visible rooms, instant seat selection, and simple buy-ins for the main floor.</p>
+                <p class="status-copy">One tap throws you into a random open public table. Set your stack first, then jump in.</p>
               </div>
 
-              <div class="table-list">
-                @for (table of lobby.tables; track table.sessionId) {
-                  <button
-                    type="button"
-                    class="table-item"
-                    [class.active]="selectedTableId() === table.sessionId"
-                    (click)="selectPublicTable(table)"
-                  >
-                    <div>
-                      <strong>{{ table.tableName }}</strong>
-                      <span>{{ table.playerCount }}/{{ table.maxPlayers }} seats · {{ table.phase }}</span>
+              <app-card tone="muted">
+                <div class="page-stack">
+                  <div class="utility-row">
+                    <div class="page-heading">
+                      <span class="page-heading__eyebrow">Quick match</span>
+                      <h3>{{ publicTables().length }} open table{{ publicTables().length === 1 ? '' : 's' }}</h3>
                     </div>
-                    <span class="pill">{{ table.minBuyIn }} cr min</span>
-                  </button>
-                } @empty {
-                  <div class="empty-copy">
-                    <strong>No public tables yet</strong>
-                    <span>Wait for an open seat or spin up a hidden room on the private side.</span>
+                    <span class="pill">{{ recommendedPublicTable()?.minBuyIn || 100 }} cr floor</span>
                   </div>
-                }
-              </div>
+                </div>
+              </app-card>
 
-              <app-input
-                label="Public table buy-in"
-                inputMode="numeric"
-                [value]="publicJoinBuyIn()"
-                (valueChange)="publicJoinBuyIn.set($event.replace(/\D/g, ''))"
-              />
+              <div class="buyin-slider-card">
+                <div class="utility-row">
+                  <div class="page-heading">
+                    <span class="page-heading__eyebrow">Your buy-in</span>
+                    <h3>{{ publicJoinBuyInNumber() }} cr</h3>
+                  </div>
+                  <span class="pill">Min {{ publicJoinBuyInSliderMin() }} cr</span>
+                </div>
+
+                <input
+                  class="buyin-slider"
+                  type="range"
+                  [min]="publicJoinBuyInSliderMin()"
+                  [max]="publicJoinBuyInSliderMax()"
+                  step="50"
+                  [value]="publicJoinBuyInNumber()"
+                  (input)="setPublicJoinBuyInFromSlider($any($event.target).value)"
+                />
+
+                <div class="buyin-slider__labels">
+                  <span>{{ publicJoinBuyInSliderMin() }} cr</span>
+                  <span>{{ publicJoinBuyInSliderMax() }} cr</span>
+                </div>
+              </div>
 
               <div class="section-meta">
-                <span class="pill">Selected min {{ selectedTable()?.minBuyIn || 100 }} cr</span>
-                <span class="pill">Public floor</span>
+                <span class="pill">Random public seat</span>
+                <span class="pill">Recommended floor {{ recommendedPublicTable()?.minBuyIn || 100 }} cr</span>
               </div>
 
-              <app-button block [disabled]="!selectedTable()" (click)="joinSelectedPublicTable()">Join public table</app-button>
+              <app-button block [disabled]="publicTables().length === 0" (click)="joinSelectedPublicTable()">Join random public table</app-button>
 
-              <div class="divider"></div>
-
-              <div class="page-heading">
-                <span class="page-heading__eyebrow">Open notes</span>
-                <h3>Lobby pulse</h3>
-                <p class="status-copy">{{ lobby.notes }}</p>
-              </div>
             </div>
           </app-card>
 
@@ -84,12 +85,30 @@
                 (valueChange)="privatePassword.set($event.replace(/\D/g, '').slice(0, 5))"
               />
 
-              <app-input
-                label="Private table buy-in"
-                inputMode="numeric"
-                [value]="privateJoinBuyIn()"
-                (valueChange)="privateJoinBuyIn.set($event.replace(/\D/g, ''))"
-              />
+              <div class="buyin-slider-card buyin-slider-card--compact">
+                <div class="utility-row">
+                  <div class="page-heading">
+                    <span class="page-heading__eyebrow">Your buy-in</span>
+                    <h3>{{ privateJoinBuyInNumber() }} cr</h3>
+                  </div>
+                  <span class="pill">Private join</span>
+                </div>
+
+                <input
+                  class="buyin-slider"
+                  type="range"
+                  [min]="privateJoinBuyInSliderMin()"
+                  [max]="privateJoinBuyInSliderMax()"
+                  step="50"
+                  [value]="privateJoinBuyInNumber()"
+                  (input)="setPrivateJoinBuyInFromSlider($any($event.target).value)"
+                />
+
+                <div class="buyin-slider__labels">
+                  <span>{{ privateJoinBuyInSliderMin() }} cr</span>
+                  <span>{{ privateJoinBuyInSliderMax() }} cr</span>
+                </div>
+              </div>
 
               <div class="section-meta">
                 <span class="pill">Wallet {{ auth.currentUser()?.balance || 0 }} cr</span>
@@ -97,9 +116,10 @@
               </div>
 
               <app-button variant="secondary" block (click)="joinPrivateTable()">Join private table</app-button>
-              <app-button block (click)="openPrivateCreateModal()">Create private room</app-button>
+            <app-button block (click)="openCreateRoomModal()">Create room</app-button>
             </div>
           </app-card>
+
         </div>
       </div>
     </app-card>
@@ -111,11 +131,11 @@
         <div class="glass-stat-grid">
           <div class="glass-stat">
             <span class="glass-stat__label">Public tables</span>
-            <strong class="glass-stat__value">{{ lobby.tables.length }}</strong>
+            <strong class="glass-stat__value">{{ publicTables().length }}</strong>
           </div>
           <div class="glass-stat">
             <span class="glass-stat__label">Recommended entry</span>
-            <strong class="glass-stat__value">{{ selectedTable()?.minBuyIn || 100 }} cr</strong>
+            <strong class="glass-stat__value">{{ recommendedPublicTable()?.minBuyIn || 100 }} cr</strong>
           </div>
         </div>
       </div>
@@ -233,28 +253,39 @@
     </app-card>
   }
 
-  @if (showPrivateCreateModal()) {
-    <div class="room-modal-backdrop" (click)="closePrivateCreateModal()">
+  @if (showCreateRoomModal()) {
+    <div class="room-modal-backdrop" (click)="closeCreateRoomModal()">
       <div class="room-modal" (click)="$event.stopPropagation()">
         <app-card tone="muted">
           <div class="page-stack">
             <div class="utility-row">
               <div class="page-heading">
-                <span class="page-heading__eyebrow">Private room setup</span>
-                <h2>Create hidden table</h2>
-                <p class="status-copy">Set the passcode, seat count, and entry floor without cluttering the main lobby.</p>
+                <span class="page-heading__eyebrow">Room setup</span>
+                <h2>Create room</h2>
+                <p class="status-copy">Choose whether the table should be public or private, then set seats and buy-in floor.</p>
               </div>
-              <app-button variant="ghost" (click)="closePrivateCreateModal()">Close</app-button>
+              <app-button variant="ghost" (click)="closeCreateRoomModal()">Close</app-button>
+            </div>
+
+            <div class="toggle-row">
+              <button type="button" class="toggle-pill" [class.active]="createVisibility() === 'public'" (click)="createVisibility.set('public')">
+                Public
+              </button>
+              <button type="button" class="toggle-pill" [class.active]="createVisibility() === 'private'" (click)="createVisibility.set('private')">
+                Private
+              </button>
             </div>
 
             <app-input label="Table name" [value]="createTableName()" (valueChange)="createTableName.set($event)" />
 
-            <app-input
-              label="5-digit table password"
-              inputMode="numeric"
-              [value]="createPassword()"
-              (valueChange)="createPassword.set($event.replace(/\D/g, '').slice(0, 5))"
-            />
+            @if (createVisibility() === 'private') {
+              <app-input
+                label="5-digit table password"
+                inputMode="numeric"
+                [value]="createPassword()"
+                (valueChange)="createPassword.set($event.replace(/\D/g, '').slice(0, 5))"
+              />
+            }
 
             <div class="form-grid">
               <app-input
@@ -297,11 +328,14 @@
             </div>
 
             <div class="section-meta">
+              <span class="pill">{{ createVisibility() === 'public' ? 'Visible in lobby' : 'Password protected' }}</span>
               <span class="pill">You bring {{ createBuyInNumber() }} cr</span>
               <span class="pill">Seats {{ createMaxPlayers() || '6' }}</span>
             </div>
 
-            <app-button block (click)="createPrivateTable()">Create private table</app-button>
+            <app-button block (click)="createRoom()">
+              {{ createVisibility() === 'public' ? 'Create public room' : 'Create private room' }}
+            </app-button>
           </div>
         </app-card>
       </div>

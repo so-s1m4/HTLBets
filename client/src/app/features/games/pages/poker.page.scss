@@ -19,6 +19,30 @@
   font-size: 0.7rem;
 }
 
+.toggle-row {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.toggle-pill {
+  flex: 1;
+  min-height: 3rem;
+  border-radius: 999px;
+  border: 1px solid rgba(149, 171, 211, 0.16);
+  background: rgba(10, 18, 30, 0.72);
+  color: var(--text-soft);
+  transition:
+    transform 180ms ease,
+    border-color 180ms ease,
+    box-shadow 180ms ease;
+}
+
+.toggle-pill.active {
+  border-color: rgba(116, 192, 255, 0.34);
+  color: var(--text);
+  box-shadow: 0 0 0 1px rgba(116, 192, 255, 0.12), 0 14px 28px rgba(6, 12, 22, 0.18);
+}
+
 .form-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -64,6 +88,14 @@
   box-shadow: 0 16px 30px rgba(5, 9, 18, 0.2);
 }
 
+.table-item--static {
+  cursor: default;
+}
+
+.table-item--static:hover {
+  transform: none;
+}
+
 .table-item strong,
 .empty-copy strong {
   display: block;
@@ -98,6 +130,10 @@
   background:
     radial-gradient(circle at top right, rgba(116, 192, 255, 0.08), transparent 40%),
     linear-gradient(180deg, rgba(12, 20, 31, 0.96), rgba(8, 14, 23, 0.98));
+}
+
+.buyin-slider-card--compact {
+  gap: 0.85rem;
 }
 
 .buyin-slider {
