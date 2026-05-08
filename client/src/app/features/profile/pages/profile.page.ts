@@ -49,6 +49,8 @@ export class ProfilePageComponent {
   readonly leaderboard = signal<LeaderboardSnapshot | null>(null);
   readonly loading = signal(true);
   readonly loadingDailies = signal(true);
+  readonly dailyTasksCollapsed = signal(false);
+  readonly historyCollapsed = signal(false);
   readonly claimingTaskKey = signal<string | null>(null);
   readonly dailyError = signal('');
   readonly dailyNotice = signal('');
@@ -225,6 +227,14 @@ export class ProfilePageComponent {
 
   goToNextPage(): void {
     this.currentPage.update((page) => Math.min(this.totalPages(), page + 1));
+  }
+
+  toggleDailyTasksCollapsed(): void {
+    this.dailyTasksCollapsed.update((value) => !value);
+  }
+
+  toggleHistoryCollapsed(): void {
+    this.historyCollapsed.update((value) => !value);
   }
 
   isAdminAdjustment(entry: GameHistoryRecord): boolean {

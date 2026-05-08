@@ -35,6 +35,14 @@
   flex-wrap: wrap;
 }
 
+.section-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
     .profile-actions {
       display: flex;
       gap: 0.65rem;
@@ -133,6 +141,11 @@
       }
 
       .profile-actions {
+        width: 100%;
+        justify-content: stretch;
+      }
+
+      .section-actions {
         width: 100%;
         justify-content: stretch;
       }
