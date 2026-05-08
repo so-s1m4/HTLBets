@@ -1,0 +1,81 @@
+<div class="page-stack">
+  <app-card tone="accent">
+    <div class="leaderboard-hero">
+      <div class="page-heading">
+        <span class="page-heading__eyebrow">Live Rankings</span>
+        <h1>Leaderboard</h1>
+        <p class="status-copy">Browse the top 100 players by balance, total losses, or biggest single win.</p>
+      </div>
+
+      <div class="leaderboard-hero__meta">
+        <span class="pill">Updates every 5 minutes</span>
+        <span class="pill">Admins excluded</span>
+        <span class="pill">Top {{ selectedEntries().length }}</span>
+      </div>
+    </div>
+  </app-card>
+
+  @if (error()) {
+    <app-card tone="muted">
+      <p class="status-copy text-danger">{{ error() }}</p>
+    </app-card>
+  } @else if (loading() && !leaderboard()) {
+    <app-card tone="muted">
+      <p class="status-copy">Loading leaderboard...</p>
+    </app-card>
+  } @else {
+    <app-card tone="muted">
+      <div class="leaderboard-panel">
+        <div class="leaderboard-panel__header">
+          <div class="page-heading">
+            <span class="page-heading__eyebrow">Leaderboard Browser</span>
+            <h2>{{ leaderboardTitle() }}</h2>
+          </div>
+
+          <span class="pill">Top {{ selectedEntries().length }}</span>
+        </div>
+
+        <div class="leaderboard-switcher">
+          <button class="leaderboard-switcher__button" [class.active]="selectedLeaderboard() === 'richest'" (click)="selectedLeaderboard.set('richest')">
+            Most money
+          </button>
+          <button class="leaderboard-switcher__button" [class.active]="selectedLeaderboard() === 'mostLosses'" (click)="selectedLeaderboard.set('mostLosses')">
+            Most losses
+          </button>
+          <button class="leaderboard-switcher__button" [class.active]="selectedLeaderboard() === 'biggestWin'" (click)="selectedLeaderboard.set('biggestWin')">
+            Biggest win
+          </button>
+        </div>
+
+        <div class="leaderboard-list">
+          @for (entry of selectedEntries(); track entry.userId; let index = $index) {
+            <div class="leaderboard-row">
+              <div class="leaderboard-row__rank">{{ index + 1 }}</div>
+
+              <div class="leaderboard-entry">
+                <div class="leaderboard-entry__avatar">
+                  @if (entry.avatarUrl) {
+                    <img [src]="entry.avatarUrl" [alt]="leaderboardName(entry) + ' avatar'" loading="lazy" decoding="async" referrerpolicy="no-referrer" />
+                  } @else {
+                    <span>{{ leaderboardInitials(entry) }}</span>
+                  }
+                </div>
+
+                <div class="leaderboard-entry__copy">
+                  <strong>{{ leaderboardName(entry) }}</strong>
+                  <span>{{ entry.email }}</span>
+                </div>
+              </div>
+
+              <div class="leaderboard-row__metric">
+                {{ entry.metricValue | credits }}
+              </div>
+            </div>
+          } @empty {
+            <p class="status-copy">No leaderboard entries yet.</p>
+          }
+        </div>
+      </div>
+    </app-card>
+  }
+</div>

@@ -1,5 +1,5 @@
 import { DatePipe } from '@angular/common';
-import { Component, computed, effect, inject, signal } from '@angular/core';
+import { Component, computed, DestroyRef, effect, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { RouterLink } from '@angular/router';
 
@@ -7,13 +7,15 @@ import { AuthService } from '../../../core/services/auth.service';
 import { DailyRewardsService } from '../../../core/services/daily-rewards.service';
 import { GameSocketService } from '../../../core/services/game-socket.service';
 import { HistoryService } from '../../../core/services/history.service';
-import type { DailyTask, GameHistoryRecord } from '../../../core/models/user.model';
+import type { DailyTask, GameHistoryRecord, LeaderboardEntry, LeaderboardSnapshot, ProfileLeaderboardTag } from '../../../core/models/user.model';
+
 import { AppButtonComponent } from '../../../shared/ui/app-button.component';
 import { AppCardComponent } from '../../../shared/ui/app-card.component';
 import { AppInputComponent } from '../../../shared/ui/app-input.component';
 import { CreditsPipe } from '../../../shared/pipes/credits.pipe';
 import { GameLabelPipe } from '../../../shared/pipes/game-label.pipe';
 import { ProfileSummaryComponent } from '../components/profile-summary.component';
+import { LeaderboardService } from '../../../core/services/leaderboard.service';
 
 @Component({
   selector: 'app-profile-page',
@@ -36,11 +38,15 @@ export class ProfilePageComponent {
 
   private readonly router = inject(Router);
   private readonly dailyRewardsService = inject(DailyRewardsService);
+  private readonly destroyRef = inject(DestroyRef);
   private readonly historyService = inject(HistoryService);
+  private readonly leaderboardService = inject(LeaderboardService);
   private readonly socket = inject(GameSocketService);
+  private readonly refreshIntervalMs = 5 * 60 * 1000;
 
   readonly history = signal<GameHistoryRecord[]>([]);
   readonly dailyTasks = signal<DailyTask[]>([]);
+  readonly leaderboard = signal<LeaderboardSnapshot | null>(null);
   readonly loading = signal(true);
   readonly loadingDailies = signal(true);
   readonly claimingTaskKey = signal<string | null>(null);
@@ -63,6 +69,20 @@ export class ProfilePageComponent {
   });
   readonly canPreviousPage = computed(() => this.currentPage() > 1);
   readonly canNextPage = computed(() => this.currentPage() < this.totalPages());
+  readonly leaderboardTags = computed<ProfileLeaderboardTag[]>(() => {
+    const userId = this.auth.currentUser()?.id;
+    const leaderboard = this.leaderboard();
+
+    if (!userId || !leaderboard) {
+      return [];
+    }
+
+    return [
+      this.buildLeaderboardTag('richest', 'Most Money', leaderboard.richest, userId),
+      this.buildLeaderboardTag('mostLosses', 'Most Losses', leaderboard.mostLosses, userId),
+      this.buildLeaderboardTag('biggestWin', 'Biggest Win', leaderboard.biggestWin, userId)
+    ].filter((tag): tag is ProfileLeaderboardTag => tag !== null);
+  });
   private lastSyncedUsername = '';
   private lastSyncedAvatarUrl = '';
 
@@ -83,6 +103,14 @@ export class ProfilePageComponent {
       }
     });
     void this.refresh();
+
+    const refreshTimer = window.setInterval(() => {
+      void this.refreshLeaderboard();
+    }, this.refreshIntervalMs);
+
+    this.destroyRef.onDestroy(() => {
+      window.clearInterval(refreshTimer);
+    });
   }
 
   async refresh(): Promise<void> {
@@ -116,6 +144,14 @@ export class ProfilePageComponent {
       this.dailyError.set(error instanceof Error ? error.message : 'Failed to claim daily reward.');
     } finally {
       this.claimingTaskKey.set(null);
+    }
+  }
+
+  async refreshLeaderboard(): Promise<void> {
+    try {
+      this.leaderboard.set(await this.leaderboardService.getLeaderboard());
+    } catch {
+      // Keep the existing snapshot or empty state. Profile tags are non-critical UI.
     }
   }
 
@@ -189,5 +225,41 @@ export class ProfilePageComponent {
 
   goToNextPage(): void {
     this.currentPage.update((page) => Math.min(this.totalPages(), page + 1));
+  }
+
+  isAdminAdjustment(entry: GameHistoryRecord): boolean {
+    return entry.gameType === 'ADMIN' || entry.result === 'ADMIN_ADJUSTMENT';
+  }
+
+  private buildLeaderboardTag(
+    _kind: 'richest' | 'mostLosses' | 'biggestWin',
+    label: string,
+    entries: LeaderboardEntry[],
+    userId: string
+  ): ProfileLeaderboardTag | null {
+    const rank = entries.findIndex((entry) => entry.userId === userId);
+
+    if (rank === -1 || rank >= 10) {
+      return null;
+    }
+
+    const placement = rank + 1;
+
+    return {
+      label: `#${placement} ${label}`,
+      tier: this.rankTier(placement)
+    };
+  }
+
+  private rankTier(rank: number): ProfileLeaderboardTag['tier'] {
+    if (rank === 1) {
+      return 'champion';
+    }
+
+    if (rank <= 5) {
+      return 'elite';
+    }
+
+    return 'contender';
   }
 }

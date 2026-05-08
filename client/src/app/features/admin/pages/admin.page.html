@@ -109,14 +109,14 @@
             } @else {
               <div class="admin-history">
                 @for (entry of selectedHistory(); track entry.id) {
-                  <div class="admin-history__item">
+                  <div class="admin-history__item" [class.admin-history__item--admin]="isAdminAdjustment(entry)">
                     <div>
                       <strong>{{ entry.gameType | gameLabel }}</strong>
                       <p class="status-copy">{{ entry.createdAt | date: 'medium' }}</p>
                     </div>
                     <div class="admin-history__values">
-                      <span class="pill">{{ entry.betAmount | credits }}</span>
-                      <span [class]="entry.balanceChange >= 0 ? 'text-success' : 'text-danger'">
+                      <span class="pill">{{ isAdminAdjustment(entry) ? 'Manual change' : (entry.betAmount | credits) }}</span>
+                      <span [class]="isAdminAdjustment(entry) ? 'admin-history__adjustment' : (entry.balanceChange >= 0 ? 'text-success' : 'text-danger')">
                         {{ entry.balanceChange | credits }}
                       </span>
                     </div>

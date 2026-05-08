@@ -1,6 +1,9 @@
-import { Component, computed, inject } from '@angular/core';
+import { Component, DestroyRef, computed, inject, signal } from '@angular/core';
 
 import { AuthService } from '../../../core/services/auth.service';
+import type { LeaderboardEntry, LeaderboardSnapshot } from '../../../core/models/user.model';
+import { LeaderboardService } from '../../../core/services/leaderboard.service';
+import { CreditsPipe } from '../../../shared/pipes/credits.pipe';
 import { AppGameCardComponent } from '../../../shared/ui/app-game-card.component';
 import { AppCardComponent } from '../../../shared/ui/app-card.component';
 import { ComingSoonComponent } from '../components/coming-soon.component';
@@ -8,15 +11,21 @@ import { ComingSoonComponent } from '../components/coming-soon.component';
 @Component({
   selector: 'app-lobby-page',
   standalone: true,
-  imports: [AppGameCardComponent, AppCardComponent, ComingSoonComponent],
+  imports: [AppGameCardComponent, AppCardComponent, ComingSoonComponent, CreditsPipe],
   templateUrl: './lobby.page.html',
   styleUrl: './lobby.page.scss'
 })
 export class LobbyPageComponent {
   private readonly auth = inject(AuthService);
+  private readonly destroyRef = inject(DestroyRef);
+  private readonly leaderboardService = inject(LeaderboardService);
+  private readonly refreshIntervalMs = 5 * 60 * 1000;
 
   readonly balance = computed(() => this.auth.currentUser()?.balance || 0);
   readonly email = computed(() => this.auth.currentUser()?.email || 'guest');
+  readonly leaderboard = signal<LeaderboardSnapshot | null>(null);
+  readonly loadingLeaderboard = signal(true);
+  readonly leaderboardError = signal('');
 
   readonly games = [
     {
@@ -44,4 +53,56 @@ export class LobbyPageComponent {
       theme: 'poker' as const
     }
   ];
+
+  constructor() {
+    void this.refreshLeaderboard();
+
+    const refreshTimer = window.setInterval(() => {
+      void this.refreshLeaderboard();
+    }, this.refreshIntervalMs);
+
+    this.destroyRef.onDestroy(() => {
+      window.clearInterval(refreshTimer);
+    });
+  }
+
+  async refreshLeaderboard(): Promise<void> {
+    if (!this.leaderboard()) {
+      this.loadingLeaderboard.set(true);
+    }
+
+    this.leaderboardError.set('');
+
+    try {
+      this.leaderboard.set(await this.leaderboardService.getLeaderboard());
+    } catch {
+      this.leaderboardError.set('Could not load the leaderboard right now.');
+    } finally {
+      this.loadingLeaderboard.set(false);
+    }
+  }
+
+  leaderboardName(entry: LeaderboardEntry | null): string {
+    if (!entry) {
+      return 'No player yet';
+    }
+
+    return entry.username || entry.email;
+  }
+
+  leaderboardInitials(entry: LeaderboardEntry | null): string {
+    const source = this.leaderboardName(entry);
+
+    return source
+      .split(/[\s@._-]+/)
+      .filter(Boolean)
+      .slice(0, 2)
+      .map((part) => part[0]?.toUpperCase() || '')
+      .join('') || 'HB';
+  }
+
+  topEntry(kind: 'richest' | 'mostLosses' | 'biggestWin'): LeaderboardEntry | null {
+    const leaderboard = this.leaderboard();
+    return leaderboard?.[kind]?.[0] || null;
+  }
 }

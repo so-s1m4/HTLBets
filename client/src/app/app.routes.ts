@@ -67,6 +67,12 @@ export const routes: Routes = [
           import('./features/games/pages/poker.page').then((module) => module.PokerPageComponent)
       },
       {
+        path: 'games/leaderboard',
+        data: { title: 'Leaderboard' },
+        loadComponent: () =>
+          import('./features/games/pages/leaderboard.page').then((module) => module.LeaderboardPageComponent)
+      },
+      {
         path: 'profile',
         data: { title: 'Profile' },
         loadComponent: () =>

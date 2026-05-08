@@ -11,10 +11,25 @@
 
           <div class="page-heading">
             <span class="page-heading__eyebrow">Profile</span>
-            <h1>{{ username || email }}</h1>
+            <div class="profile-summary__title-row">
+              <h1>{{ username || email }}</h1>
+              @if (isAdmin) {
+                <span class="profile-summary__admin-tag">Admin</span>
+              }
+            </div>
             <p class="status-copy">{{ email }}</p>
           </div>
         </div>
+
+        @if (leaderboardTags.length) {
+          <div class="profile-summary__tags">
+            @for (tag of leaderboardTags; track tag.label) {
+              <span class="profile-summary__leaderboard-tag" [class.profile-summary__leaderboard-tag--champion]="tag.tier === 'champion'" [class.profile-summary__leaderboard-tag--elite]="tag.tier === 'elite'" [class.profile-summary__leaderboard-tag--contender]="tag.tier === 'contender'">
+                {{ tag.label }}
+              </span>
+            }
+          </div>
+        }
 
         <div class="profile-summary__footer">
           <app-balance-badge [balance]="balance" />

@@ -41,9 +41,20 @@
         linear-gradient(180deg, rgba(16, 23, 36, 0.98), rgba(11, 17, 27, 0.98));
     }
 
+    .admin-history__item--admin {
+      border-color: rgba(255, 199, 116, 0.18);
+      background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0)),
+        linear-gradient(180deg, rgba(45, 33, 14, 0.98), rgba(22, 16, 8, 0.98));
+    }
+
     .admin-history__item strong,
     .admin-history__item p {
       margin: 0;
+    }
+
+    .admin-history__adjustment {
+      color: #ffd18a;
     }
 
     @media (min-width: 980px) {

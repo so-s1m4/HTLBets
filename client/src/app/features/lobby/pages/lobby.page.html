@@ -53,5 +53,103 @@
         />
       }
 
+      <div class="page-heading section-shell">
+        <span class="page-heading__eyebrow">Leaderboard</span>
+        <h2>Top players right now</h2>
+      </div>
+
+      @if (leaderboardError()) {
+        <app-card tone="muted">
+          <p class="status-copy text-danger">{{ leaderboardError() }}</p>
+        </app-card>
+      } @else if (loadingLeaderboard() && !leaderboard()) {
+        <app-card tone="muted">
+          <p class="status-copy">Loading leaderboard...</p>
+        </app-card>
+      } @else if (leaderboard()) {
+        <div class="leaderboard-grid">
+          <app-card tone="muted">
+            <div class="leaderboard-card">
+              <div class="leaderboard-card__header">
+                <span class="page-heading__eyebrow">Most Money</span>
+                <span class="pill">Top 1</span>
+              </div>
+
+              <div class="leaderboard-entry">
+                <div class="leaderboard-entry__avatar">
+                  @if (topEntry('richest')?.avatarUrl) {
+                    <img [src]="topEntry('richest')!.avatarUrl!" [alt]="leaderboardName(topEntry('richest')) + ' avatar'" loading="lazy" decoding="async" referrerpolicy="no-referrer" />
+                  } @else {
+                    <span>{{ leaderboardInitials(topEntry('richest')) }}</span>
+                  }
+                </div>
+
+                <div class="leaderboard-entry__copy">
+                  <strong>{{ leaderboardName(topEntry('richest')) }}</strong>
+                  <span>{{ topEntry('richest') ? (topEntry('richest')!.metricValue | credits) : 'No score yet' }}</span>
+                </div>
+              </div>
+            </div>
+          </app-card>
+
+          <app-card tone="muted">
+            <div class="leaderboard-card">
+              <div class="leaderboard-card__header">
+                <span class="page-heading__eyebrow">Most Losses</span>
+                <span class="pill">Top 1</span>
+              </div>
+
+              <div class="leaderboard-entry">
+                <div class="leaderboard-entry__avatar">
+                  @if (topEntry('mostLosses')?.avatarUrl) {
+                    <img [src]="topEntry('mostLosses')!.avatarUrl!" [alt]="leaderboardName(topEntry('mostLosses')) + ' avatar'" loading="lazy" decoding="async" referrerpolicy="no-referrer" />
+                  } @else {
+                    <span>{{ leaderboardInitials(topEntry('mostLosses')) }}</span>
+                  }
+                </div>
+
+                <div class="leaderboard-entry__copy">
+                  <strong>{{ leaderboardName(topEntry('mostLosses')) }}</strong>
+                  <span>{{ topEntry('mostLosses') ? (topEntry('mostLosses')!.metricValue | credits) : 'No losses yet' }}</span>
+                </div>
+              </div>
+            </div>
+          </app-card>
+
+          <app-card tone="muted">
+            <div class="leaderboard-card">
+              <div class="leaderboard-card__header">
+                <span class="page-heading__eyebrow">Biggest Win</span>
+                <span class="pill">Top 1</span>
+              </div>
+
+              <div class="leaderboard-entry">
+                <div class="leaderboard-entry__avatar">
+                  @if (topEntry('biggestWin')?.avatarUrl) {
+                    <img [src]="topEntry('biggestWin')!.avatarUrl!" [alt]="leaderboardName(topEntry('biggestWin')) + ' avatar'" loading="lazy" decoding="async" referrerpolicy="no-referrer" />
+                  } @else {
+                    <span>{{ leaderboardInitials(topEntry('biggestWin')) }}</span>
+                  }
+                </div>
+
+                <div class="leaderboard-entry__copy">
+                  <strong>{{ leaderboardName(topEntry('biggestWin')) }}</strong>
+                  <span>{{ topEntry('biggestWin') ? (topEntry('biggestWin')!.metricValue | credits) : 'No win yet' }}</span>
+                </div>
+              </div>
+            </div>
+          </app-card>
+        </div>
+
+        <app-game-card
+          title="Leaderboard"
+          description="Open the full ranking browser and switch between most money, most losses, and biggest wins for the top 100 players."
+          route="/games/leaderboard"
+          badge="Live"
+          availability="Top 100 players"
+          theme="leaderboard"
+        />
+      }
+
       <app-coming-soon />
     </div>

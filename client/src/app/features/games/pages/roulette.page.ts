@@ -53,6 +53,7 @@ export class RoulettePageComponent {
   readonly socket = inject(GameSocketService);
 
   private readonly destroyRef = inject(DestroyRef);
+  private hasHydratedState = false;
   private lastSpinSignature = '';
   private readonly spinDurationMs = 5200;
   private pendingRevealSignature: string | null = null;
@@ -118,21 +119,44 @@ export class RoulettePageComponent {
       const round = this.viewState()?.lastRound;
       const phase = this.viewState()?.phase;
       const outcome = this.outcome();
+      const signature = round ? `${round.spin.number}:${round.selection.type}:${round.selection.value}` : '';
 
       this.isSpinning.set(phase === 'spinning');
 
-      if (phase !== 'spinning' && this.pendingRevealSignature === null) {
-        this.revealedRound.set(round ?? null);
-        this.revealedOutcome.set(outcome ?? null);
-      }
+      if (!this.hasHydratedState) {
+        this.hasHydratedState = true;
+        this.lastSpinSignature = signature;
 
-      if (!round) {
+        if (phase === 'spinning') {
+          this.revealedRound.set(null);
+          this.revealedOutcome.set(null);
+        } else {
+          this.revealedRound.set(round ?? null);
+          this.revealedOutcome.set(outcome ?? null);
+        }
+
         return;
       }
 
-      const signature = `${round.spin.number}:${round.selection.type}:${round.selection.value}`;
+      if (phase === 'spinning') {
+        this.revealedRound.set(null);
+        this.revealedOutcome.set(null);
+        return;
+      }
+
+      if (!round) {
+        if (this.pendingRevealSignature === null) {
+          this.revealedRound.set(null);
+          this.revealedOutcome.set(outcome ?? null);
+        }
+        return;
+      }
 
       if (signature === this.lastSpinSignature) {
+        if (this.pendingRevealSignature === null) {
+          this.revealedRound.set(round);
+          this.revealedOutcome.set(outcome ?? null);
+        }
         return;
       }
 

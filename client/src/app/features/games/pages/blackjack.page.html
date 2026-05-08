@@ -71,7 +71,7 @@
         <app-button block [disabled]="isDealing()" (click)="deal()">Deal cards</app-button>
       }
 
-      @if (socket.currentState()?.outcome; as result) {
+      @if (revealedOutcome(); as result) {
         <div class="page-stack">
           <span class="pill">{{ result.result }}</span>
           <p [class]="result.balanceChange >= 0 ? 'text-success' : 'text-danger'">

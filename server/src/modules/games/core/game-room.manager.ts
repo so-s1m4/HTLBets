@@ -16,15 +16,17 @@ import { RouletteEngine } from '../roulette/roulette.engine';
 const toJsonValue = (value: unknown): Prisma.InputJsonValue =>
   JSON.parse(JSON.stringify(value)) as Prisma.InputJsonValue;
 
+type RealtimeGameType = 'ROULETTE' | 'BLACKJACK' | 'POKER';
+
 export interface JoinGameInput {
   userId: string;
-  gameType: GameType;
+  gameType: RealtimeGameType;
   sessionId?: string;
 }
 
 export interface GameOperationInput {
   userId: string;
-  gameType: GameType;
+  gameType: RealtimeGameType;
   sessionId?: string;
   payload?: Record<string, unknown>;
 }
@@ -39,7 +41,7 @@ export interface ActionOperationInput extends GameOperationInput {
 
 export interface GameStateEnvelope {
   sessionId: string;
-  gameType: GameType;
+  gameType: RealtimeGameType;
   status: GameSessionStatus;
   balance: number;
   currentBet: number;
@@ -47,18 +49,18 @@ export interface GameStateEnvelope {
   outcome: GameResolution | null;
 }
 
-export const parseGameType = (value: string): GameType => {
+export const parseGameType = (value: string): RealtimeGameType => {
   const normalized = value.trim().toUpperCase();
 
   if (normalized === GameType.ROULETTE || normalized === GameType.BLACKJACK || normalized === GameType.POKER) {
-    return normalized as GameType;
+    return normalized as RealtimeGameType;
   }
 
   throw new HttpError(400, `Unsupported game type: ${value}`);
 };
 
 class GameRoomManager {
-  private readonly engines: Record<GameType, GameEngine<any>> = {
+  private readonly engines: Record<RealtimeGameType, GameEngine<any>> = {
     [GameType.ROULETTE]: new RouletteEngine(),
     [GameType.BLACKJACK]: new BlackjackEngine(),
     [GameType.POKER]: new PokerEngine()
@@ -168,7 +170,7 @@ class GameRoomManager {
     });
   }
 
-  private async requireSession(userId: string, gameType: GameType, sessionId?: string): Promise<GameSession> {
+  private async requireSession(userId: string, gameType: RealtimeGameType, sessionId?: string): Promise<GameSession> {
     if (!sessionId) {
       throw new HttpError(400, 'Session id is required for this action.');
     }
@@ -259,7 +261,7 @@ class GameRoomManager {
 
     return {
       sessionId: session.id,
-      gameType: session.gameType,
+      gameType: session.gameType as RealtimeGameType,
       status: session.status,
       balance,
       currentBet: session.currentBet,

@@ -44,33 +44,154 @@
         radial-gradient(circle at top left, rgba(93, 168, 255, 0.14), transparent 34%);
     }
 
-    .game-card__visual-ring,
-    .game-card__visual-core {
+    .game-card__visual-trophy {
+      position: absolute;
+      inset: 50% auto auto 50%;
+      transform: translate(-50%, -50%);
+      font-size: 3.65rem;
+      line-height: 1;
+      filter: drop-shadow(0 14px 22px rgba(255, 171, 87, 0.2));
+    }
+
+    .game-card__roulette,
+    .game-card__blackjack,
+    .game-card__poker {
+      position: absolute;
+      inset: 0;
+    }
+
+    .game-card__roulette-wheel,
+    .game-card__roulette-hub,
+    .game-card__roulette-ball {
+      position: absolute;
+      inset: 50% auto auto 50%;
+      transform: translate(-50%, -50%);
+      border-radius: 50%;
+    }
+
+    .game-card__roulette-wheel {
+      width: 6.35rem;
+      height: 6.35rem;
+      background:
+        radial-gradient(circle, rgba(19, 25, 34, 0.95) 0 28%, transparent 29%),
+        conic-gradient(
+          from 0deg,
+          #c7515a 0deg 24deg,
+          #141b27 24deg 48deg,
+          #c7515a 48deg 72deg,
+          #141b27 72deg 96deg,
+          #c7515a 96deg 120deg,
+          #141b27 120deg 144deg,
+          #c7515a 144deg 168deg,
+          #141b27 168deg 192deg,
+          #2ba06b 192deg 216deg,
+          #141b27 216deg 240deg,
+          #c7515a 240deg 264deg,
+          #141b27 264deg 288deg,
+          #c7515a 288deg 312deg,
+          #141b27 312deg 336deg,
+          #c7515a 336deg 360deg
+        );
+      box-shadow:
+        inset 0 0 0 0.48rem rgba(69, 42, 20, 0.9),
+        0 18px 26px rgba(4, 8, 20, 0.22);
+    }
+
+    .game-card__roulette-hub {
+      width: 1.35rem;
+      height: 1.35rem;
+      background: linear-gradient(180deg, #f3cb79, #a96721);
+      box-shadow: 0 0 0 0.22rem rgba(255, 240, 208, 0.08);
+    }
+
+    .game-card__roulette-ball {
+      width: 0.78rem;
+      height: 0.78rem;
+      margin-left: 2.3rem;
+      margin-top: -1.5rem;
+      background: radial-gradient(circle at 30% 30%, #ffffff, #c7d3ea 72%);
+      box-shadow: 0 0 12px rgba(255, 255, 255, 0.18);
+    }
+
+    .game-card__playing-card,
+    .game-card__poker-card {
+      position: absolute;
+      width: 3.3rem;
+      height: 4.7rem;
+      border-radius: 0.95rem;
+      border: 1px solid rgba(149, 171, 211, 0.18);
+      box-shadow: 0 16px 24px rgba(4, 8, 20, 0.2);
+    }
+
+    .game-card__playing-card {
+      inset: 50% auto auto 50%;
+      display: grid;
+      align-content: space-between;
+      padding: 0.6rem;
+      transform: translate(-50%, -50%);
+      background: linear-gradient(180deg, rgba(249, 252, 255, 0.98), rgba(221, 232, 246, 0.92));
+      color: #102338;
+    }
+
+    .game-card__playing-card strong,
+    .game-card__playing-card em,
+    .game-card__poker-card strong,
+    .game-card__poker-card em {
+      font-style: normal;
+      margin: 0;
+    }
+
+    .game-card__playing-card--back {
+      background:
+        radial-gradient(circle at 30% 20%, rgba(159, 219, 255, 0.2), transparent 32%),
+        linear-gradient(180deg, rgba(72, 163, 255, 0.3), rgba(10, 29, 47, 0.98));
+      transform: translate(calc(-50% - 1.25rem), calc(-50% + 0.15rem)) rotate(-12deg);
+    }
+
+    .game-card__playing-card--front {
+      transform: translate(calc(-50% - 0.2rem), calc(-50% + 0.05rem)) rotate(-5deg);
+    }
+
+    .game-card__playing-card--accent {
+      color: #8f213c;
+      transform: translate(calc(-50% + 1.3rem), calc(-50% - 0.2rem)) rotate(10deg);
+    }
+
+    .game-card__chip {
       position: absolute;
       inset: 50% auto auto 50%;
       border-radius: 50%;
       transform: translate(-50%, -50%);
+      box-shadow: 0 16px 24px rgba(4, 8, 20, 0.2);
     }
 
-    .game-card__visual-ring:nth-child(1) {
-      width: 7.5rem;
-      height: 7.5rem;
-      border: 1px solid rgba(255, 255, 255, 0.06);
-      box-shadow: 0 0 0 1px rgba(149, 171, 211, 0.04);
+    .game-card__chip--large {
+      width: 4.6rem;
+      height: 4.6rem;
+      margin-left: -1rem;
+      background:
+        radial-gradient(circle, rgba(14, 27, 44, 0.92) 0 34%, transparent 35%),
+        repeating-conic-gradient(from 0deg, #6c3fff 0deg 14deg, #efe6ff 14deg 28deg);
     }
 
-    .game-card__visual-ring:nth-child(2) {
-      width: 5rem;
-      height: 5rem;
-      border: 1px solid rgba(93, 168, 255, 0.24);
-      box-shadow: 0 0 24px rgba(93, 168, 255, 0.08);
+    .game-card__chip--small {
+      width: 3rem;
+      height: 3rem;
+      margin-left: 2rem;
+      margin-top: 1.05rem;
+      background:
+        radial-gradient(circle, rgba(18, 24, 36, 0.92) 0 34%, transparent 35%),
+        repeating-conic-gradient(from 0deg, #53d9c8 0deg 14deg, #effffc 14deg 28deg);
     }
 
-    .game-card__visual-core {
-      width: 1.1rem;
-      height: 1.1rem;
-      background: linear-gradient(180deg, var(--accent-cyan), var(--accent));
-      box-shadow: 0 0 20px rgba(93, 168, 255, 0.24);
+    .game-card__poker-card {
+      inset: 50% auto auto 50%;
+      display: grid;
+      align-content: space-between;
+      padding: 0.6rem;
+      background: linear-gradient(180deg, rgba(249, 252, 255, 0.98), rgba(221, 232, 246, 0.92));
+      color: #1c3558;
+      transform: translate(calc(-50% + 1.65rem), calc(-50% - 1rem)) rotate(8deg);
     }
 
     .game-card[data-theme="blackjack"] .game-card__visual::before {
@@ -79,20 +200,26 @@
         radial-gradient(circle at top left, rgba(125, 227, 255, 0.14), transparent 34%);
     }
 
-    .game-card[data-theme="blackjack"] .game-card__visual-ring:nth-child(2) {
-      border-color: rgba(125, 227, 255, 0.28);
-      box-shadow: 0 0 24px rgba(125, 227, 255, 0.08);
-    }
-
     .game-card[data-theme="poker"] .game-card__visual::before {
       background:
         linear-gradient(135deg, rgba(255, 255, 255, 0.04), transparent 34%),
         radial-gradient(circle at top left, rgba(136, 123, 255, 0.14), transparent 34%);
     }
 
-    .game-card[data-theme="poker"] .game-card__visual-ring:nth-child(2) {
-      border-color: rgba(136, 123, 255, 0.3);
-      box-shadow: 0 0 24px rgba(136, 123, 255, 0.08);
+    .game-card[data-theme="leaderboard"] .game-card__visual::before {
+      background:
+        linear-gradient(135deg, rgba(255, 255, 255, 0.04), transparent 34%),
+        radial-gradient(circle at top left, rgba(255, 210, 120, 0.16), transparent 34%);
+    }
+
+    .game-card[data-theme="leaderboard"] .game-card__visual-ring:nth-child(2) {
+      border-color: rgba(255, 210, 120, 0.34);
+      box-shadow: 0 0 24px rgba(255, 210, 120, 0.1);
+    }
+
+    .game-card[data-theme="leaderboard"] .game-card__visual-core {
+      background: linear-gradient(180deg, #ffd18a, #ff9d57);
+      box-shadow: 0 0 20px rgba(255, 171, 87, 0.24);
     }
 
     .game-card__footer {

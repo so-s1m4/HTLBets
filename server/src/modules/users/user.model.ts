@@ -21,6 +21,20 @@ export interface PublicDailyTask {
   completed: boolean;
   claimed: boolean;
 }
+export interface PublicLeaderboardEntry {
+  userId: string;
+  email: string;
+  username: string | null;
+  avatarUrl: string | null;
+  metricValue: number;
+}
+
+export interface PublicLeaderboard {
+  richest: PublicLeaderboardEntry[];
+  mostLosses: PublicLeaderboardEntry[];
+  biggestWin: PublicLeaderboardEntry[];
+  refreshedAt: Date;
+}
 
 export const toPublicUser = (user: User): PublicUser => ({
   id: user.id,
