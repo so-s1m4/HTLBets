@@ -39,6 +39,9 @@ userRouter.post('/me/dailies/:taskKey/claim', async (req, res, next) => {
   try {
     const result = await userService.claimDailyTask(req.auth!.userId, String(req.params.taskKey));
     res.status(200).json(result);
+  } catch (error) {
+    next(error);
+  }
 });
   
 userRouter.get('/leaderboard', async (_req, res, next) => {
@@ -52,14 +55,14 @@ userRouter.get('/leaderboard', async (_req, res, next) => {
 
 userRouter.patch('/me/profile', async (req, res, next) => {
   try {
-    const input: { username?: unknown; avatarUrl?: unknown } = {};
+    const input: { username?: string; avatarUrl?: string | null } = {};
 
     if (req.body && 'username' in req.body) {
-      input.username = req.body.username;
+      input.username = req.body.username == null ? '' : String(req.body.username);
     }
 
     if (req.body && 'avatarUrl' in req.body) {
-      input.avatarUrl = req.body.avatarUrl;
+      input.avatarUrl = req.body.avatarUrl == null ? null : String(req.body.avatarUrl);
     }
 
     const user = await userService.updateProfile(req.auth!.userId, input);
