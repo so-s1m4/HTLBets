@@ -5,7 +5,6 @@
   [currentBet]="currentBet()"
   [error]="socket.lastError() || ''"
 >
-
   <app-card table>
     <div class="blackjack-table">
       <div class="blackjack-table__surface"></div>
@@ -29,23 +28,29 @@
           label="Dealer"
           [cards]="displayedDealerHand()"
           [score]="displayedDealerScore()"
-          [hidden]="displayedDealerHand().length == 0 && !isRoundActive()"
+          [hidden]="dealerHandHidden()"
           [isDealer]="true"
         />
 
-        <app-blackjack-hand
-          label="Player"
-          [cards]="displayedPlayerHand()"
-          [score]="displayedPlayerScore()"
-          [hidden]="displayedPlayerHand().length == 0 && !isRoundActive()"
-        />
+        <div class="blackjack-table__player-hands" [class.blackjack-table__player-hands--split]="isSplitView()">
+          @for (hand of displayedPlayerHands(); track $index) {
+            <app-blackjack-hand
+              [label]="playerHandLabel($index)"
+              [cards]="hand.cards"
+              [score]="hand.score"
+              [caption]="playerHandCaption(hand)"
+              [active]="isSplitView() && hand.active"
+              [hidden]="playerHandsHidden()"
+            />
+          }
+        </div>
       </div>
     </div>
   </app-card>
 
   <app-card sidebar>
     <div class="page-stack">
-        <span class="pill" style="width: fit-content">{{ statusLabel() }}</span>
+      <span class="pill" style="width: fit-content">{{ statusLabel() }}</span>
 
       <app-input
         label="Bet amount"
@@ -54,17 +59,32 @@
         (valueChange)="betAmount.set($event.replace(/\D/g, ''))"
       />
 
-      @if (isRoundActive()) {
+      @if (isInsuranceDecision()) {
+        <div class="page-stack">
+          <app-button block [disabled]="!canTakeInsurance()" (click)="action('insurance')">
+            Take insurance
+          </app-button>
+          <app-button variant="secondary" block (click)="action('skip-insurance')">No insurance</app-button>
+        </div>
+      } @else if (isRoundActive()) {
         <div class="page-stack">
           <app-button block (click)="action('hit')">Hit</app-button>
           <app-button variant="secondary" block (click)="action('stand')">Stand</app-button>
           <app-button
             variant="ghost"
             block
-            [disabled]="!viewState()?.canDouble"
+            [disabled]="!canDouble()"
             (click)="action('double')"
           >
             Double
+          </app-button>
+          <app-button
+            variant="ghost"
+            block
+            [disabled]="!canSplit()"
+            (click)="action('split')"
+          >
+            Split
           </app-button>
         </div>
       } @else {
@@ -81,8 +101,8 @@
       }
     </div>
 
-      <div class="page-stack">
-          <p class="status-copy">{{ viewState()?.message || 'Place a bet to begin.' }}</p>
-      </div>
+    <div class="page-stack">
+      <p class="status-copy">{{ statusMessage() }}</p>
+    </div>
   </app-card>
 </app-game-shell>

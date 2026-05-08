@@ -141,9 +141,28 @@ export const createSocketServer = (httpServer: HttpServer): Server => {
               return;
             }
 
+            if (request.action === 'spectate-table') {
+              const sessionId = await pokerTableManager.spectateTable(request.userId, request.payload);
+              syncPokerSocketSession(socket, sessionId);
+              await emitPokerTableState(io);
+              return;
+            }
+
             if (request.action === 'join-table') {
               const sessionId = await pokerTableManager.joinTable(request.userId, request.payload);
               syncPokerSocketSession(socket, sessionId);
+              await emitPokerTableState(io);
+              return;
+            }
+
+            if (request.action === 'emote') {
+              await pokerTableManager.emitEmote(request.userId, request.sessionId, request.payload);
+              await emitPokerTableState(io);
+              return;
+            }
+
+            if (request.action === 'ready-table') {
+              await pokerTableManager.readySeat(request.userId, request.sessionId);
               await emitPokerTableState(io);
               return;
             }

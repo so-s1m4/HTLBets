@@ -202,15 +202,16 @@ export class GameSocketService {
       return null;
     }
 
-    const previousPlayerHand = this.readBlackjackHand(previousView['playerHand']);
+    const previousPlayerHands = this.readBlackjackHands(previousView);
     const previousDealerHand = this.readBlackjackHand(previousView['dealerHand']);
-    const nextPlayerHand = this.readBlackjackHand(nextView['playerHand']);
+    const nextPlayerHands = this.readBlackjackHands(nextView);
     const nextDealerHand = this.readBlackjackHand(nextView['dealerHand']);
 
     const isInitialResolvedDeal =
-      previousPlayerHand.length === 0 &&
+      previousPlayerHands.length === 0 &&
       previousDealerHand.length === 0 &&
-      nextPlayerHand.length === 2 &&
+      nextPlayerHands.length === 1 &&
+      nextPlayerHands[0].length === 2 &&
       nextDealerHand.length === 2 &&
       typeof nextView['phase'] === 'string' &&
       nextView['phase'] !== 'ready';
@@ -220,7 +221,7 @@ export class GameSocketService {
     }
 
     const changedCards =
-      this.countBlackjackCardChanges(previousPlayerHand, nextPlayerHand) +
+      this.countBlackjackHandSetChanges(previousPlayerHands, nextPlayerHands) +
       this.countBlackjackCardChanges(previousDealerHand, nextDealerHand);
 
     if (changedCards > 0) {
@@ -246,6 +247,20 @@ export class GameSocketService {
     return Array.isArray(value) ? value.filter((entry): entry is Record<string, unknown> => Boolean(entry) && typeof entry === 'object') : [];
   }
 
+  private readBlackjackHands(state: Record<string, unknown>): Array<Array<Record<string, unknown>>> {
+    const serializedHands = state['playerHands'];
+
+    if (Array.isArray(serializedHands)) {
+      return serializedHands
+        .filter((entry): entry is Record<string, unknown> => Boolean(entry) && typeof entry === 'object')
+        .map((entry) => this.readBlackjackHand(entry['cards']))
+        .filter((cards) => cards.length > 0);
+    }
+
+    const fallbackHand = this.readBlackjackHand(state['playerHand']);
+    return fallbackHand.length ? [fallbackHand] : [];
+  }
+
   private countBlackjackCardChanges(left: Array<Record<string, unknown>>, right: Array<Record<string, unknown>>): number {
     const maxLength = Math.max(left.length, right.length);
     let changes = 0;
@@ -254,6 +269,20 @@ export class GameSocketService {
       if (this.blackjackCardSignature(left[index]) !== this.blackjackCardSignature(right[index])) {
         changes += 1;
       }
+    }
+
+    return changes;
+  }
+
+  private countBlackjackHandSetChanges(
+    left: Array<Array<Record<string, unknown>>>,
+    right: Array<Array<Record<string, unknown>>>
+  ): number {
+    const maxLength = Math.max(left.length, right.length);
+    let changes = 0;
+
+    for (let index = 0; index < maxLength; index += 1) {
+      changes += this.countBlackjackCardChanges(left[index] || [], right[index] || []);
     }
 
     return changes;

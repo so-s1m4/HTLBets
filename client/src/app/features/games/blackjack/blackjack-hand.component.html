@@ -2,7 +2,12 @@
     'player-hand': !isDealer
     }">
       <div class="hand__header">
-        <h3>{{ label }}</h3>
+        <div class="hand__title">
+          <h3>{{ label }}</h3>
+          @if (caption) {
+            <span class="hand__caption">{{ caption }}</span>
+          }
+        </div>
         <span class="pill">Score: {{ score }}</span>
       </div>
 

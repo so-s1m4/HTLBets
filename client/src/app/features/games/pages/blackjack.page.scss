@@ -41,6 +41,16 @@
       padding: 0.95rem 1.3rem 0.85rem;
     }
 
+    .blackjack-table__player-hands {
+      display: grid;
+      gap: 0.85rem;
+    }
+
+    .blackjack-table__player-hands--split {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      align-items: start;
+    }
+
     .blackjack-table__overlay {
       position: absolute;
       top: 1rem;
@@ -163,5 +173,11 @@
       100% {
         transform: translate(-50%, -50%) scale(1.04);
         filter: drop-shadow(0 0 18px rgba(125, 227, 255, 0.22));
+      }
+    }
+
+    @media (max-width: 860px) {
+      .blackjack-table__player-hands--split {
+        grid-template-columns: 1fr;
       }
     }
