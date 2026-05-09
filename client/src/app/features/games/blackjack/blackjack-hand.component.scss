@@ -83,24 +83,18 @@
   position: absolute;
   inset: 0;
   border-radius: 8px;
-  border: 1px solid var(--border);
   box-shadow: 0 10px 22px rgba(0, 0, 0, 0.18);
   backface-visibility: hidden;
-}
 
-.card__face--front {
-  background: linear-gradient(180deg, rgba(252, 254, 255, 0.98), rgba(223, 233, 247, 0.94));
-  color: #08203b;
-  display: grid;
-  align-content: space-between;
-  padding: 0.75rem;
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    border-radius: 8px;
+  }
 }
 
 .card__face--back {
-  background:
-    radial-gradient(circle at 30% 20%, rgba(159, 219, 255, 0.18), transparent 32%),
-    linear-gradient(180deg, rgba(72, 163, 255, 0.24), rgba(10, 29, 47, 0.98));
-  color: var(--text);
   display: grid;
   place-content: center;
   font-weight: 700;

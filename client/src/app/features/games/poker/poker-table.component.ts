@@ -9,46 +9,46 @@ interface PositionedSeat {
 }
 
 const orbitLayouts: Record<number, Array<{ left: number; top: number }>> = {
-  1: [{ left: 50, top: 10 }],
+  1: [{ left: 50, top: 20 }],
   2: [
-    { left: 26, top: 16 },
-    { left: 74, top: 16 }
+    { left: 30, top: 20 },
+    { left: 70, top: 20 },
   ],
   3: [
-    { left: 20, top: 22 },
-    { left: 50, top: 8 },
-    { left: 80, top: 22 }
+    { left: 10, top: 48 },
+    { left: 50, top: 20 },
+    { left: 90, top: 48 },
   ],
   4: [
-    { left: 18, top: 28 },
-    { left: 33, top: 10 },
-    { left: 67, top: 10 },
-    { left: 82, top: 28 }
+    { left: 20, top: 77 },
+    { left: 30, top: 20 },
+    { left: 70, top: 20 },
+    { left: 80, top: 77 }
   ],
   5: [
-    { left: 15, top: 34 },
-    { left: 26, top: 14 },
-    { left: 50, top: 7 },
-    { left: 74, top: 14 },
-    { left: 85, top: 34 }
+    { left: 10, top: 48 },
+    { left: 30, top: 20 },
+    { left: 50, top: 25 },
+    { left: 70, top: 20 },
+    { left: 90, top: 48 },
   ],
   6: [
-    { left: 13, top: 40 },
-    { left: 22, top: 18 },
-    { left: 40, top: 8 },
-    { left: 60, top: 8 },
-    { left: 78, top: 18 },
-    { left: 87, top: 40 }
+    { left: 20, top: 77 },
+    { left: 10, top: 48 },
+    { left: 30, top: 20 },
+    { left: 70, top: 20 },
+    { left: 90, top: 48 },
+    { left: 80, top: 77 }
   ],
   7: [
-    { left: 12, top: 46 },
-    { left: 18, top: 22 },
-    { left: 34, top: 9 },
-    { left: 50, top: 5 },
-    { left: 66, top: 9 },
-    { left: 82, top: 22 },
-    { left: 88, top: 46 }
-  ]
+    { left: 20, top: 77 },
+    { left: 10, top: 48 },
+    { left: 30, top: 20 },
+    { left: 50, top: 25 },
+    { left: 70, top: 20 },
+    { left: 90, top: 48 },
+    { left: 80, top: 77 }
+  ],
 };
 
 @Component({

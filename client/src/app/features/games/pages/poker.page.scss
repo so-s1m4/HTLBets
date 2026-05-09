@@ -127,14 +127,11 @@
 }
 
 .poker-sidebar {
-  padding-bottom: 4.6rem;
+  padding-bottom: 1.5rem;
 }
 
 .poker-board-emote-overlay,
 .poker-emote-overlay {
-  position: absolute;
-  left: 0;
-  bottom: 0;
   display: grid;
   justify-items: start;
   gap: 0.75rem;
@@ -229,7 +226,7 @@
   box-shadow: 0 14px 28px rgba(5, 9, 18, 0.18);
 }
 
- .buyin-slider-card {
+.buyin-slider-card {
   display: grid;
   gap: 1rem;
   padding: 1rem 1.05rem;
@@ -297,6 +294,21 @@
 
 .room-modal {
   width: min(42rem, 100%);
+}
+
+
+.glass-stat-grid {
+  grid-template-rows: 1fr 1fr 1fr;
+  grid-template-columns: 1fr;
+}
+
+.sidebar {
+  max-width: 25%;
+  position: absolute;
+  top: 50%;
+  right: 0;
+
+  transform: translate(50%, -50%);
 }
 
 @media (min-width: 1040px) {

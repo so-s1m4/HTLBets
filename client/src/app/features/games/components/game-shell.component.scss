@@ -31,6 +31,7 @@
 
     .game-shell__grid {
       display: grid;
+      position: relative;
       gap: 1rem;
     }
 
@@ -52,7 +53,7 @@
 
 @media (min-width: 1480px) {
   .game-shell__grid.split-sidebar {
-    grid-template-columns: minmax(0, 1.9fr) minmax(250px, 0.62fr);
+    grid-template-columns: 100%;
   }
 }
 

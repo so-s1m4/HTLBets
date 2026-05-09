@@ -1,6 +1,7 @@
 <div class="poker-table">
-  <div class="poker-table__ambient poker-table__ambient--left"></div>
-  <div class="poker-table__ambient poker-table__ambient--right"></div>
+    <div class="poker-table__background">
+        <img src="/poker_table.png" alt="">
+    </div>
 
   <div class="poker-table__header">
     <div class="page-heading">
@@ -16,22 +17,16 @@
 
   <div class="poker-table__arena">
     <section class="poker-board">
-      <div class="poker-board__status">
-        <span class="pill">{{ phase }}</span>
-        <span class="pill">Current bet {{ currentBet }} cr</span>
-      </div>
-
       <div class="poker-board__cards">
         @for (card of displayBoardCards(); track $index) {
           <div class="poker-card poker-card--board" [class.hidden]="card.hidden" [style.animation-delay]="animationDelay($index, 100)">
             <div class="poker-card__inner">
               <div class="poker-card__face poker-card__face--back">
-                <span>??</span>
+                  <img src="/cards/back_dark.png" alt="">
               </div>
 
               <div class="poker-card__face poker-card__face--front">
-                <strong [style.color]="color(card.suit)">{{ card.rank }}</strong>
-                <span [style.color]="color(card.suit)">{{ symbol(card.suit) }}</span>
+                  <img src="/cards/{{card.suit}}_{{card.rank}}.png" alt="">
               </div>
             </div>
           </div>
@@ -80,17 +75,16 @@
           </div>
         </div>
 
-        <div class="poker-seat__cards">
+        <div class="poker-seat__cards poker-seat__cards--user">
           @for (card of entry.seat.cards; track $index) {
             <div class="poker-card" [class.hidden]="card.hidden" [style.animation-delay]="animationDelay($index, 180)">
               <div class="poker-card__inner">
                 <div class="poker-card__face poker-card__face--back">
-                  <span>??</span>
+                  <img src="/cards/back_dark.png" alt="">
                 </div>
 
                 <div class="poker-card__face poker-card__face--front">
-                  <strong [style.color]="color(card.suit)">{{ card.rank }}</strong>
-                  <span [style.color]="color(card.suit)">{{ symbol(card.suit) }}</span>
+                    <img src="/cards/{{card.suit}}_{{card.rank}}.png" alt="">
                 </div>
               </div>
             </div>
@@ -135,12 +129,11 @@
             <div class="poker-card" [class.hidden]="card.hidden" [style.animation-delay]="animationDelay($index, 240)">
               <div class="poker-card__inner">
                 <div class="poker-card__face poker-card__face--back">
-                  <span>??</span>
+                  <img src="/cards/back_dark.png" alt="">
                 </div>
 
                 <div class="poker-card__face poker-card__face--front">
-                  <strong [style.color]="color(card.suit)">{{ card.rank }}</strong>
-                  <span [style.color]="color(card.suit)">{{ symbol(card.suit) }}</span>
+                    <img src="/cards/{{card.suit}}_{{card.rank}}.png" alt="">
                 </div>
               </div>
             </div>

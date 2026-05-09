@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, DestroyRef, computed, effect, inject, signal } from '@angular/core';
 
-import type { PokerLobbyState, PokerRealtimeState, PokerTableState } from '../../../core/models/game.model';
+import type { PokerDisplayCard, PokerLobbyState, PokerRealtimeState, PokerSeatView, PokerTableState } from '../../../core/models/game.model';
 import { AuthService } from '../../../core/services/auth.service';
 import { GameSocketService } from '../../../core/services/game-socket.service';
 import { CreditsPipe } from '../../../shared/pipes/credits.pipe';
@@ -33,6 +33,15 @@ export class PokerPageComponent {
   readonly auth = inject(AuthService);
 
   private readonly destroyRef = inject(DestroyRef);
+  private readonly isLocalLayoutDebug = false; // typeof window !== 'undefined' &&
+  // ['localhost', '127.0.0.1'].includes(window.location.hostname);
+  private readonly previewBoardCards: PokerDisplayCard[] = [
+    { rank: 'A', suit: 'spades' },
+    { rank: '10', suit: 'hearts' },
+    { rank: '7', suit: 'clubs' },
+    { rank: '2', suit: 'diamonds' },
+    { rank: 'K', suit: 'spades' }
+  ];
 
   readonly createTableName = signal('Skyline No-Limit');
   readonly createVisibility = signal<'public' | 'private'>('public');
@@ -55,6 +64,36 @@ export class PokerPageComponent {
   readonly pokerState = computed(() => (this.state()?.state as unknown as PokerRealtimeState | null) || null);
   readonly lobbyState = computed(() => (this.pokerState()?.kind === 'lobby' ? (this.pokerState() as PokerLobbyState) : null));
   readonly tableState = computed(() => (this.pokerState()?.kind === 'table' ? (this.pokerState() as PokerTableState) : null));
+  readonly previewTableState = computed(() => {
+    const table = this.tableState();
+    if (!table || !this.isLocalLayoutDebug) {
+      return table;
+    }
+
+    const maxPlayers = Math.min(8, Math.max(2, table.maxPlayers || 8));
+    const occupied = new Set(table.players.map((seat) => seat.seatIndex));
+    const previewPlayers = [...table.players];
+
+    for (let seatIndex = 0; seatIndex < maxPlayers; seatIndex += 1) {
+      if (previewPlayers.length > maxPlayers) {
+        break;
+      }
+
+      if (occupied.has(seatIndex)) {
+        continue;
+      }
+
+      previewPlayers.push(this.createDebugSeat(seatIndex, previewPlayers.length + 1));
+    }
+
+    previewPlayers.sort((left, right) => left.seatIndex - right.seatIndex);
+
+    return {
+      ...table,
+      players: previewPlayers,
+      communityCards: table.communityCards.length > 0 ? table.communityCards : this.previewBoardCards
+    } satisfies PokerTableState;
+  });
   readonly currentBet = computed(() => this.state()?.currentBet || 0);
   readonly selfSeat = computed(() => this.tableState()?.players.find((seat) => seat.isSelf) || null);
   readonly isSelfReady = computed(() => Boolean(this.selfSeat()?.isReady));
@@ -317,5 +356,25 @@ export class PokerPageComponent {
   private asWholeNumber(value: string, fallback: number): number {
     const parsed = Number(value);
     return Number.isFinite(parsed) && parsed > 0 ? Math.round(parsed) : fallback;
+  }
+
+  private createDebugSeat(seatIndex: number, botNumber: number): PokerSeatView {
+    return {
+      userId: `debug-bot-${seatIndex}`,
+      playerLabel: `Bot ${botNumber}`,
+      avatarUrl: null,
+      emoteText: null,
+      isReady: true,
+      buyIn: 1000,
+      stackRemaining: 1000 + botNumber * 150,
+      totalContribution: 0,
+      streetContribution: 0,
+      status: 'active',
+      seatIndex,
+      isSelf: false,
+      cards: [{ hidden: true }, { hidden: true }],
+      evaluation: null,
+      lastAction: botNumber % 2 === 0 ? 'Checked' : 'Thinking'
+    };
   }
 }

@@ -48,17 +48,8 @@
     </div>
   </app-card>
 
-  <app-card sidebar>
+  <app-card sidebar class="blackjack-sidebar">
     <div class="page-stack">
-      <span class="pill" style="width: fit-content">{{ statusLabel() }}</span>
-
-      <app-input
-        label="Bet amount"
-        inputMode="numeric"
-        [value]="betAmount()"
-        (valueChange)="betAmount.set($event.replace(/\D/g, ''))"
-      />
-
       @if (isInsuranceDecision()) {
         <div class="page-stack">
           <app-button block [disabled]="!canTakeInsurance()" (click)="action('insurance')">
@@ -88,21 +79,14 @@
           </app-button>
         </div>
       } @else {
+          <app-input
+                  label="Bet amount"
+                  inputMode="numeric"
+                  [value]="betAmount()"
+                  (valueChange)="betAmount.set($event.replace(/\D/g, ''))"
+          />
         <app-button block [disabled]="isDealing()" (click)="deal()">Deal cards</app-button>
       }
-
-      @if (revealedOutcome(); as result) {
-        <div class="page-stack">
-          <span class="pill">{{ result.result }}</span>
-          <p [class]="result.balanceChange >= 0 ? 'text-success' : 'text-danger'">
-            {{ result.balanceChange | credits }}
-          </p>
-        </div>
-      }
-    </div>
-
-    <div class="page-stack">
-      <p class="status-copy">{{ statusMessage() }}</p>
     </div>
   </app-card>
 </app-game-shell>

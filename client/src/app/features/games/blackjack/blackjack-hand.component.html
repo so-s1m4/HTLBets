@@ -16,12 +16,11 @@
           <div class="card" [class.hidden]="isHidden(card)">
             <div class="card__inner">
               <div class="card__face card__face--back">
-                <span>??</span>
+                  <img src="/cards/back_dark.png" alt="">
               </div>
 
               <div class="card__face card__face--front">
-                <strong [style.color]="color(card.suit)">{{ card.rank }}</strong>
-                <span [style.color]="color(card.suit)">{{ symbol(card.suit) }}</span>
+                  <img src='/cards/{{card.suit}}_{{card.rank}}.png' alt="">
               </div>
             </div>
           </div>
