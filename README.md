@@ -1,6 +1,21 @@
 # HTLBets
 
-Demo-only mini-game platform built with Angular, Express, Socket.io, PostgreSQL, and Prisma.
+Mini-game platform for HTL students, built with Angular, Express, Socket.io, PostgreSQL, and Prisma.
+
+## Links
+- [Live Demo](https://htlbets.s1m4.me)
+- [Source Code](https://github.com/so-s1m4/HTLBets)
+
+## Features
+
+- school-email based authentication
+- first login via code, then password-based login
+- demo credits only, no real money
+- realtime roulette with shared table state
+- blackjack
+- multiplayer poker with public and private tables
+- profile, session history, daily rewards, and nickname support
+- admin area for user lookup and balance management
 
 ## Stack
 
@@ -20,8 +35,8 @@ npm run dev
 `npm run dev` automatically:
 
 - creates `.env.docker` from `.env.docker.example` if missing
-- syncs `PORT`, `CLIENT_ORIGIN`, `DATABASE_URL`, and `TRUST_PROXY` from the local dev entries in `.env.docker`
-- starts local PostgreSQL through Docker Compose
+- syncs local dev values into `.env.docker`
+- starts PostgreSQL through Docker Compose
 - runs Prisma generate + migrate deploy
 - starts backend and frontend
 
@@ -32,7 +47,7 @@ Default local URLs:
 
 Requirement: Docker must be running locally.
 
-## Env File
+## Environment
 
 Everything reads from `.env.docker`.
 
@@ -40,7 +55,7 @@ Everything reads from `.env.docker`.
 - `.env.docker` is used by both `npm run dev` and `docker compose`
 - `DEV_CLIENT_PORT` is client dev only
 - `DEV_SERVER_PORT` and `DEV_TRUST_PROXY` are server dev only
-- `POSTGRES_PUBLISHED_PORT` is the shared local Postgres host port and is also used to build `DATABASE_URL`
+- `POSTGRES_PUBLISHED_PORT` is the shared local Postgres host port
 - `SERVER_PUBLISHED_PORT`, `CLIENT_PUBLISHED_PORT`, and `DEPLOY_TRUST_PROXY` are deployment-only
 
 ## Commands
@@ -71,11 +86,14 @@ npm run docker:logs
 
 - `POST /api/auth/request-code`
 - `POST /api/auth/verify-code`
+- `POST /api/auth/login`
+- `POST /api/auth/set-password`
 - `GET /api/me`
 - `GET /api/history`
 
 ## Notes
 
-- Demo credits only
-- No real-money gambling, payments, or withdrawals
-- Game results are calculated on the backend
+- demo credits only
+- no payments, deposits, withdrawals, or real-money betting
+- game results and balance updates are calculated on the backend
+- production deploys should keep PostgreSQL private to the Docker network

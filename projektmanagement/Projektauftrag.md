@@ -2,54 +2,58 @@
 
 **Dokumenttyp:** Projektauftrag  
 **Projekt:** HTLBets  
-**Version:** 1.0  
-**Status:** Entwurf zur Freigabe  
-**Datum:** 28.04.2026  
+**Version:** 1.1  
+**Status:** aktualisiert  
+**Datum:** 09.05.2026
 
 ---
 
 ## 1. Projektbezeichnung
 
-**HTLBets – Demo-Minigame-Plattform für HTL-Schüler:innen**
+**HTLBets – Minigame-Plattform für HTL-Schüler:innen**
 
-HTLBets ist eine mobile-first Webplattform, auf der berechtigte Nutzer:innen mit reinen Demo-Credits Minispiele spielen können. Das Projekt dient ausschließlich Demonstrations-, Lern- und Entwicklungszwecken.
+HTLBets ist eine PC-first Webplattform, auf der berechtigte Nutzer:innen Minispiele spielen können. Das Projekt dient ausschließlich Demonstrations-, Lern- und Entwicklungszwecken.
 
 ---
 
 ## 2. Projektauftraggeber
 
-| Rolle | Name / Organisation |
-|---|---|
-| Projektauftraggeber | HTL / betreuende Lehrperson |
-| Auftragnehmer | Projektteam HTLBets |
-| Projektleitung | `[Name der Projektleitung eintragen]` |
-| Projektteam | `[Teammitglieder eintragen]` |
+| Rolle | Name / Organisation                                 |
+|---|-----------------------------------------------------|
+| Projektauftraggeber | HTL / betreuende Lehrperson                         |
+| Auftragnehmer | Projektteam HTLBets                                 |
+| Projektleitung | `IDK SORRY ME PLS`                                  |
+| Projektteam | `Maksym Rvachov und Oleksii Shovkoplias`            |
 | Zielgruppe | Schüler:innen mit berechtigter Schul-E-Mail-Adresse |
 
 ---
 
 ## 3. Projekthintergrund
 
-Im Rahmen des Unterrichts soll eine moderne, mobile-first Webanwendung geplant und umgesetzt werden. Das Projekt soll zeigen, wie eine interaktive Plattform mit Benutzeranmeldung, Demo-Guthaben, Spielabläufen und Spielhistorie konzipiert werden kann.
+Im Rahmen des Unterrichts soll eine moderne, interaktive Webanwendung geplant, umgesetzt und dokumentiert werden. Das Projekt soll zeigen, wie eine Plattform mit Benutzeranmeldung, Guthaben, Echtzeit-Spielzuständen, Profilverwaltung, Spielhistorie und einfachen Administrationsfunktionen aufgebaut werden kann.
 
-HTLBets verwendet ausschließlich virtuelle Demo-Credits. Es werden keine Echtgeld-Wetten, keine Zahlungen, keine Auszahlungen und keine monetären Einsätze angeboten. Dadurch bleibt das Projekt klar als Schul-, Demo- und Lernprojekt abgegrenzt.
+HTLBets verwendet ausschließlich virtuelle Credits. Es werden keine Echtgeld-Wetten, keine Zahlungen, keine Auszahlungen und keine monetären Einsätze angeboten. Das Projekt bleibt damit klar als Schul-,  und Lernprojekt abgegrenzt.
 
 ---
 
 ## 4. Projektendergebnis
 
-Am Projektende liegt eine abnahmefähige Demo-Webanwendung mit folgender Dokumentation vor:
+Am Projektende liegt eine abnahmefähige Webanwendung mit folgender Dokumentation vor:
 
 | Ergebnis | Messbare Eigenschaft |
 |---|---|
-| Mobile-first Weboberfläche | Bedienbar auf Smartphone-Breite ab ca. 390 px sowie auf Desktop-Bildschirmen |
+| Mobile-first Weboberfläche | Bedienbar auf Smartphone-Breite sowie auf Desktop-Bildschirmen |
 | Benutzerzugang | Anmeldung nur für berechtigte Schul-E-Mail-Adressen möglich |
-| Demo-Credit-System | Neue Nutzer:innen erhalten ein Startguthaben von 1000 Demo-Credits |
-| Minispiele | Mindestens Roulette und Blackjack sind spielbar; Poker ist als vorbereiteter Prototyp bzw. Platzhalter vorhanden |
-| Spielhistorie | Abgeschlossene Spielrunden werden mit Spieltyp, Einsatz, Ergebnis und Zeitpunkt nachvollziehbar gespeichert |
+| Authentifizierungsablauf | Erster Login per Code; danach Passwort-Login möglich |
+| Credit-System | Neue Nutzer:innen erhalten ein Startguthaben; Guthaben ändert sich nachvollziehbar |
+| Roulette | Realtime-Roulette mit gemeinsamem Tisch, Countdown und sichtbaren Einsätzen |
+| Blackjack | Blackjack ist spielbar |
+| Poker | Multiplayer-Poker mit öffentlichen und privaten Tischen ist verfügbar |
+| Profilfunktionen | Benutzername, Historie und tägliche Belohnungen sind verfügbar |
+| Administrationsbereich | Admin-Nutzer:innen können Nutzer:innen suchen und Guthaben verwalten |
 | Sicherheitsabgrenzung | Keine Echtgeldfunktion, keine Zahlungsfunktion, keine Auszahlung und keine monetären Einsätze |
-| Qualitätssicherung | Anwendung kann lokal gestartet werden; vorhandene Tests und Builds laufen ohne bekannte kritische Fehler |
-| Projektdokumentation | Projektauftrag, README und weitere technische Dokumentation sind im Repository abgelegt |
+| Qualitätssicherung | Anwendung kann lokal gestartet werden; vorhandene Builds und Tests laufen ohne bekannte kritische Fehler |
+| Projektdokumentation | README und Projektauftrag sind im Repository abgelegt |
 
 ---
 
@@ -57,20 +61,23 @@ Am Projektende liegt eine abnahmefähige Demo-Webanwendung mit folgender Dokumen
 
 ### 5.1 Hauptziel
 
-Ziel des Projekts ist die Entwicklung einer funktionsfähigen Demo-Minigame-Plattform für HTL-Schüler:innen, bei der Nutzer:innen nach Anmeldung mit virtuellen Demo-Credits spielen und ihre Spielhistorie einsehen können.
+Ziel des Projekts ist die Entwicklung einer funktionsfähigen Minigame-Plattform für HTL-Schüler:innen, bei der Nutzer:innen nach Anmeldung mit virtuellen Credits spielen, ihre Historie einsehen und an mehreren Spielmodi teilnehmen können.
 
 ### 5.2 Teilziele
 
 | Nr. | Ziel | Messkriterium |
 |---|---|---|
 | Z1 | Nutzer:innen können sich mit einer berechtigten Schul-E-Mail-Adresse anmelden. | Anmeldung mit gültiger Adresse funktioniert; unberechtigte Adressen werden abgewiesen. |
-| Z2 | Jede neue Nutzerin bzw. jeder neue Nutzer erhält ein Demo-Startguthaben. | Startguthaben beträgt 1000 Credits. |
-| Z3 | Roulette ist als Demo-Spiel verfügbar. | Eine Spielrunde kann gestartet, abgeschlossen und im Verlauf gespeichert werden. |
-| Z4 | Blackjack ist als Demo-Spiel verfügbar. | Nutzer:innen können typische Aktionen wie Karte ziehen oder stehen bleiben ausführen. |
-| Z5 | Poker ist vorbereitet. | Es gibt eine sichtbare, abgegrenzte Poker-Funktion als Prototyp oder Platzhalter. |
-| Z6 | Spielausgänge sind nachvollziehbar. | Ergebnisse werden nicht nur in der Oberfläche angezeigt, sondern auch in der Spielhistorie gespeichert. |
-| Z7 | Die Oberfläche ist für mobile Nutzung optimiert. | Kernfunktionen sind auf Smartphone-Größe ohne horizontales Scrollen bedienbar. |
-| Z8 | Die Anwendung ist vorführbar. | Projekt kann lokal oder in einer Demo-Umgebung gestartet und präsentiert werden. |
+| Z2 | Der Login-Ablauf ist zweistufig. | Erster Login erfolgt per Code; danach kann ein Passwort gesetzt und verwendet werden. |
+| Z3 | Neue Nutzer:innen erhalten ein Startguthaben. | Startguthaben wird automatisch gesetzt. |
+| Z4 | Roulette ist als Realtime-Spiel verfügbar. | Mehrere Nutzer:innen sehen denselben Tischzustand und dieselbe Runde. |
+| Z5 | Blackjack ist als Spiel verfügbar. | Typische Aktionen wie Ziehen und Stehen bleiben funktionieren. |
+| Z6 | Poker ist als Multiplayer-Spiel verfügbar. | Öffentliche und private Tische können verwendet werden. |
+| Z7 | Spielausgänge sind nachvollziehbar. | Ergebnisse werden im Frontend angezeigt und in der Historie gespeichert. |
+| Z8 | Die Oberfläche ist für mobile Nutzung optimiert. | Kernfunktionen sind auf Smartphone-Größe bedienbar. |
+| Z9 | Es gibt einfache tägliche Belohnungen und Benutzerprofilfunktionen. | Daily Rewards, Benutzername und Profilansicht funktionieren. |
+| Z10 | Eine einfache Administration ist vorhanden. | Admin-Nutzer:innen können Nutzer:innen finden und Guthaben verwalten. |
+| Z11 | Die Anwendung ist vorführbar. | Projekt kann lokal oder in einer Umgebung gestartet und präsentiert werden. |
 
 ### 5.3 Nicht-Projektziele / Abgrenzung
 
@@ -81,7 +88,7 @@ Nicht Bestandteil dieses Projekts sind:
 - Monetäre Wetten oder finanzielle Gewinne
 - Veröffentlichung als öffentliches Casino- oder Wettprodukt
 - Rechtliche Zertifizierung für Glücksspielbetrieb
-- Vollständige Umsetzung aller Poker-Regeln auf Produktionsniveau
+- Poker auf professionellem Echtgeld-Casino-Niveau
 - Native Apps für App Store oder Play Store
 - Langfristiger Produktivbetrieb mit echtem Kundensupport
 
@@ -89,21 +96,22 @@ Nicht Bestandteil dieses Projekts sind:
 
 ## 6. Projektbeschreibung
 
-HTLBets wird als Demo-Webplattform umgesetzt. Nutzer:innen melden sich mit einer berechtigten Schul-E-Mail-Adresse an und erhalten ein virtuelles Guthaben. Mit diesem Guthaben können sie in einer mobilen Oberfläche Minispiele starten. Nach jeder abgeschlossenen Runde wird das Ergebnis angezeigt und in einer Historie gespeichert.
+HTLBets wird als Webplattform umgesetzt. Nutzer:innen melden sich mit einer berechtigten Schul-E-Mail-Adresse an und erhalten ein virtuelles Guthaben. Beim ersten Login erfolgt die Anmeldung per E-Mail-Code; danach kann ein Passwort gesetzt werden. Mit dem Guthaben können Nutzer:innen in einer mobilen Oberfläche Minispiele spielen.
 
-Der Schwerpunkt liegt auf einem klar abgegrenzten, vorführbaren Schulprojekt. Die Anwendung soll verständlich bedienbar sein, grundlegende Spiellogik demonstrieren und eine saubere Trennung zwischen Demo-Credits und echtem Geld einhalten.
+Roulette läuft als gemeinsamer Echtzeit-Tisch mit sichtbaren Einsätzen. Blackjack ist als klassisches Einzelspiel verfügbar. Poker bietet öffentliche und private Tische mit Buy-in-Logik und Multiplayer-Tischansicht. Zusätzlich gibt es Profilfunktionen, eine Spielhistorie, tägliche Belohnungen sowie einen einfachen Administrationsbereich.
 
 Die Projektarbeit umfasst:
 
 1. Planung der Anforderungen und Projektabgrenzung
-2. Entwurf einer einfachen Benutzerführung
-3. Umsetzung der Anmeldung und Nutzerverwaltung
-4. Umsetzung des Demo-Guthabens
-5. Umsetzung der Minispiele und Spielhistorie
-6. Test, Fehlerbehebung und Dokumentation
-7. Abnahme und Präsentation
+2. Entwurf der Benutzerführung
+3. Umsetzung von Anmeldung und Nutzerverwaltung
+4. Umsetzung des Guthabens und der Rewards
+5. Umsetzung der Spielmodi und Echtzeitlogik
+6. Umsetzung von Historie und Admin-Funktionen
+7. Test, Fehlerbehebung und Dokumentation
+8. Abnahme und Präsentation
 
-Technische Implementierungsdetails werden nicht in diesem Projektauftrag festgelegt, sondern in den nachfolgenden technischen Dokumenten bzw. im Pflichtenheft beschrieben.
+Technische Implementierungsdetails werden nicht im Projektauftrag festgelegt, sondern in den technischen Unterlagen und im Quellcode beschrieben.
 
 ---
 
@@ -113,12 +121,13 @@ Technische Implementierungsdetails werden nicht in diesem Projektauftrag festgel
 |---|---|---:|---|
 | 1. Projektstart | Projektauftrag erstellt und abgestimmt | 28.04.2026 | Auftraggeber / Lehrperson |
 | 2. Anforderungsanalyse | Funktionsumfang, Nicht-Ziele und Akzeptanzkriterien festgelegt | 05.05.2026 | Projektleitung |
-| 3. UI- und Ablaufkonzept | Mobile-first Bedienkonzept für Anmeldung, Spiele und Verlauf | 12.05.2026 | Projektteam |
-| 4. Grundfunktionen | Anmeldung, Nutzerstatus und Demo-Guthaben funktionieren | 19.05.2026 | Projektleitung |
-| 5. Spielfunktionen | Roulette und Blackjack spielbar; Poker vorbereitet | 02.06.2026 | Projektteam |
-| 6. Verlauf und Qualität | Spielhistorie, Tests und Fehlerbehebung abgeschlossen | 16.06.2026 | Projektleitung |
-| 7. Abnahmeversion | Demo-Version ist vorführbar und dokumentiert | 23.06.2026 | Auftraggeber / Lehrperson |
-| 8. Projektabschluss | Präsentation, Reflexion und finale Abgabe | 30.06.2026 | Auftraggeber / Lehrperson |
+| 3. UI- und Ablaufkonzept | Bedienkonzept für Login, Spiele, Profil und Admin | 12.05.2026 | Projektteam |
+| 4. Grundfunktionen | Anmeldung, Nutzerstatus und Guthaben funktionieren | 19.05.2026 | Projektleitung |
+| 5. Spielfunktionen I | Roulette und Blackjack spielbar | 02.06.2026 | Projektteam |
+| 6. Spielfunktionen II | Multiplayer-Poker und Tischlogik integriert | 12.06.2026 | Projektteam |
+| 7. Zusatzfunktionen | Profil, Rewards, Admin und Historie abgeschlossen | 20.06.2026 | Projektleitung |
+| 8. Abnahmeversion | Version ist vorführbar und dokumentiert | 26.06.2026 | Auftraggeber / Lehrperson |
+| 9. Projektabschluss | Präsentation, Reflexion und finale Abgabe | 30.06.2026 | Auftraggeber / Lehrperson |
 
 ---
 
@@ -127,11 +136,9 @@ Technische Implementierungsdetails werden nicht in diesem Projektauftrag festgel
 | Punkt | Beschreibung |
 |---|---|
 | Offizieller Projektstart | 28.04.2026, nach Freigabe bzw. Unterzeichnung dieses Projektauftrags |
-| Auslösendes Ereignis | Auftrag zur Erstellung einer Demo-Minigame-Plattform im Rahmen des Unterrichts |
+| Auslösendes Ereignis | Auftrag zur Erstellung einer Minigame-Plattform im Rahmen des Unterrichts |
 | Geplantes Projektende | 30.06.2026 |
-| Abschlussereignis | Abnahme der Demo-Version, Abgabe der Dokumentation und Präsentation des Projekts |
-
-> Hinweis: Falls die Schule andere Termine vorgibt, sind die Datumsangaben vor der Abgabe anzupassen.
+| Abschlussereignis | Abnahme der Version, Abgabe der Dokumentation und Präsentation des Projekts |
 
 ---
 
@@ -142,8 +149,8 @@ Technische Implementierungsdetails werden nicht in diesem Projektauftrag festgel
 | Rolle | Aufgaben |
 |---|---|
 | Projektleitung | Planung, Koordination, Terminüberwachung, Kommunikation mit Auftraggeber |
-| Frontend-Verantwortliche:r | Benutzeroberfläche, mobile-first Layout, Bedienbarkeit |
-| Backend-/Logik-Verantwortliche:r | Nutzerverwaltung, Spielabläufe, Demo-Credit-System |
+| Frontend-Verantwortliche:r | Benutzeroberfläche, Responsive Design, Spiele-UI |
+| Backend-/Realtime-Verantwortliche:r | Nutzerverwaltung, Spiellogik, Socket-Kommunikation, Credit-System |
 | Qualitätssicherung | Tests, Fehlerdokumentation, Abnahmekriterien |
 | Dokumentation | README, Projektauftrag, Präsentationsunterlagen |
 
@@ -154,7 +161,7 @@ Technische Implementierungsdetails werden nicht in diesem Projektauftrag festgel
 | Entwicklungsgeräte | Schul- oder Privatgeräte der Teammitglieder |
 | Versionsverwaltung | Git-Repository für Quellcode und Dokumentation |
 | Testgeräte | Mindestens ein Smartphone-Browser und ein Desktop-Browser |
-| Entwicklungsumgebung | Lokale Entwicklungsumgebung der Teammitglieder |
+| Entwicklungsumgebung | Lokale Entwicklungsumgebung mit Node.js, Docker und PostgreSQL |
 | Kommunikationsmittel | Unterricht, Chat oder Projektbesprechungen |
 
 ### 9.3 Kostenrahmen
@@ -172,27 +179,27 @@ Technische Implementierungsdetails werden nicht in diesem Projektauftrag festgel
 
 | Risiko | Auswirkung | Wahrscheinlichkeit | Gegenmaßnahme |
 |---|---|---:|---|
-| Unklare Abgrenzung zu echtem Glücksspiel | Missverständnisse über Zweck und rechtliche Einordnung | Mittel | Klare Dokumentation: nur Demo-Credits, kein Echtgeld, keine Zahlungen |
-| Funktionsumfang wird zu groß | Terminverzug und unfertige Kernfunktionen | Mittel | Fokus auf Pflichtfunktionen; Poker nur als Prototyp/Platzhalter |
-| Anmeldung oder E-Mail-Prüfung funktioniert nicht zuverlässig | Nutzer:innen können Demo nicht verwenden | Mittel | Früh testen und Alternativ-Testzugänge für Präsentation vorbereiten |
-| Mobile Darstellung ist unübersichtlich | Schlechte Bedienbarkeit bei der Abnahme | Mittel | Mobile-first Design laufend auf Smartphone-Breite testen |
-| Spielhistorie speichert Ergebnisse fehlerhaft | Ergebnisse nicht nachvollziehbar | Niedrig bis mittel | Testfälle für Spielrunden und Verlaufsanzeige erstellen |
-| Zeitmangel kurz vor Abgabe | Qualitätsverlust und fehlende Dokumentation | Mittel | Meilensteine einhalten, Dokumentation parallel zur Umsetzung pflegen |
-| Sicherheitslücken oder Manipulation von Demo-Credits | Demo-Ergebnisse sind nicht vertrauenswürdig | Mittel | Kritische Spiel- und Guthabenlogik nicht nur in der Oberfläche behandeln |
-| Teammitglied fällt aus | Aufgaben bleiben liegen | Niedrig bis mittel | Aufgaben dokumentieren und Wissen im Team verteilen |
+| Unklare Abgrenzung zu echtem Glücksspiel | Missverständnisse über Zweck und rechtliche Einordnung | Mittel | Klare Dokumentation: nur Credits, kein Echtgeld, keine Zahlungen |
+| Funktionsumfang wird zu groß | Terminverzug und unfertige Kernfunktionen | Mittel | Fokus auf stabile Kernfunktionen; Erweiterungen klar priorisieren |
+| Echtzeitlogik verhält sich instabil | Nutzer:innen sehen inkonsistente Spielzustände | Mittel | Server-seitige Spiellogik zentral halten und gezielt testen |
+| Mobile Darstellung ist unübersichtlich | Schlechte Bedienbarkeit bei der Abnahme | Mittel | Mobile-first Design laufend testen |
+| Historie oder Guthaben werden fehlerhaft gespeichert | Ergebnisse nicht nachvollziehbar | Niedrig bis mittel | Testfälle für Spielrunden, Balance und Verlauf erstellen |
+| Authentifizierungsablauf ist unklar | Nutzer:innen können sich nicht zuverlässig anmelden | Mittel | Login-Flow früh testen und dokumentieren |
+| Sicherheitslücken oder Manipulation von Credits | Ergebnisse sind nicht vertrauenswürdig | Mittel | Kritische Spiel- und Guthabenlogik im Backend halten |
+| Zeitmangel kurz vor Abgabe | Qualitätsverlust und fehlende Dokumentation | Mittel | Meilensteine einhalten und Dokumentation laufend pflegen |
 
 ---
 
 ## 11. Projektorganisation
 
-| Bereich | Zuständigkeit |
-|---|---|
+| Bereich | Zuständigkeit               |
+|---|-----------------------------|
 | Auftraggeber | HTL / betreuende Lehrperson |
-| Projektleitung | `[Name eintragen]` |
-| Entwicklung | Projektteam HTLBets |
-| Qualitätssicherung | `[Name eintragen]` |
-| Dokumentation | `[Name eintragen]` |
-| Abnahme | Auftraggeber / Lehrperson |
+| Projektleitung | `IDK SORRY ME PLS`          |
+| Entwicklung | Projektteam HTLBets         |
+| Qualitätssicherung | `Projektteam HTLBets`          |
+| Dokumentation | `Projektteam HTLBets`          |
+| Abnahme | Auftraggeber / Lehrperson   |
 
 ### Kommunikationsregeln
 
@@ -207,15 +214,17 @@ Technische Implementierungsdetails werden nicht in diesem Projektauftrag festgel
 
 Das Projekt gilt als erfolgreich abgeschlossen, wenn folgende Kriterien erfüllt sind:
 
-- Die Demo-Anwendung kann gestartet und vorgeführt werden.
+- Die Anwendung kann gestartet und vorgeführt werden.
 - Eine berechtigte Nutzerin bzw. ein berechtigter Nutzer kann sich anmelden.
-- Das Demo-Guthaben wird angezeigt und verändert sich nach Spielrunden nachvollziehbar.
-- Mindestens Roulette und Blackjack sind in einer Demo-Version spielbar.
+- Das Guthaben wird angezeigt und verändert sich nach Spielrunden nachvollziehbar.
+- Roulette, Blackjack und Poker sind in einer Version verwendbar.
 - Eine Spielhistorie zeigt abgeschlossene Spielrunden.
+- Daily Rewards und grundlegende Profilfunktionen sind vorhanden.
+- Ein einfacher Admin-Bereich ist vorhanden.
 - Die Oberfläche ist auf Smartphone-Größe bedienbar.
 - Es gibt keine Funktionen für Echtgeld, Zahlungen, Auszahlungen oder monetäre Wetten.
 - Die Dokumentation ist im Repository abgelegt.
-- Auftraggeber bzw. Lehrperson nehmen die Demo-Version ab.
+- Auftraggeber bzw. Lehrperson nehmen die Version ab.
 
 ---
 
@@ -237,3 +246,4 @@ Mit der Unterzeichnung bestätigen Auftraggeber und Projektteam den beschriebene
 | Version | Datum | Änderung | Autor:in |
 |---|---:|---|---|
 | 1.0 | 28.04.2026 | Erstfassung des Projektauftrags | Projektteam HTLBets |
+| 1.1 | 09.05.2026 | Aktualisierung auf aktuellen Projektstand mit Poker, Profil, Rewards und Admin | Projektteam HTLBets |
