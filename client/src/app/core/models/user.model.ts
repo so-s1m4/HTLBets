@@ -17,6 +17,7 @@ export interface CardDeck {
   price: number;
   backImageUrl: string;
   faceImageTemplate: string;
+  isDefault: boolean;
   enabled: boolean;
   owned: boolean;
   selected: boolean;
@@ -33,6 +34,7 @@ export interface AdminCardDeck {
   price: number;
   backImageUrl: string;
   faceImageTemplate: string;
+  isDefault: boolean;
   enabled: boolean;
   purchaseCount: number;
   createdAt: string;

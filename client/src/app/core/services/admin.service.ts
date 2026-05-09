@@ -38,4 +38,8 @@ export class AdminService {
   }): Promise<AdminCardDeck> {
     return firstValueFrom(this.http.post<AdminCardDeck>(`${this.config.apiUrl}/admin/card-decks/import`, input));
   }
+
+  setDefaultCardDeck(deckId: string): Promise<AdminCardDeck> {
+    return firstValueFrom(this.http.post<AdminCardDeck>(`${this.config.apiUrl}/admin/card-decks/${deckId}/default`, {}));
+  }
 }

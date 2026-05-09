@@ -247,4 +247,31 @@ export class AdminPageComponent {
       this.savingDeckId.set(null);
     }
   }
+
+  async setDefaultDeck(deck: AdminCardDeck): Promise<void> {
+    this.savingDeckId.set(`default:${deck.id}`);
+    this.deckError.set('');
+    this.deckNotice.set('');
+
+    try {
+      const updatedDefault = await this.adminService.setDefaultCardDeck(deck.id);
+      this.cardDecks.update((decks) =>
+        decks
+          .map((entry) =>
+            entry.id === updatedDefault.id
+              ? updatedDefault
+              : {
+                  ...entry,
+                  isDefault: false
+                }
+          )
+          .sort((left, right) => Number(right.enabled) - Number(left.enabled))
+      );
+      this.deckNotice.set(`Deck ${updatedDefault.name} is now the standard deck.`);
+    } catch (error) {
+      this.deckError.set(error instanceof Error ? error.message : 'Failed to change the standard deck.');
+    } finally {
+      this.savingDeckId.set(null);
+    }
+  }
 }

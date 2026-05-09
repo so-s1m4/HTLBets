@@ -69,6 +69,10 @@ class UserService {
     return cardDeckService.importForAdmin(payload);
   }
 
+  async setAdminDefaultCardDeck(deckId: string): Promise<AdminCardDeck> {
+    return cardDeckService.setDefaultForAdmin(deckId);
+  }
+
   async claimDailyTask(userId: string, taskKey: string): Promise<{ user: PublicUser; task: PublicDailyTask }> {
     return dailyRewardsService.claimDailyTask(userId, taskKey);
   }

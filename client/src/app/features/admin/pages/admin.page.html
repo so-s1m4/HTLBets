@@ -114,7 +114,12 @@
                   <div class="admin-deck-card__fields">
                     <div class="admin-deck-card__meta">
                       <strong>{{ deck.id }}</strong>
-                      <span class="pill">{{ deck.purchaseCount }} owners</span>
+                      <div class="section-actions">
+                        @if (deck.isDefault) {
+                          <span class="pill">Standard</span>
+                        }
+                        <span class="pill">{{ deck.purchaseCount }} owners</span>
+                      </div>
                     </div>
 
                     <app-input
@@ -150,9 +155,20 @@
 
                     <div class="admin-user-card__actions">
                       <span class="pill">{{ deck.createdAt | date: 'mediumDate' }}</span>
-                      <app-button variant="secondary" [disabled]="savingDeckId() === deck.id" (click)="saveDeck(deck)">
-                        {{ savingDeckId() === deck.id ? 'Saving...' : 'Save deck' }}
-                      </app-button>
+                      <div class="section-actions">
+                        @if (!deck.isDefault) {
+                          <app-button
+                            variant="ghost"
+                            [disabled]="savingDeckId() === 'default:' + deck.id"
+                            (click)="setDefaultDeck(deck)"
+                          >
+                            {{ savingDeckId() === 'default:' + deck.id ? 'Switching...' : 'Make standard' }}
+                          </app-button>
+                        }
+                        <app-button variant="secondary" [disabled]="savingDeckId() === deck.id" (click)="saveDeck(deck)">
+                          {{ savingDeckId() === deck.id ? 'Saving...' : 'Save deck' }}
+                        </app-button>
+                      </div>
                     </div>
                   </div>
                 </div>

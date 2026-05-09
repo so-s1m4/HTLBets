@@ -172,6 +172,9 @@
                       <span class="pill">{{ deck.price | credits }}</span>
                     </div>
                     <div class="deck-card__meta">
+                      @if (deck.isDefault) {
+                        <span class="pill">Standard</span>
+                      }
                       @if (deck.selected) {
                         <span class="pill">Selected</span>
                       } @else if (deck.owned) {

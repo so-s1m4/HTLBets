@@ -143,3 +143,12 @@ userRouter.post('/admin/card-decks/import', adminMiddleware, async (req, res, ne
     next(error);
   }
 });
+
+userRouter.post('/admin/card-decks/:deckId/default', adminMiddleware, async (req, res, next) => {
+  try {
+    const deck = await userService.setAdminDefaultCardDeck(String(req.params.deckId));
+    res.status(200).json(deck);
+  } catch (error) {
+    next(error);
+  }
+});

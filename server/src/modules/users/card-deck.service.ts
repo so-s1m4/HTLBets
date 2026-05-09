@@ -11,6 +11,7 @@ export interface PublicCardDeck {
   price: number;
   backImageUrl: string;
   faceImageTemplate: string;
+  isDefault: boolean;
   enabled: boolean;
   owned: boolean;
   selected: boolean;
@@ -22,6 +23,7 @@ export interface AdminCardDeck {
   price: number;
   backImageUrl: string;
   faceImageTemplate: string;
+  isDefault: boolean;
   enabled: boolean;
   purchaseCount: number;
   createdAt: Date;
@@ -108,7 +110,7 @@ const normalizeCardDeckInput = (payload?: Record<string, unknown>): CardDeckInpu
 });
 
 const mapPublicCardDeck = (
-  deck: { id: string; name: string; price: number; backImageUrl: string; faceImageTemplate: string; enabled: boolean },
+  deck: { id: string; name: string; price: number; backImageUrl: string; faceImageTemplate: string; isDefault: boolean; enabled: boolean },
   ownedDeckIds: Set<string>,
   selectedCardDeckId: string
 ): PublicCardDeck => ({
@@ -117,24 +119,46 @@ const mapPublicCardDeck = (
   price: deck.price,
   backImageUrl: deck.backImageUrl,
   faceImageTemplate: deck.faceImageTemplate,
+  isDefault: deck.isDefault,
   enabled: deck.enabled,
-  owned: ownedDeckIds.has(deck.id),
+  owned: ownedDeckIds.has(deck.id) || deck.isDefault,
   selected: selectedCardDeckId === deck.id
 });
 
 export class CardDeckService {
+  async getDefaultDeck(): Promise<{ id: string; backImageUrl: string; faceImageTemplate: string } | null> {
+    const deck = await prisma.cardDeck.findFirst({
+      where: {
+        isDefault: true
+      },
+      orderBy: {
+        createdAt: 'asc'
+      },
+      select: {
+        id: true,
+        backImageUrl: true,
+        faceImageTemplate: true
+      }
+    });
+
+    return deck;
+  }
+
   async ensureDefaultOwnership(userId: string): Promise<void> {
+    const defaultDeck = await this.getDefaultDeck();
+    const deckId = defaultDeck?.id || DEFAULT_CARD_DECK_ID;
+
     await prisma.userCardDeck.upsert({
       where: {
         userId_deckId: {
           userId,
-          deckId: DEFAULT_CARD_DECK_ID
+          deckId
         }
       },
       update: {},
       create: {
         userId,
-        deckId: DEFAULT_CARD_DECK_ID
+        deckId
       }
     });
   }
@@ -163,7 +187,12 @@ export class CardDeckService {
     }
 
     const ownedDeckIds = new Set(ownedEntries.map((entry) => entry.deckId));
-    ownedDeckIds.add(DEFAULT_CARD_DECK_ID);
+    const defaultDeck = decks.find((deck) => deck.isDefault);
+    if (defaultDeck) {
+      ownedDeckIds.add(defaultDeck.id);
+    } else {
+      ownedDeckIds.add(DEFAULT_CARD_DECK_ID);
+    }
 
     return decks
       .filter((deck) => deck.enabled || ownedDeckIds.has(deck.id) || user.selectedCardDeckId === deck.id)
@@ -266,7 +295,7 @@ export class CardDeckService {
       throw new HttpError(404, 'That card deck was not found.');
     }
 
-    if (normalizedDeckId !== DEFAULT_CARD_DECK_ID && !ownership) {
+    if (!deck.isDefault && normalizedDeckId !== DEFAULT_CARD_DECK_ID && !ownership) {
       throw new HttpError(400, 'Buy that card deck before selecting it.');
     }
 
@@ -301,6 +330,7 @@ export class CardDeckService {
       price: deck.price,
       backImageUrl: deck.backImageUrl,
       faceImageTemplate: deck.faceImageTemplate,
+      isDefault: deck.isDefault,
       enabled: deck.enabled,
       purchaseCount: deck._count.owners,
       createdAt: deck.createdAt,
@@ -336,10 +366,93 @@ export class CardDeckService {
       price: deck.price,
       backImageUrl: deck.backImageUrl,
       faceImageTemplate: deck.faceImageTemplate,
+      isDefault: deck.isDefault,
       enabled: deck.enabled,
       purchaseCount: deck._count.owners,
       createdAt: deck.createdAt,
       updatedAt: deck.updatedAt
+    };
+  }
+
+  async setDefaultForAdmin(deckId: string): Promise<AdminCardDeck> {
+    const normalizedDeckId = normalizeDeckId(deckId);
+    const existingDefault = await prisma.cardDeck.findFirst({
+      where: {
+        isDefault: true
+      },
+      select: {
+        id: true
+      }
+    });
+
+    const result = await prisma.$transaction(async (tx) => {
+      const nextDefault = await tx.cardDeck.findUnique({
+        where: {
+          id: normalizedDeckId
+        },
+        include: {
+          _count: {
+            select: {
+              owners: true
+            }
+          }
+        }
+      });
+
+      if (!nextDefault) {
+        throw new HttpError(404, 'That card deck was not found.');
+      }
+
+      await tx.cardDeck.updateMany({
+        where: {
+          isDefault: true
+        },
+        data: {
+          isDefault: false
+        }
+      });
+
+      const updatedDefault = await tx.cardDeck.update({
+        where: {
+          id: normalizedDeckId
+        },
+        data: {
+          isDefault: true
+        },
+        include: {
+          _count: {
+            select: {
+              owners: true
+            }
+          }
+        }
+      });
+
+      if (existingDefault?.id && existingDefault.id !== normalizedDeckId) {
+        await tx.user.updateMany({
+          where: {
+            selectedCardDeckId: existingDefault.id
+          },
+          data: {
+            selectedCardDeckId: normalizedDeckId
+          }
+        });
+      }
+
+      return updatedDefault;
+    });
+
+    return {
+      id: result.id,
+      name: result.name,
+      price: result.price,
+      backImageUrl: result.backImageUrl,
+      faceImageTemplate: result.faceImageTemplate,
+      isDefault: result.isDefault,
+      enabled: result.enabled,
+      purchaseCount: result._count.owners,
+      createdAt: result.createdAt,
+      updatedAt: result.updatedAt
     };
   }
 }
