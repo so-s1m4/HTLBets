@@ -1,35 +1,49 @@
     <div class="roulette-board">
       <div class="roulette-board__surface">
         <div class="roulette-board__layout">
-          <button
-            class="roulette-board__zero"
-            [class.active]="selectedType === 'number' && selectedValue === 0"
-            (click)="numberSelected.emit(0)"
-          >
-            0
-            @if (getAggregate('number', 0); as aggregate) {
-              <span class="roulette-board__chips">
-                @for (chip of chipsFor('number', 0, aggregate.totalAmount, aggregate.playerCount); track $index) {
-                  <span class="roulette-board__chip" [style.--chip-color]="chip"></span>
-                }
-              </span>
-            }
-          </button>
+          <div class="roulette-board__zero-stack">
+            <button
+              class="roulette-board__zero roulette-board__zero--double"
+              [class.active]="selectedType === 'number' && selectedValue === '00'"
+              (click)="emitSelection('number', '00')"
+            >
+              @if (getAggregate('number', '00'); as aggregate) {
+                <span class="roulette-board__chips">
+                  @for (chip of chipsFor('number', '00', aggregate.totalAmount, aggregate.playerCount); track $index) {
+                    <span class="roulette-board__chip" [style.--chip-color]="chip"></span>
+                  }
+                </span>
+              }
+            </button>
+
+            <button
+              class="roulette-board__zero"
+              [class.active]="selectedType === 'number' && selectedValue === 0"
+              (click)="emitSelection('number', 0)"
+            >
+              @if (getAggregate('number', 0); as aggregate) {
+                <span class="roulette-board__chips">
+                  @for (chip of chipsFor('number', 0, aggregate.totalAmount, aggregate.playerCount); track $index) {
+                    <span class="roulette-board__chip" [style.--chip-color]="chip"></span>
+                  }
+                </span>
+              }
+            </button>
+          </div>
 
           <div class="roulette-board__grid">
             @for (column of columns; track $index) {
               <div class="roulette-board__column">
-                @for (number of column; track number) {
+                @for (choice of column; track choice) {
                   <button
                     class="roulette-board__number"
-                    [class.active]="selectedType === 'number' && selectedValue === number"
-                    [class.red]="isRed(number)"
-                    (click)="numberSelected.emit(number)"
+                    [class.active]="selectedType === choice.type && selectedValue === choice.value"
+                    [class.red]="isRed(choice.value)"
+                    (click)="emitSelection(choice.type, choice.value)"
                   >
-                    {{ number }}
-                    @if (getAggregate('number', number); as aggregate) {
+                    @if (getAggregate(choice.type, choice.value); as aggregate) {
                       <span class="roulette-board__chips">
-                        @for (chip of chipsFor('number', number, aggregate.totalAmount, aggregate.playerCount); track $index) {
+                        @for (chip of chipsFor(choice.type, choice.value, aggregate.totalAmount, aggregate.playerCount); track $index) {
                           <span class="roulette-board__chip" [style.--chip-color]="chip"></span>
                         }
                       </span>
@@ -38,38 +52,192 @@
                 }
               </div>
             }
+              <div class="roulette-board__column">
+                  @for (choice of columnsBets; track choice) {
+                      <button
+                              class="roulette-board__number"
+                              (click)="emitSelection('column', choice.value)"
+                      >
+                          @if (getAggregate('column', choice.value); as aggregate) {
+                              <span class="roulette-board__chips">
+                        @for (chip of chipsFor('column', choice.value, aggregate.totalAmount, aggregate.playerCount); track $index) {
+                            <span class="roulette-board__chip" [style.--chip-color]="chip"></span>
+                        }
+                      </span>
+                          }
+                      </button>
+                  }
+              </div>
           </div>
         </div>
-      </div>
+          <div class="roulette-board__other_choices">
+              <div class="row c3">
+                    @for (bet of dozens; track bet.value) {
+                        <button
+                                class="roulette-board__choice"
+                                [class.active]="selectedType === 'dozen' && selectedValue === bet.value"
+                                (click)="emitSelection('dozen', bet.value)"
+                        >
+                            @if (getAggregate('dozen', bet.value); as aggregate) {
+                                <span class="roulette-board__chips">
+                            @for (chip of chipsFor('dozen', bet.value, aggregate.totalAmount, aggregate.playerCount); track $index) {
+                                <span class="roulette-board__chip" [style.--chip-color]="chip"></span>
+                            }
+                        </span>
+                            }
+                        </button>
+                    }
+              </div>
+              <div class="row c3">
+                  <div class="row c2">
+                      <button
+                              class="roulette-board__choice"
+                              [class.active]="selectedType === 'range' && selectedValue === '1-18'"
+                              (click)="emitSelection('range', '1-18')"
+                      >
+                          @if (getAggregate('range', '1-18'); as aggregate) {
+                              <span class="roulette-board__chips">
+                        @for (chip of chipsFor('range', '1-18', aggregate.totalAmount, aggregate.playerCount); track $index) {
+                            <span class="roulette-board__chip" [style.--chip-color]="chip"></span>
+                        }
+                      </span>
+                          }
+                      </button>
 
-      <div class="roulette-board__colors">
-        <button
-          class="roulette-board__choice red"
-          [class.active]="selectedType === 'color' && selectedValue === 'red'"
-          (click)="colorSelected.emit('red')"
-        >
-          Red
-          @if (getAggregate('color', 'red'); as aggregate) {
-            <span class="roulette-board__chips roulette-board__chips--choice">
-              @for (chip of chipsFor('color', 'red', aggregate.totalAmount, aggregate.playerCount); track $index) {
-                <span class="roulette-board__chip" [style.--chip-color]="chip"></span>
-              }
-            </span>
-          }
-        </button>
-        <button
-          class="roulette-board__choice black"
-          [class.active]="selectedType === 'color' && selectedValue === 'black'"
-          (click)="colorSelected.emit('black')"
-        >
-          Black
-          @if (getAggregate('color', 'black'); as aggregate) {
-            <span class="roulette-board__chips roulette-board__chips--choice">
-              @for (chip of chipsFor('color', 'black', aggregate.totalAmount, aggregate.playerCount); track $index) {
-                <span class="roulette-board__chip" [style.--chip-color]="chip"></span>
-              }
-            </span>
-          }
-        </button>
+
+                      <button
+                              class="roulette-board__choice"
+                              [class.active]="selectedType === 'parity' && selectedValue === 'even'"
+                              (click)="emitSelection('parity', 'even')"
+                      >
+                          @if (getAggregate('parity', 'even'); as aggregate) {
+                              <span class="roulette-board__chips">
+                        @for (chip of chipsFor('parity', 'even', aggregate.totalAmount, aggregate.playerCount); track $index) {
+                            <span class="roulette-board__chip" [style.--chip-color]="chip"></span>
+                        }
+                      </span>
+                          }
+                      </button>
+                  </div>
+                  <div class="row c2">
+                      <button
+                              class="roulette-board__choice"
+                              [class.active]="selectedType === 'color' && selectedValue === 'red'"
+                              (click)="emitSelection('color', 'red')"
+                      >
+                          @if (getAggregate('color', 'red'); as aggregate) {
+                              <span class="roulette-board__chips">
+                        @for (chip of chipsFor('color', 'red', aggregate.totalAmount, aggregate.playerCount); track $index) {
+                            <span class="roulette-board__chip" [style.--chip-color]="chip"></span>
+                        }
+                      </span>
+                          }
+                      </button>
+
+
+                      <button
+                              class="roulette-board__choice"
+                              [class.active]="selectedType === 'color' && selectedValue === 'black'"
+                              (click)="emitSelection('color', 'black')"
+                      >
+                          @if (getAggregate('color', 'black'); as aggregate) {
+                              <span class="roulette-board__chips">
+                        @for (chip of chipsFor('color', 'black', aggregate.totalAmount, aggregate.playerCount); track $index) {
+                            <span class="roulette-board__chip" [style.--chip-color]="chip"></span>
+                        }
+                      </span>
+                          }
+                      </button>
+                  </div>
+                  <div class="row c2">
+                      <button
+                              class="roulette-board__choice"
+                              [class.active]="selectedType === 'parity' && selectedValue === 'odd'"
+                              (click)="emitSelection('parity', 'odd')"
+                      >
+                          @if (getAggregate('parity', 'odd'); as aggregate) {
+                              <span class="roulette-board__chips">
+                        @for (chip of chipsFor('parity', 'odd', aggregate.totalAmount, aggregate.playerCount); track $index) {
+                            <span class="roulette-board__chip" [style.--chip-color]="chip"></span>
+                        }
+                      </span>
+                          }
+                      </button>
+
+                      <button
+                              class="roulette-board__choice"
+                              [class.active]="selectedType === 'range' && selectedValue === '19-36'"
+                              (click)="emitSelection('range', '19-36')"
+                      >
+                          @if (getAggregate('range', '19-36'); as aggregate) {
+                              <span class="roulette-board__chips">
+                        @for (chip of chipsFor('range', '19-36', aggregate.totalAmount, aggregate.playerCount); track $index) {
+                            <span class="roulette-board__chip" [style.--chip-color]="chip"></span>
+                        }
+                      </span>
+                          }
+                      </button>
+                  </div>
+              </div>
+          </div>
       </div>
+<!--      <div class="roulette-board__dozens">-->
+<!--        @for (bet of dozens; track bet.value) {-->
+<!--          <button-->
+<!--            class="roulette-board__outside roulette-board__outside&#45;&#45;green"-->
+<!--            [class.active]="selectedType === 'dozen' && selectedValue === bet.value"-->
+<!--            (click)="emitSelection('dozen', bet.value)"-->
+<!--          >-->
+<!--            {{ bet.label }}-->
+<!--            @if (getAggregate('dozen', bet.value); as aggregate) {-->
+<!--              <span class="roulette-board__chips roulette-board__chips&#45;&#45;choice">-->
+<!--                @for (chip of chipsFor('dozen', bet.value, aggregate.totalAmount, aggregate.playerCount); track $index) {-->
+<!--                  <span class="roulette-board__chip" [style.&#45;&#45;chip-color]="chip"></span>-->
+<!--                }-->
+<!--              </span>-->
+<!--            }-->
+<!--          </button>-->
+<!--        }-->
+<!--      </div>-->
+
+<!--      <div class="roulette-board__outside-row">-->
+<!--        @for (bet of outerBets; track bet.type + ':' + bet.value) {-->
+<!--          <button-->
+<!--            class="roulette-board__outside"-->
+<!--            [class.roulette-board__outside&#45;&#45;red]="bet.tone === 'red'"-->
+<!--            [class.roulette-board__outside&#45;&#45;black]="bet.tone === 'black'"-->
+<!--            [class.roulette-board__outside&#45;&#45;green]="bet.tone === 'green'"-->
+<!--            [class.active]="selectedType === bet.type && selectedValue === bet.value"-->
+<!--            (click)="emitSelection(bet.type, bet.value)"-->
+<!--          >-->
+<!--            {{ bet.label }}-->
+<!--            @if (getAggregate(bet.type, bet.value); as aggregate) {-->
+<!--              <span class="roulette-board__chips roulette-board__chips&#45;&#45;choice">-->
+<!--                @for (chip of chipsFor(bet.type, bet.value, aggregate.totalAmount, aggregate.playerCount); track $index) {-->
+<!--                  <span class="roulette-board__chip" [style.&#45;&#45;chip-color]="chip"></span>-->
+<!--                }-->
+<!--              </span>-->
+<!--            }-->
+<!--          </button>-->
+<!--        }-->
+<!--      </div>-->
+
+<!--      <div class="roulette-board__columns-row">-->
+<!--        @for (bet of columnsBets; track bet.value) {-->
+<!--          <button-->
+<!--            class="roulette-board__outside roulette-board__outside&#45;&#45;green"-->
+<!--            [class.active]="selectedType === 'column' && selectedValue === bet.value"-->
+<!--            (click)="emitSelection('column', bet.value)"-->
+<!--          >-->
+<!--            {{ bet.label }}-->
+<!--            @if (getAggregate('column', bet.value); as aggregate) {-->
+<!--              <span class="roulette-board__chips roulette-board__chips&#45;&#45;choice">-->
+<!--                @for (chip of chipsFor('column', bet.value, aggregate.totalAmount, aggregate.playerCount); track $index) {-->
+<!--                  <span class="roulette-board__chip" [style.&#45;&#45;chip-color]="chip"></span>-->
+<!--                }-->
+<!--              </span>-->
+<!--            }-->
+<!--          </button>-->
+<!--        }-->
+<!--      </div>-->
     </div>

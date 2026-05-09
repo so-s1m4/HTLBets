@@ -5,16 +5,17 @@ import { HttpError } from '../../../utils/http-error';
 import type { GameResolution } from '../core/game-engine.interface';
 
 type RouletteColor = 'red' | 'black' | 'green';
-type RouletteSelectionType = 'color' | 'number';
+type RoulettePocket = number | '00';
+type RouletteSelectionType = 'color' | 'number' | 'parity' | 'dozen' | 'range' | 'column';
 type RoulettePhase = 'betting' | 'spinning';
 
 interface RouletteSelection {
   type: RouletteSelectionType;
-  value: RouletteColor | number;
+  value: RouletteColor | RoulettePocket | 'odd' | 'even' | '1st12' | '2nd12' | '3rd12' | '1-18' | '19-36' | 'top' | 'middle' | 'bottom';
 }
 
 interface RouletteSpinResult {
-  number: number;
+  number: RoulettePocket;
   color: RouletteColor;
 }
 
@@ -28,7 +29,7 @@ interface RouletteBetEntry {
 
 interface AggregateBetEntry {
   selectionType: RouletteSelectionType;
-  value: RouletteColor | number;
+  value: RouletteSelection['value'];
   totalAmount: number;
   playerCount: number;
 }
@@ -65,11 +66,12 @@ const TABLE_SESSION_ID = 'roulette-main';
 const BETTING_WINDOW_MS = 40_000;
 const HISTORY_LIMIT = 12;
 const RECENT_BETS_LIMIT = 80;
+const wheelOrder: RoulettePocket[] = [0, 28, 9, 26, 30, 11, 7, 20, 32, 17, 5, 22, 34, 15, 3, 24, 36, 13, 1, '00', 27, 10, 25, 29, 12, 8, 19, 31, 18, 6, 21, 33, 16, 4, 23, 35, 14, 2];
 
 const redNumbers = new Set([1, 3, 5, 7, 9, 12, 14, 16, 18, 19, 21, 23, 25, 27, 30, 32, 34, 36]);
 
-const getColorForNumber = (number: number): RouletteColor => {
-  if (number === 0) {
+const getColorForNumber = (number: RoulettePocket): RouletteColor => {
+  if (number === 0 || number === '00') {
     return 'green';
   }
 
@@ -84,6 +86,10 @@ const normalizeSelection = (payload?: Record<string, unknown>): RouletteSelectio
     return { type, value };
   }
 
+  if (type === 'number' && value === '00') {
+    return { type, value };
+  }
+
   if (type === 'number' && Number.isInteger(value) && Number(value) >= 0 && Number(value) <= 36) {
     return {
       type,
@@ -91,7 +97,70 @@ const normalizeSelection = (payload?: Record<string, unknown>): RouletteSelectio
     };
   }
 
-  throw new HttpError(400, 'Roulette bet must target red, black, or a number between 0 and 36.');
+  if (type === 'parity' && (value === 'odd' || value === 'even')) {
+    return { type, value };
+  }
+
+  if (type === 'dozen' && (value === '1st12' || value === '2nd12' || value === '3rd12')) {
+    return { type, value };
+  }
+
+  if (type === 'range' && (value === '1-18' || value === '19-36')) {
+    return { type, value };
+  }
+
+  if (type === 'column' && (value === 'top' || value === 'middle' || value === 'bottom')) {
+    return { type, value };
+  }
+
+  throw new HttpError(400, 'Roulette bet must target a valid inside or outside roulette selection.');
+};
+
+const evaluateSelection = (selection: RouletteSelection, spin: RouletteSpinResult): boolean => {
+  switch (selection.type) {
+    case 'color':
+      return selection.value === spin.color;
+    case 'number':
+      return selection.value === spin.number;
+    case 'parity':
+      if (typeof spin.number !== 'number' || spin.number === 0) {
+        return false;
+      }
+      return selection.value === (spin.number % 2 === 0 ? 'even' : 'odd');
+    case 'dozen':
+      if (typeof spin.number !== 'number' || spin.number === 0) {
+        return false;
+      }
+      if (selection.value === '1st12') return spin.number >= 1 && spin.number <= 12;
+      if (selection.value === '2nd12') return spin.number >= 13 && spin.number <= 24;
+      return spin.number >= 25 && spin.number <= 36;
+    case 'range':
+      if (typeof spin.number !== 'number' || spin.number === 0) {
+        return false;
+      }
+      return selection.value === '1-18' ? spin.number >= 1 && spin.number <= 18 : spin.number >= 19 && spin.number <= 36;
+    case 'column':
+      if (typeof spin.number !== 'number' || spin.number === 0) {
+        return false;
+      }
+      if (selection.value === 'top') return spin.number % 3 === 0;
+      if (selection.value === 'middle') return spin.number % 3 === 2;
+      return spin.number % 3 === 1;
+  }
+};
+
+const getPayoutMultiplier = (selection: RouletteSelection): number => {
+  switch (selection.type) {
+    case 'color':
+    case 'parity':
+    case 'range':
+      return 2;
+    case 'dozen':
+    case 'column':
+      return 3;
+    case 'number':
+      return 36;
+  }
 };
 
 const selectionKey = (selection: RouletteSelection): string => `${selection.type}:${selection.value}`;
@@ -255,7 +324,7 @@ export class RouletteTableManager {
       return;
     }
 
-    const resultNumber = Math.floor(Math.random() * 37);
+    const resultNumber = wheelOrder[Math.floor(Math.random() * wheelOrder.length)] ?? 0;
     const spin: RouletteSpinResult = {
       number: resultNumber,
       color: getColorForNumber(resultNumber)
@@ -280,12 +349,8 @@ export class RouletteTableManager {
         let primaryBet: RouletteBetEntry | null = null;
 
         for (const bet of userBets) {
-          const won =
-            bet.selection.type === 'color'
-              ? bet.selection.value === spin.color
-              : Number(bet.selection.value) === spin.number;
-
-          const payoutMultiplier = bet.selection.type === 'color' ? 2 : 36;
+          const won = evaluateSelection(bet.selection, spin);
+          const payoutMultiplier = getPayoutMultiplier(bet.selection);
           const balanceChange = won ? bet.amount * (payoutMultiplier - 1) : -bet.amount;
 
           netChange += balanceChange;
@@ -318,15 +383,12 @@ export class RouletteTableManager {
         }
 
         if (primaryBet) {
-          const won =
-            primaryBet.selection.type === 'color'
-              ? primaryBet.selection.value === spin.color
-              : Number(primaryBet.selection.value) === spin.number;
+          const won = evaluateSelection(primaryBet.selection, spin);
 
           this.lastRoundByUser.set(userId, {
             selection: primaryBet.selection,
             spin,
-            payoutMultiplier: primaryBet.selection.type === 'color' ? 2 : 36,
+            payoutMultiplier: getPayoutMultiplier(primaryBet.selection),
             won
           });
         }

@@ -5,14 +5,14 @@
 
       <div class="roulette-wheel__plate" [style.transform]="'rotate(' + wheelRotation + 'deg)'">
         <div class="roulette-wheel__outer-ring"></div>
-        <div class="roulette-wheel__segments"></div>
+        <div class="roulette-wheel__segments" [style.background]="segmentsBackground"></div>
 
         <div class="roulette-wheel__labels">
           @for (slot of wheel; track slot; let index = $index) {
             <span
               class="roulette-wheel__label"
               [class.red]="isRed(slot)"
-              [class.green]="slot === 0"
+              [class.green]="slot === 0 || slot === '00'"
               [style.transform]="labelTransform(index)"
             >
               <span [style.transform]="labelTextTransform(index)">{{ slot }}</span>

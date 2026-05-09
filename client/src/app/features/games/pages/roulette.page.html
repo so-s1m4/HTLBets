@@ -26,6 +26,10 @@
               </div>
             }
 
+              <img src="/roulette_table.png" alt="TableBackground" class="roulette-table__background" aria-hidden="true" />
+
+
+
             <div class="roulette-table__wheel-bay">
               <div class="roulette-table__wheel-shell">
                 <app-roulette-wheel
@@ -35,76 +39,47 @@
                 />
               </div>
 
-              @if (revealedRound(); as round) {
-                <div class="roulette-highlight" [class.win]="round.won">
-                  <div class="utility-row">
-                    <span class="pill">Last spin</span>
-                    <span [class]="round.won ? 'text-success' : 'text-danger'">
-                      {{ round.won ? 'Win' : 'Loss' }}
-                    </span>
-                  </div>
-
-                  <div class="roulette-highlight__number">
-                    <strong>{{ round.spin.number }}</strong>
-                    <span>{{ round.spin.color }}</span>
-                  </div>
-
-                  <p class="status-copy">
-                    {{ round.selection.type }} {{ round.selection.value }} at x{{ round.payoutMultiplier }}
-                  </p>
-                </div>
-              }
             </div>
 
             <div class="roulette-table__board-bay">
-              <div class="roulette-table__board-head">
-                <div class="page-heading">
-                  <span class="page-heading__eyebrow">Main Table</span>
-                  <h2>Full betting board</h2>
-                </div>
-                <span class="pill">{{ selectedType() }}: {{ selectedValue() }}</span>
-              </div>
-
               <app-roulette-board
                 [selectedType]="selectedType()"
                 [selectedValue]="selectedValue()"
                 [aggregates]="viewState()?.aggregates || []"
-                (colorSelected)="confirmColorBet($event)"
-                (numberSelected)="confirmNumberBet($event)"
+                (selectionSelected)="placeSelection($event)"
               />
+            </div>
+
 
               <div class="roulette-table__rail">
-                <div class="roulette-table__rail-meta">
-                  <span class="pill">{{ countdownLabel() }}</span>
-                  <span class="pill">{{ selectedType() }} {{ selectedValue() }}</span>
-                  <span class="pill">Round #{{ viewState()?.roundId || 1 }}</span>
-                </div>
+                  <div class="roulette-table__rail-tray">
+                      <div class="roulette-table__chip-row">
+                          @for (chip of chipOptions; track chip.value) {
+                              <button
+                                      class="roulette-chip"
+                                      [class.active]="selectedChip() === chip.value"
+                                      [attr.data-color]="chip.color"
+                                      (click)="selectChip(chip.value)"
+                              >
+                                  <span class="roulette-chip__segments" aria-hidden="true"></span>
+                                  <span class="roulette-chip__face" aria-hidden="true"></span>
+                                  <span class="roulette-chip__inner-ring" aria-hidden="true"></span>
+                                  <span class="roulette-chip__dots" aria-hidden="true"></span>
+                                  <span class="roulette-chip__label">{{ chip.label }}</span>
+                              </button>
+                          }
+                      </div>
 
-                <div class="roulette-table__rail-tray">
-                  <div class="roulette-table__chip-row">
-                    @for (chip of chipValues; track chip) {
-                      <button
-                        class="roulette-chip"
-                        [class.active]="selectedChip() === chip"
-                        (click)="selectChip(chip)"
-                      >
-                        {{ chip }}
-                      </button>
-                    }
+                      <div class="roulette-table__bet-controls">
+                          <app-input
+                                  label="Bet amount"
+                                  inputMode="numeric"
+                                  [value]="betAmount()"
+                                  (valueChange)="betAmount.set($event.replace(/\D/g, ''))"
+                          />
+                      </div>
                   </div>
-
-                  <div class="roulette-table__bet-controls">
-                    <app-input
-                      label="Bet amount"
-                      helper="Tap a chip, then tap a number or color to place the bet."
-                      inputMode="numeric"
-                      [value]="betAmount()"
-                      (valueChange)="betAmount.set($event.replace(/\D/g, ''))"
-                    />
-                  </div>
-                </div>
               </div>
-            </div>
           </div>
         </div>
       </app-card>
@@ -112,15 +87,6 @@
       @if (hasSidebarContent()) {
         <app-card sidebar>
           <div class="page-stack roulette-sidebar">
-            @if (revealedOutcome(); as result) {
-              <div class="page-stack roulette-result">
-                <span class="pill">{{ result.result }}</span>
-                <p class="roulette-result__amount" [class]="result.balanceChange >= 0 ? 'text-success' : 'text-danger'">
-                  {{ result.balanceChange | credits }}
-                </p>
-              </div>
-            }
-
             @if (viewState()?.bets?.length) {
               <div class="page-stack">
                 <div class="utility-row">

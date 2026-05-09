@@ -1,6 +1,8 @@
 import { CommonModule } from '@angular/common';
 import { ChangeDetectionStrategy, Component, EventEmitter, Input, Output } from '@angular/core';
 
+type RouletteSelectionType = 'color' | 'number' | 'parity' | 'dozen' | 'range' | 'column';
+
 @Component({
   selector: 'app-roulette-board',
   standalone: true,
@@ -15,12 +17,12 @@ export class RouletteBoardComponent {
   private aggregateMap = new Map<string, { totalAmount: number; playerCount: number }>();
   private chipMap = new Map<string, string[]>();
 
-  @Input() selectedType: 'color' | 'number' = 'color';
+  @Input() selectedType: RouletteSelectionType = 'color';
   @Input() selectedValue: string | number = 'red';
   @Input()
   set aggregates(
     value: Array<{
-      selectionType: 'color' | 'number';
+      selectionType: 'color' | 'number' | 'parity' | 'dozen' | 'range' | 'column';
       value: string | number;
       totalAmount: number;
       playerCount: number;
@@ -37,28 +39,52 @@ export class RouletteBoardComponent {
     }
   }
 
-  @Output() readonly colorSelected = new EventEmitter<'red' | 'black'>();
-  @Output() readonly numberSelected = new EventEmitter<number>();
+  @Output() readonly selectionSelected = new EventEmitter<{ selectionType: RouletteSelectionType; value: string | number }>();
 
-  readonly columns = Array.from({ length: 12 }, (_, columnIndex) => [
-    columnIndex * 3 + 3,
-    columnIndex * 3 + 2,
-    columnIndex * 3 + 1
+  readonly columns:{type:RouletteSelectionType, value:number}[][] = Array.from({ length: 12 }, (_, columnIndex) => [
+    {type: 'number', value: columnIndex * 3 + 3},
+    {type: 'number', value: columnIndex * 3 + 2},
+    {type: 'number', value: columnIndex * 3 + 1},
   ]);
 
   isRed(number: number): boolean {
     return this.redNumbers.has(number);
   }
 
-  getAggregate(selectionType: 'color' | 'number', value: string | number): { totalAmount: number; playerCount: number } | null {
+  readonly dozens = [
+    { label: '1st 12', value: '1st12' },
+    { label: '2nd 12', value: '2nd12' },
+    { label: '3rd 12', value: '3rd12' }
+  ] as const;
+
+  readonly outerBets = [
+    { label: '1 to 18', type: 'range', value: '1-18', tone: 'green' },
+    { label: 'EVEN', type: 'parity', value: 'even', tone: 'green' },
+    { label: 'RED', type: 'color', value: 'red', tone: 'red' },
+    { label: 'BLACK', type: 'color', value: 'black', tone: 'black' },
+    { label: 'ODD', type: 'parity', value: 'odd', tone: 'green' },
+    { label: '19 to 36', type: 'range', value: '19-36', tone: 'green' }
+  ] as const;
+
+  readonly columnsBets = [
+    { label: '2 to 1', value: 'top' },
+    { label: '2 to 1', value: 'middle' },
+    { label: '2 to 1', value: 'bottom' }
+  ] as const;
+
+  emitSelection(selectionType: RouletteSelectionType, value: string | number): void {
+    this.selectionSelected.emit({ selectionType, value });
+  }
+
+  getAggregate(selectionType: RouletteSelectionType, value: string | number): { totalAmount: number; playerCount: number } | null {
     return this.aggregateMap.get(this.aggregateKey(selectionType, value)) || null;
   }
 
-  chipsFor(selectionType: 'color' | 'number', value: string | number, totalAmount: number, playerCount: number): string[] {
+  chipsFor(selectionType: RouletteSelectionType, value: string | number, totalAmount: number, playerCount: number): string[] {
     return this.chipMap.get(this.aggregateKey(selectionType, value)) || this.createChips(totalAmount, playerCount);
   }
 
-  private aggregateKey(selectionType: 'color' | 'number', value: string | number): string {
+  private aggregateKey(selectionType: RouletteSelectionType, value: string | number): string {
     return `${selectionType}:${value}`;
   }
 
