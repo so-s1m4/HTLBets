@@ -1,0 +1,25 @@
+name: Sync to GitLab
+
+on:
+  push:
+    branches:
+      - main
+      - master
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout full repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Push to existing GitLab repo
+        run: |
+          git remote add gitlab https://oauth2:${GITLAB_TOKEN}@gitlab.com:htlstp/if/2025-3AHIF/projects/VibeB.git
+          git push gitlab --all --force
+          git push gitlab --tags --force
+        env:
+          GITLAB_TOKEN: ${{ secrets.GITLAB_TOKEN }}
