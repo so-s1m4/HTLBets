@@ -71,6 +71,8 @@ export interface PokerTableState {
   tableId: string;
   tableName: string;
   visibility: PokerTableVisibility;
+  tableCardBackAsset?: string;
+  tableCardFaceTemplate?: string;
   requiresPassword: boolean;
   maxPlayers: number;
   minBuyIn: number;
@@ -296,6 +298,28 @@ class PokerTableInstance {
     seat.cardBackAsset = cardBackAsset;
     seat.cardFaceTemplate = cardFaceTemplate;
     return true;
+  }
+
+  replaceCardDeckSelection(
+    previousDeckId: string,
+    nextDeckId: string,
+    cardBackAsset: string,
+    cardFaceTemplate: string
+  ): boolean {
+    let changed = false;
+
+    for (const seat of this.seats) {
+      if (seat.pendingRemoval || seat.selectedCardDeckId !== previousDeckId) {
+        continue;
+      }
+
+      seat.selectedCardDeckId = nextDeckId;
+      seat.cardBackAsset = cardBackAsset;
+      seat.cardFaceTemplate = cardFaceTemplate;
+      changed = true;
+    }
+
+    return changed;
   }
 
   isPrivate(): boolean {
@@ -1390,6 +1414,24 @@ class PokerTableManager {
     }
   }
 
+  replaceCardDeckSelection(
+    previousDeckId: string,
+    nextDeckId: string,
+    cardBackAsset: string,
+    cardFaceTemplate: string
+  ): void {
+    let changed = false;
+
+    for (const table of this.tables.values()) {
+      changed =
+        table.replaceCardDeckSelection(previousDeckId, nextDeckId, cardBackAsset, cardFaceTemplate) || changed;
+    }
+
+    if (changed) {
+      this.emitStateChange();
+    }
+  }
+
   async getStateForUser(userId: string, requestedSessionId?: string): Promise<PokerPlayerEnvelope> {
     const user = await prisma.user.findUnique({
       where: { id: userId }
@@ -1422,6 +1464,9 @@ class PokerTableManager {
     }
 
     const state = table.buildStateForUser(userId);
+    const defaultDeck = await this.resolveDefaultCardDeckAssets();
+    state.tableCardBackAsset = defaultDeck.cardBackAsset;
+    state.tableCardFaceTemplate = defaultDeck.cardFaceTemplate;
 
     return {
       sessionId: table.sessionId,
@@ -1685,6 +1730,26 @@ class PokerTableManager {
     const deck = await prisma.cardDeck.findUnique({
       where: {
         id: selectedCardDeckId
+      },
+      select: {
+        backImageUrl: true,
+        faceImageTemplate: true
+      }
+    });
+
+    return {
+      cardBackAsset: deck?.backImageUrl || DEFAULT_CARD_BACK_ASSET,
+      cardFaceTemplate: deck?.faceImageTemplate || '/cards/{suit}_{rank}.png'
+    };
+  }
+
+  private async resolveDefaultCardDeckAssets(): Promise<{ cardBackAsset: string; cardFaceTemplate: string }> {
+    const deck = await prisma.cardDeck.findFirst({
+      where: {
+        isDefault: true
+      },
+      orderBy: {
+        createdAt: 'asc'
       },
       select: {
         backImageUrl: true,

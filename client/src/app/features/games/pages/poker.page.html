@@ -182,6 +182,8 @@
           [phase]="preview.phase"
           [pot]="preview.pot"
           [currentBet]="preview.currentBet"
+          [tableCardBackAsset]="preview.tableCardBackAsset || '/cards/back_dark.png'"
+          [tableCardFaceTemplate]="preview.tableCardFaceTemplate || '/cards/{suit}_{rank}.png'"
           [actingUserId]="preview.actingUserId || null"
           [actingCountdownMs]="countdownMs()"
           [actingTurnDurationMs]="actingTurnDurationMs()"

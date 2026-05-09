@@ -22,11 +22,11 @@
           <div class="poker-card poker-card--board" [class.hidden]="card.hidden" [style.animation-delay]="animationDelay($index, 100)">
             <div class="poker-card__inner">
               <div class="poker-card__face poker-card__face--back">
-                  <img src="/cards/back_dark.png" alt="">
+                  <img [src]="tableCardBackAsset" alt="">
               </div>
 
               <div class="poker-card__face poker-card__face--front">
-                  <img src="/cards/{{card.suit}}_{{card.rank}}.png" alt="">
+                  <img [src]="cardAsset(card, tableCardFaceTemplate)" alt="">
               </div>
             </div>
           </div>

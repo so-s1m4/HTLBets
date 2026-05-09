@@ -63,6 +63,8 @@ export interface PokerTableState {
   tableId: string;
   tableName: string;
   visibility: 'public' | 'private';
+  tableCardBackAsset?: string;
+  tableCardFaceTemplate?: string;
   requiresPassword: boolean;
   maxPlayers: number;
   minBuyIn: number;

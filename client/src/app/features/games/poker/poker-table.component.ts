@@ -69,6 +69,8 @@ export class PokerTableComponent {
   @Input() phase = 'waiting';
   @Input() pot = 0;
   @Input() currentBet = 0;
+  @Input() tableCardBackAsset = '/cards/back_dark.png';
+  @Input() tableCardFaceTemplate = '/cards/{suit}_{rank}.png';
   @Input() actingUserId: string | null = null;
   @Input() actingCountdownMs = 0;
   @Input() actingTurnDurationMs = 20_000;

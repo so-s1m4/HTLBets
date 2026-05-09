@@ -70,7 +70,19 @@ class UserService {
   }
 
   async setAdminDefaultCardDeck(deckId: string): Promise<AdminCardDeck> {
-    return cardDeckService.setDefaultForAdmin(deckId);
+    const previousDefault = await cardDeckService.getDefaultDeck();
+    const nextDefault = await cardDeckService.setDefaultForAdmin(deckId);
+
+    if (previousDefault && previousDefault.id !== nextDefault.id) {
+      pokerTableManager.replaceCardDeckSelection(
+        previousDefault.id,
+        nextDefault.id,
+        nextDefault.backImageUrl,
+        nextDefault.faceImageTemplate
+      );
+    }
+
+    return nextDefault;
   }
 
   async claimDailyTask(userId: string, taskKey: string): Promise<{ user: PublicUser; task: PublicDailyTask }> {
