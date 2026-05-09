@@ -2,7 +2,7 @@ import { DatePipe } from '@angular/common';
 import { Component, computed, inject, signal } from '@angular/core';
 
 import { AdminService } from '../../../core/services/admin.service';
-import type { GameHistoryRecord, User } from '../../../core/models/user.model';
+import type { AdminCardDeck, GameHistoryRecord, User } from '../../../core/models/user.model';
 import { AppButtonComponent } from '../../../shared/ui/app-button.component';
 import { AppCardComponent } from '../../../shared/ui/app-card.component';
 import { AppInputComponent } from '../../../shared/ui/app-input.component';
@@ -20,14 +20,30 @@ export class AdminPageComponent {
   private readonly adminService = inject(AdminService);
 
   readonly users = signal<User[]>([]);
+  readonly cardDecks = signal<AdminCardDeck[]>([]);
   readonly loading = signal(true);
+  readonly deckLoading = signal(true);
   readonly historyLoading = signal(false);
   readonly error = signal('');
+  readonly deckError = signal('');
+  readonly deckNotice = signal('');
   readonly query = signal('');
   readonly savingUserId = signal<string | null>(null);
+  readonly savingDeckId = signal<string | null>(null);
   readonly selectedUser = signal<User | null>(null);
   readonly selectedHistory = signal<GameHistoryRecord[]>([]);
   readonly balanceDrafts = signal<Record<string, string>>({});
+  readonly deckNameDrafts = signal<Record<string, string>>({});
+  readonly deckPriceDrafts = signal<Record<string, string>>({});
+  readonly deckBackImageDrafts = signal<Record<string, string>>({});
+  readonly deckFaceTemplateDrafts = signal<Record<string, string>>({});
+  readonly deckEnabledDrafts = signal<Record<string, boolean>>({});
+  readonly importDeckId = signal('');
+  readonly importDeckName = signal('');
+  readonly importDeckPrice = signal('1200');
+  readonly importDeckBackImage = signal('');
+  readonly importDeckFaceTemplate = signal('/cards/{suit}_{rank}.png');
+  readonly importDeckEnabled = signal(true);
 
   readonly filteredUsers = computed(() => {
     const query = this.query().trim().toLowerCase();
@@ -42,6 +58,7 @@ export class AdminPageComponent {
   });
   readonly totalBalance = computed(() => this.users().reduce((sum, user) => sum + user.balance, 0));
   readonly adminCount = computed(() => this.users().filter((user) => user.isAdmin).length);
+  readonly enabledDeckCount = computed(() => this.cardDecks().filter((deck) => deck.enabled).length);
 
   constructor() {
     void this.refresh();
@@ -49,16 +66,26 @@ export class AdminPageComponent {
 
   async refresh(): Promise<void> {
     this.loading.set(true);
+    this.deckLoading.set(true);
     this.error.set('');
+    this.deckError.set('');
+    this.deckNotice.set('');
 
     try {
-      const users = await this.adminService.listUsers();
+      const [users, cardDecks] = await Promise.all([this.adminService.listUsers(), this.adminService.listCardDecks()]);
       this.users.set(users);
+      this.cardDecks.set(cardDecks);
       this.balanceDrafts.set(Object.fromEntries(users.map((user) => [user.id, String(user.balance)])));
+      this.deckNameDrafts.set(Object.fromEntries(cardDecks.map((deck) => [deck.id, deck.name])));
+      this.deckPriceDrafts.set(Object.fromEntries(cardDecks.map((deck) => [deck.id, String(deck.price)])));
+      this.deckBackImageDrafts.set(Object.fromEntries(cardDecks.map((deck) => [deck.id, deck.backImageUrl])));
+      this.deckFaceTemplateDrafts.set(Object.fromEntries(cardDecks.map((deck) => [deck.id, deck.faceImageTemplate])));
+      this.deckEnabledDrafts.set(Object.fromEntries(cardDecks.map((deck) => [deck.id, deck.enabled])));
     } catch (error) {
       this.error.set(error instanceof Error ? error.message : 'Failed to load admin users.');
     } finally {
       this.loading.set(false);
+      this.deckLoading.set(false);
     }
   }
 
@@ -119,5 +146,105 @@ export class AdminPageComponent {
 
   isAdminAdjustment(entry: GameHistoryRecord): boolean {
     return entry.gameType === 'ADMIN' || entry.result === 'ADMIN_ADJUSTMENT';
+  }
+
+  draftDeckName(deckId: string): string {
+    return this.deckNameDrafts()[deckId] || '';
+  }
+
+  setDraftDeckName(deckId: string, value: string): void {
+    this.deckNameDrafts.update((drafts) => ({ ...drafts, [deckId]: value }));
+  }
+
+  draftDeckPrice(deckId: string): string {
+    return this.deckPriceDrafts()[deckId] || '';
+  }
+
+  setDraftDeckPrice(deckId: string, value: string): void {
+    this.deckPriceDrafts.update((drafts) => ({ ...drafts, [deckId]: value }));
+  }
+
+  draftDeckBackImage(deckId: string): string {
+    return this.deckBackImageDrafts()[deckId] || '';
+  }
+
+  setDraftDeckBackImage(deckId: string, value: string): void {
+    this.deckBackImageDrafts.update((drafts) => ({ ...drafts, [deckId]: value }));
+  }
+
+  draftDeckFaceTemplate(deckId: string): string {
+    return this.deckFaceTemplateDrafts()[deckId] || '/cards/{suit}_{rank}.png';
+  }
+
+  setDraftDeckFaceTemplate(deckId: string, value: string): void {
+    this.deckFaceTemplateDrafts.update((drafts) => ({ ...drafts, [deckId]: value }));
+  }
+
+  draftDeckEnabled(deckId: string): boolean {
+    return this.deckEnabledDrafts()[deckId] ?? true;
+  }
+
+  setDraftDeckEnabled(deckId: string, value: boolean): void {
+    this.deckEnabledDrafts.update((drafts) => ({ ...drafts, [deckId]: value }));
+  }
+
+  async saveDeck(deck: AdminCardDeck): Promise<void> {
+    this.savingDeckId.set(deck.id);
+    this.deckError.set('');
+    this.deckNotice.set('');
+
+    try {
+      const saved = await this.adminService.importCardDeck({
+        id: deck.id,
+        name: this.draftDeckName(deck.id),
+        price: Number(this.draftDeckPrice(deck.id)),
+        backImageUrl: this.draftDeckBackImage(deck.id),
+        faceImageTemplate: this.draftDeckFaceTemplate(deck.id),
+        enabled: this.draftDeckEnabled(deck.id)
+      });
+
+      this.cardDecks.update((decks) => decks.map((entry) => (entry.id === deck.id ? saved : entry)));
+      this.deckNotice.set(`Deck ${saved.name} saved.`);
+    } catch (error) {
+      this.deckError.set(error instanceof Error ? error.message : 'Failed to save deck.');
+    } finally {
+      this.savingDeckId.set(null);
+    }
+  }
+
+  async importDeck(): Promise<void> {
+    this.savingDeckId.set('import');
+    this.deckError.set('');
+    this.deckNotice.set('');
+
+    try {
+      const imported = await this.adminService.importCardDeck({
+        id: this.importDeckId(),
+        name: this.importDeckName(),
+        price: Number(this.importDeckPrice()),
+        backImageUrl: this.importDeckBackImage(),
+        faceImageTemplate: this.importDeckFaceTemplate(),
+        enabled: this.importDeckEnabled()
+      });
+
+      const nextDecks = this.cardDecks().filter((deck) => deck.id !== imported.id);
+      this.cardDecks.set([...nextDecks, imported].sort((left, right) => Number(right.enabled) - Number(left.enabled)));
+      this.deckNameDrafts.update((drafts) => ({ ...drafts, [imported.id]: imported.name }));
+      this.deckPriceDrafts.update((drafts) => ({ ...drafts, [imported.id]: String(imported.price) }));
+      this.deckBackImageDrafts.update((drafts) => ({ ...drafts, [imported.id]: imported.backImageUrl }));
+      this.deckFaceTemplateDrafts.update((drafts) => ({ ...drafts, [imported.id]: imported.faceImageTemplate }));
+      this.deckEnabledDrafts.update((drafts) => ({ ...drafts, [imported.id]: imported.enabled }));
+      this.importDeckId.set('');
+      this.importDeckName.set('');
+      this.importDeckPrice.set('1200');
+      this.importDeckBackImage.set('');
+      this.importDeckFaceTemplate.set('/cards/{suit}_{rank}.png');
+      this.importDeckEnabled.set(true);
+      this.deckNotice.set(`Deck ${imported.name} imported.`);
+    } catch (error) {
+      this.deckError.set(error instanceof Error ? error.message : 'Failed to import deck.');
+    } finally {
+      this.savingDeckId.set(null);
+    }
   }
 }

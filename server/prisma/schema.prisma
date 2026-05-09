@@ -25,6 +25,7 @@ model User {
   email             String                  @unique
   username          String?
   avatarUrl         String?
+  selectedCardDeckId String                @default("classic-dark")
   passwordHash      String?
   lastDailyLoginAt  String?
   balance           Int                     @default(1000)
@@ -33,8 +34,35 @@ model User {
   gameSessions      GameSession[]
   gameHistory       GameHistory[]
   dailyTaskClaims   DailyTaskClaim[]
+  ownedCardDecks    UserCardDeck[]
 
   @@index([email])
+}
+
+model CardDeck {
+  id           String         @id
+  name         String
+  price        Int
+  backImageUrl String
+  faceImageTemplate String    @default("/cards/{suit}_{rank}.png")
+  enabled      Boolean        @default(true)
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+  owners       UserCardDeck[]
+
+  @@index([enabled, createdAt])
+}
+
+model UserCardDeck {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  deckId    String
+  deck      CardDeck @relation(fields: [deckId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([userId, deckId])
+  @@index([userId, createdAt])
 }
 
 model EmailVerificationCode {

@@ -1,5 +1,7 @@
 import { ChangeDetectionStrategy, Component, DestroyRef, computed, effect, inject, signal, untracked } from '@angular/core';
 
+import { AuthService } from '../../../core/services/auth.service';
+import { CardDeckService } from '../../../core/services/card-deck.service';
 import { GameSocketService } from '../../../core/services/game-socket.service';
 import { AppButtonComponent } from '../../../shared/ui/app-button.component';
 import { AppCardComponent } from '../../../shared/ui/app-card.component';
@@ -66,14 +68,19 @@ interface DisplayPlayerHand {
 })
 export class BlackjackPageComponent {
   readonly socket = inject(GameSocketService);
+  readonly auth = inject(AuthService);
 
   private readonly destroyRef = inject(DestroyRef);
+  private readonly cardDeckService = inject(CardDeckService);
   private readonly animationTimers = new Set<number>();
   private shouldAnimateInitialDeal = false;
   private shouldAnimateNextStateChange = false;
   private hasHydratedState = false;
+  private loadedDeckId: string | null = null;
 
   readonly betAmount = signal('50');
+  readonly selectedBackImageUrl = signal('/cards/back_dark.png');
+  readonly selectedFaceImageTemplate = signal('/cards/{suit}_{rank}.png');
   readonly state = computed(() => this.socket.currentState());
   readonly viewState = computed(() => (this.state()?.state as unknown as BlackjackViewState | null) || null);
   readonly currentBet = computed(() => this.state()?.currentBet || 0);
@@ -126,9 +133,19 @@ export class BlackjackPageComponent {
   constructor() {
     this.socket.reset();
     this.socket.joinGame('blackjack');
+    void this.syncSelectedDeck();
     effect(() => {
       const nextView = this.viewState();
       this.syncDisplayedHands(nextView);
+    });
+    effect(() => {
+      const selectedDeckId = this.auth.currentUser()?.selectedCardDeckId || null;
+
+      if (!selectedDeckId || selectedDeckId === this.loadedDeckId) {
+        return;
+      }
+
+      void this.syncSelectedDeck();
     });
     this.destroyRef.onDestroy(() => {
       this.clearAnimationTimers();
@@ -266,6 +283,29 @@ export class BlackjackPageComponent {
     this.revealedOutcome.set(nextOutcome);
     this.shouldAnimateInitialDeal = false;
     this.shouldAnimateNextStateChange = false;
+  }
+
+  private async syncSelectedDeck(): Promise<void> {
+    try {
+      const selectedDeckId = this.auth.currentUser()?.selectedCardDeckId || null;
+      const decks = await this.cardDeckService.listMine();
+      const selected = decks.find((deck) => deck.selected) || decks.find((deck) => deck.id === selectedDeckId) || null;
+
+      if (!selected) {
+        this.selectedBackImageUrl.set('/cards/back_dark.png');
+        this.selectedFaceImageTemplate.set('/cards/{suit}_{rank}.png');
+        this.loadedDeckId = null;
+        return;
+      }
+
+      this.selectedBackImageUrl.set(selected.backImageUrl);
+      this.selectedFaceImageTemplate.set(selected.faceImageTemplate);
+      this.loadedDeckId = selected.id;
+    } catch {
+      this.selectedBackImageUrl.set('/cards/back_dark.png');
+      this.selectedFaceImageTemplate.set('/cards/{suit}_{rank}.png');
+      this.loadedDeckId = null;
+    }
   }
 
   private runInitialDealSequence(

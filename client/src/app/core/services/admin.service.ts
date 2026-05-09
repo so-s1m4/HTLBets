@@ -2,7 +2,7 @@ import { inject, Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
 
-import type { GameHistoryRecord, User } from '../models/user.model';
+import type { AdminCardDeck, GameHistoryRecord, User } from '../models/user.model';
 import { AppConfigService } from './app-config.service';
 
 @Injectable({
@@ -22,5 +22,20 @@ export class AdminService {
 
   setBalance(userId: string, balance: number): Promise<User> {
     return firstValueFrom(this.http.patch<User>(`${this.config.apiUrl}/admin/users/${userId}/balance`, { balance }));
+  }
+
+  listCardDecks(): Promise<AdminCardDeck[]> {
+    return firstValueFrom(this.http.get<AdminCardDeck[]>(`${this.config.apiUrl}/admin/card-decks`));
+  }
+
+  importCardDeck(input: {
+    id: string;
+    name: string;
+    price: number;
+    backImageUrl: string;
+    faceImageTemplate: string;
+    enabled: boolean;
+  }): Promise<AdminCardDeck> {
+    return firstValueFrom(this.http.post<AdminCardDeck>(`${this.config.apiUrl}/admin/card-decks/import`, input));
   }
 }

@@ -32,6 +32,9 @@ interface PokerSeatView {
   userId: string;
   playerLabel: string;
   avatarUrl?: string | null;
+  selectedCardDeckId: string;
+  cardBackAsset: string;
+  cardFaceTemplate: string;
   emoteText?: string | null;
   isReady?: boolean;
   buyIn: number;
@@ -102,6 +105,9 @@ interface InternalSeat {
   userId: string;
   playerLabel: string;
   avatarUrl: string | null;
+  selectedCardDeckId: string;
+  cardBackAsset: string;
+  cardFaceTemplate: string;
   emoteText: string | null;
   readyForNextHand: boolean;
   seatIndex: number;
@@ -223,6 +229,7 @@ const normalizeSpectateConfig = (payload?: Record<string, unknown>): { sessionId
 };
 
 const buildTableId = (): string => `poker-${Math.random().toString(36).slice(2, 10)}`;
+const DEFAULT_CARD_BACK_ASSET = '/cards/back_dark.png';
 
 class PokerTableInstance {
   readonly sessionId: string;
@@ -278,6 +285,19 @@ class PokerTableInstance {
     return this.seats.some((seat) => seat.userId === userId && !seat.pendingRemoval);
   }
 
+  updateSeatCardDeck(userId: string, selectedCardDeckId: string, cardBackAsset: string, cardFaceTemplate: string): boolean {
+    const seat = this.findSeat(userId);
+
+    if (!seat || seat.pendingRemoval) {
+      return false;
+    }
+
+    seat.selectedCardDeckId = selectedCardDeckId;
+    seat.cardBackAsset = cardBackAsset;
+    seat.cardFaceTemplate = cardFaceTemplate;
+    return true;
+  }
+
   isPrivate(): boolean {
     return this.visibility === 'private';
   }
@@ -311,7 +331,15 @@ class PokerTableInstance {
     };
   }
 
-  addSeat(userId: string, playerLabel: string, avatarUrl: string | null, buyIn: number): void {
+  addSeat(
+    userId: string,
+    playerLabel: string,
+    avatarUrl: string | null,
+    selectedCardDeckId: string,
+    cardBackAsset: string,
+    cardFaceTemplate: string,
+    buyIn: number
+  ): void {
     if (this.hasUser(userId)) {
       throw new HttpError(400, 'You are already seated at this table.');
     }
@@ -324,6 +352,9 @@ class PokerTableInstance {
       userId,
       playerLabel,
       avatarUrl,
+      selectedCardDeckId,
+      cardBackAsset,
+      cardFaceTemplate,
       seatIndex: this.seats.length,
       buyIn,
       stackRemaining: buyIn,
@@ -410,6 +441,9 @@ class PokerTableInstance {
           userId: seat.userId,
           playerLabel: seat.playerLabel,
           avatarUrl: seat.avatarUrl,
+          selectedCardDeckId: seat.selectedCardDeckId,
+          cardBackAsset: seat.cardBackAsset,
+          cardFaceTemplate: seat.cardFaceTemplate,
           emoteText: seat.emoteText,
           isReady: seat.readyForNextHand,
           buyIn: seat.buyIn,
@@ -1344,6 +1378,18 @@ class PokerTableManager {
     };
   }
 
+  updateUserCardDeck(userId: string, selectedCardDeckId: string, cardBackAsset: string, cardFaceTemplate: string): void {
+    let changed = false;
+
+    for (const table of this.tables.values()) {
+      changed = table.updateSeatCardDeck(userId, selectedCardDeckId, cardBackAsset, cardFaceTemplate) || changed;
+    }
+
+    if (changed) {
+      this.emitStateChange();
+    }
+  }
+
   async getStateForUser(userId: string, requestedSessionId?: string): Promise<PokerPlayerEnvelope> {
     const user = await prisma.user.findUnique({
       where: { id: userId }
@@ -1414,7 +1460,15 @@ class PokerTableManager {
     );
 
     this.tables.set(table.sessionId, table);
-    table.addSeat(userId, formatPlayerLabel(user.email, user.username), user.avatarUrl, Number(config.buyIn));
+    table.addSeat(
+      userId,
+      formatPlayerLabel(user.email, user.username),
+      user.avatarUrl,
+      user.selectedCardDeckId,
+      user.cardBackAsset,
+      user.cardFaceTemplate,
+      Number(config.buyIn)
+    );
     this.userTable.set(userId, table.sessionId);
     this.emitStateChange();
 
@@ -1452,7 +1506,15 @@ class PokerTableManager {
     }
 
     const user = await this.reserveBalance(userId, config.buyIn);
-    table.addSeat(userId, formatPlayerLabel(user.email, user.username), user.avatarUrl, config.buyIn);
+    table.addSeat(
+      userId,
+      formatPlayerLabel(user.email, user.username),
+      user.avatarUrl,
+      user.selectedCardDeckId,
+      user.cardBackAsset,
+      user.cardFaceTemplate,
+      config.buyIn
+    );
     this.userTable.set(userId, table.sessionId);
     this.emitStateChange();
 
@@ -1613,7 +1675,27 @@ class PokerTableManager {
       throw new HttpError(404, 'Authenticated user could not be found.');
     }
 
-    return user;
+    return {
+      ...user,
+      ...(await this.resolveCardDeckAssets(user.selectedCardDeckId))
+    };
+  }
+
+  private async resolveCardDeckAssets(selectedCardDeckId: string): Promise<{ cardBackAsset: string; cardFaceTemplate: string }> {
+    const deck = await prisma.cardDeck.findUnique({
+      where: {
+        id: selectedCardDeckId
+      },
+      select: {
+        backImageUrl: true,
+        faceImageTemplate: true
+      }
+    });
+
+    return {
+      cardBackAsset: deck?.backImageUrl || DEFAULT_CARD_BACK_ASSET,
+      cardFaceTemplate: deck?.faceImageTemplate || '/cards/{suit}_{rank}.png'
+    };
   }
 
   private emitStateChange(): void {

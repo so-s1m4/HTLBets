@@ -35,6 +35,33 @@ userRouter.get('/me/dailies', async (req, res, next) => {
   }
 });
 
+userRouter.get('/me/card-decks', async (req, res, next) => {
+  try {
+    const decks = await userService.listCardDecks(req.auth!.userId);
+    res.status(200).json(decks);
+  } catch (error) {
+    next(error);
+  }
+});
+
+userRouter.post('/me/card-decks/:deckId/purchase', async (req, res, next) => {
+  try {
+    const result = await userService.purchaseCardDeck(req.auth!.userId, String(req.params.deckId));
+    res.status(200).json(result);
+  } catch (error) {
+    next(error);
+  }
+});
+
+userRouter.post('/me/card-decks/:deckId/select', async (req, res, next) => {
+  try {
+    const result = await userService.selectCardDeck(req.auth!.userId, String(req.params.deckId));
+    res.status(200).json(result);
+  } catch (error) {
+    next(error);
+  }
+});
+
 userRouter.post('/me/dailies/:taskKey/claim', async (req, res, next) => {
   try {
     const result = await userService.claimDailyTask(req.auth!.userId, String(req.params.taskKey));
@@ -94,6 +121,24 @@ userRouter.patch('/admin/users/:userId/balance', adminMiddleware, async (req, re
   try {
     const user = await userService.setBalance(req.auth!.userId, String(req.params.userId), req.body?.balance);
     res.status(200).json(user);
+  } catch (error) {
+    next(error);
+  }
+});
+
+userRouter.get('/admin/card-decks', adminMiddleware, async (_req, res, next) => {
+  try {
+    const decks = await userService.listAdminCardDecks();
+    res.status(200).json(decks);
+  } catch (error) {
+    next(error);
+  }
+});
+
+userRouter.post('/admin/card-decks/import', adminMiddleware, async (req, res, next) => {
+  try {
+    const deck = await userService.importAdminCardDeck(req.body);
+    res.status(200).json(deck);
   } catch (error) {
     next(error);
   }

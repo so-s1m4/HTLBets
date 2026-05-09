@@ -4,10 +4,11 @@ import { Router } from '@angular/router';
 import { RouterLink } from '@angular/router';
 
 import { AuthService } from '../../../core/services/auth.service';
+import { CardDeckService } from '../../../core/services/card-deck.service';
 import { DailyRewardsService } from '../../../core/services/daily-rewards.service';
 import { GameSocketService } from '../../../core/services/game-socket.service';
 import { HistoryService } from '../../../core/services/history.service';
-import type { DailyTask, GameHistoryRecord, LeaderboardEntry, LeaderboardSnapshot, ProfileLeaderboardTag } from '../../../core/models/user.model';
+import type { CardDeck, DailyTask, GameHistoryRecord, LeaderboardEntry, LeaderboardSnapshot, ProfileLeaderboardTag } from '../../../core/models/user.model';
 
 import { AppButtonComponent } from '../../../shared/ui/app-button.component';
 import { AppCardComponent } from '../../../shared/ui/app-card.component';
@@ -37,6 +38,7 @@ export class ProfilePageComponent {
   readonly auth = inject(AuthService);
 
   private readonly router = inject(Router);
+  private readonly cardDeckService = inject(CardDeckService);
   private readonly dailyRewardsService = inject(DailyRewardsService);
   private readonly destroyRef = inject(DestroyRef);
   private readonly historyService = inject(HistoryService);
@@ -46,9 +48,11 @@ export class ProfilePageComponent {
 
   readonly history = signal<GameHistoryRecord[]>([]);
   readonly dailyTasks = signal<DailyTask[]>([]);
+  readonly cardDecks = signal<CardDeck[]>([]);
   readonly leaderboard = signal<LeaderboardSnapshot | null>(null);
   readonly loading = signal(true);
   readonly loadingDailies = signal(true);
+  readonly loadingDecks = signal(true);
   readonly dailyTasksCollapsed = signal(false);
   readonly historyCollapsed = signal(false);
   readonly claimingTaskKey = signal<string | null>(null);
@@ -58,6 +62,9 @@ export class ProfilePageComponent {
   readonly savingAvatar = signal(false);
   readonly profileError = signal('');
   readonly profileNotice = signal('');
+  readonly deckNotice = signal('');
+  readonly deckError = signal('');
+  readonly deckActionId = signal<string | null>(null);
   readonly usernameDraft = signal('');
   readonly avatarUrlDraft = signal('');
   readonly usernameDirty = signal(false);
@@ -118,15 +125,22 @@ export class ProfilePageComponent {
   async refresh(): Promise<void> {
     this.loading.set(true);
     this.loadingDailies.set(true);
+    this.loadingDecks.set(true);
 
     try {
-      const [history, dailyTasks] = await Promise.all([this.historyService.getHistory(), this.dailyRewardsService.getTasks()]);
+      const [history, dailyTasks, cardDecks] = await Promise.all([
+        this.historyService.getHistory(),
+        this.dailyRewardsService.getTasks(),
+        this.cardDeckService.listMine()
+      ]);
       this.history.set(history);
       this.dailyTasks.set(dailyTasks);
+      this.cardDecks.set(cardDecks);
       this.currentPage.set(1);
     } finally {
       this.loading.set(false);
       this.loadingDailies.set(false);
+      this.loadingDecks.set(false);
     }
   }
 
@@ -219,6 +233,42 @@ export class ProfilePageComponent {
   setAvatarUrlDraft(value: string): void {
     this.avatarDirty.set(true);
     this.avatarUrlDraft.set(value);
+  }
+
+  async purchaseDeck(deckId: string): Promise<void> {
+    this.deckActionId.set(deckId);
+    this.deckError.set('');
+    this.deckNotice.set('');
+
+    try {
+      const response = await this.cardDeckService.purchase(deckId);
+      this.cardDecks.set(response.decks);
+      this.auth.updateBalance(response.user.balance);
+      await this.auth.loadCurrentUser();
+      this.deckNotice.set('Card deck purchased.');
+    } catch (error) {
+      this.deckError.set(error instanceof Error ? error.message : 'Failed to buy card deck.');
+    } finally {
+      this.deckActionId.set(null);
+    }
+  }
+
+  async selectDeck(deckId: string): Promise<void> {
+    this.deckActionId.set(deckId);
+    this.deckError.set('');
+    this.deckNotice.set('');
+
+    try {
+      const response = await this.cardDeckService.select(deckId);
+      this.cardDecks.set(response.decks);
+      this.auth.updateBalance(response.user.balance);
+      await this.auth.loadCurrentUser();
+      this.deckNotice.set('Card deck selected.');
+    } catch (error) {
+      this.deckError.set(error instanceof Error ? error.message : 'Failed to select card deck.');
+    } finally {
+      this.deckActionId.set(null);
+    }
   }
 
   goToPreviousPage(): void {

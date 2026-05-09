@@ -16,11 +16,11 @@
           <div class="card" [class.hidden]="isHidden(card)">
             <div class="card__inner">
               <div class="card__face card__face--back">
-                  <img src="/cards/back_dark.png" alt="">
+                  <img [src]="backImageUrl" alt="">
               </div>
 
               <div class="card__face card__face--front">
-                  <img src='/cards/{{card.suit}}_{{card.rank}}.png' alt="">
+                  <img [src]="cardAsset(card)" alt="">
               </div>
             </div>
           </div>

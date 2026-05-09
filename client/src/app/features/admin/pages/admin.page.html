@@ -42,6 +42,126 @@
         </div>
       </app-card>
 
+      <app-card tone="muted">
+        <div class="page-stack">
+          <div class="utility-row">
+            <div class="page-heading">
+              <span class="page-heading__eyebrow">Card Deck Catalog</span>
+              <h2>Import and tune purchasable decks</h2>
+            </div>
+            <span class="pill">{{ enabledDeckCount() }} enabled</span>
+          </div>
+
+          @if (deckError()) {
+            <p class="status-copy text-danger">{{ deckError() }}</p>
+          } @else if (deckNotice()) {
+            <p class="status-copy text-success">{{ deckNotice() }}</p>
+          }
+
+          <div class="admin-deck-import">
+            <app-input
+              label="Deck id"
+              helper="Slug used in API, for example neon-violet."
+              [value]="importDeckId()"
+              (valueChange)="importDeckId.set($event)"
+            />
+            <app-input
+              label="Display name"
+              [value]="importDeckName()"
+              (valueChange)="importDeckName.set($event)"
+            />
+            <app-input
+              label="Price"
+              inputMode="numeric"
+              [value]="importDeckPrice()"
+              (valueChange)="importDeckPrice.set($event.replace(/\D/g, ''))"
+            />
+            <app-input
+              label="Back image URL or /asset path"
+              helper="Examples: /cards/back_light.png or https://.../deck.png"
+              [value]="importDeckBackImage()"
+              (valueChange)="importDeckBackImage.set($event)"
+            />
+            <app-input
+              label="Face template"
+              helper="Use {rank}, {suit}, or {suitShort}. Example: /cards/{suit}_{rank}.png or /cards/{rank}{suitShort}.png"
+              [value]="importDeckFaceTemplate()"
+              (valueChange)="importDeckFaceTemplate.set($event)"
+            />
+            <label class="admin-toggle">
+              <input
+                type="checkbox"
+                [checked]="importDeckEnabled()"
+                (change)="importDeckEnabled.set($any($event.target).checked)"
+              />
+              <span>Enabled for purchase</span>
+            </label>
+            <app-button (click)="importDeck()" [disabled]="savingDeckId() === 'import'">
+              {{ savingDeckId() === 'import' ? 'Importing...' : 'Import deck' }}
+            </app-button>
+          </div>
+
+          @if (deckLoading()) {
+            <p class="status-copy">Loading card decks...</p>
+          } @else {
+            <div class="admin-deck-list">
+              @for (deck of cardDecks(); track deck.id) {
+                <div class="admin-deck-card">
+                  <div class="admin-deck-card__preview">
+                    <img [src]="draftDeckBackImage(deck.id)" [alt]="deck.name + ' preview'" loading="lazy" decoding="async" referrerpolicy="no-referrer" />
+                  </div>
+
+                  <div class="admin-deck-card__fields">
+                    <div class="admin-deck-card__meta">
+                      <strong>{{ deck.id }}</strong>
+                      <span class="pill">{{ deck.purchaseCount }} owners</span>
+                    </div>
+
+                    <app-input
+                      label="Display name"
+                      [value]="draftDeckName(deck.id)"
+                      (valueChange)="setDraftDeckName(deck.id, $event)"
+                    />
+                    <app-input
+                      label="Price"
+                      inputMode="numeric"
+                      [value]="draftDeckPrice(deck.id)"
+                      (valueChange)="setDraftDeckPrice(deck.id, $event.replace(/\D/g, ''))"
+                    />
+                    <app-input
+                      label="Back image URL or /asset path"
+                      [value]="draftDeckBackImage(deck.id)"
+                      (valueChange)="setDraftDeckBackImage(deck.id, $event)"
+                    />
+                    <app-input
+                      label="Face template"
+                      [value]="draftDeckFaceTemplate(deck.id)"
+                      (valueChange)="setDraftDeckFaceTemplate(deck.id, $event)"
+                    />
+
+                    <label class="admin-toggle">
+                      <input
+                        type="checkbox"
+                        [checked]="draftDeckEnabled(deck.id)"
+                        (change)="setDraftDeckEnabled(deck.id, $any($event.target).checked)"
+                      />
+                      <span>Enabled for purchase</span>
+                    </label>
+
+                    <div class="admin-user-card__actions">
+                      <span class="pill">{{ deck.createdAt | date: 'mediumDate' }}</span>
+                      <app-button variant="secondary" [disabled]="savingDeckId() === deck.id" (click)="saveDeck(deck)">
+                        {{ savingDeckId() === deck.id ? 'Saving...' : 'Save deck' }}
+                      </app-button>
+                    </div>
+                  </div>
+                </div>
+              }
+            </div>
+          }
+        </div>
+      </app-card>
+
       @if (error()) {
         <app-card tone="muted">
           <p class="status-copy text-danger">{{ error() }}</p>

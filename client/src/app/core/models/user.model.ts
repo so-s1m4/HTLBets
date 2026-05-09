@@ -3,9 +3,38 @@ export interface User {
   email: string;
   username: string | null;
   avatarUrl: string | null;
+  selectedCardDeckId: string;
   balance: number;
   isAdmin: boolean;
   hasPassword: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CardDeck {
+  id: string;
+  name: string;
+  price: number;
+  backImageUrl: string;
+  faceImageTemplate: string;
+  enabled: boolean;
+  owned: boolean;
+  selected: boolean;
+}
+
+export interface CardDeckMutationResponse {
+  user: User;
+  decks: CardDeck[];
+}
+
+export interface AdminCardDeck {
+  id: string;
+  name: string;
+  price: number;
+  backImageUrl: string;
+  faceImageTemplate: string;
+  enabled: boolean;
+  purchaseCount: number;
   createdAt: string;
   updatedAt: string;
 }

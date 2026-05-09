@@ -12,9 +12,12 @@ import {
   type PublicGameHistory,
   type PublicUser
 } from './user.model';
+import { cardDeckService, type AdminCardDeck, type PublicCardDeck } from './card-deck.service';
+import { pokerTableManager } from '../games/poker/poker-table.manager';
 
 class UserService {
   async getCurrentUser(userId: string): Promise<PublicUser> {
+    await cardDeckService.ensureDefaultOwnership(userId);
     return toPublicUser(await dailyRewardsService.grantDailyLoginBonus(userId));
   }
 
@@ -32,6 +35,38 @@ class UserService {
 
   async getDailyTasks(userId: string): Promise<PublicDailyTask[]> {
     return dailyRewardsService.getDailyTasks(userId);
+  }
+
+  async listCardDecks(userId: string): Promise<PublicCardDeck[]> {
+    return cardDeckService.listForUser(userId);
+  }
+
+  async purchaseCardDeck(userId: string, deckId: string): Promise<{ user: PublicUser; decks: PublicCardDeck[] }> {
+    return cardDeckService.purchaseForUser(userId, deckId);
+  }
+
+  async selectCardDeck(userId: string, deckId: string): Promise<{ user: PublicUser; decks: PublicCardDeck[] }> {
+    const result = await cardDeckService.selectForUser(userId, deckId);
+    const selectedDeck = result.decks.find((deck) => deck.selected);
+
+    if (selectedDeck) {
+      pokerTableManager.updateUserCardDeck(
+        userId,
+        selectedDeck.id,
+        selectedDeck.backImageUrl,
+        selectedDeck.faceImageTemplate
+      );
+    }
+
+    return result;
+  }
+
+  async listAdminCardDecks(): Promise<AdminCardDeck[]> {
+    return cardDeckService.listForAdmin();
+  }
+
+  async importAdminCardDeck(payload?: Record<string, unknown>): Promise<AdminCardDeck> {
+    return cardDeckService.importForAdmin(payload);
   }
 
   async claimDailyTask(userId: string, taskKey: string): Promise<{ user: PublicUser; task: PublicDailyTask }> {

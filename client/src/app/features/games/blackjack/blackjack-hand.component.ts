@@ -20,6 +20,8 @@ export class BlackjackHandComponent {
   @Input() score = 0;
   @Input() cards: DisplayCard[] = [];
   @Input() caption = '';
+  @Input() backImageUrl = '/cards/back_dark.png';
+  @Input() faceImageTemplate = '/cards/{suit}_{rank}.png';
   @HostBinding('class.hidden')
   @Input() hidden = false;
 
@@ -33,6 +35,17 @@ export class BlackjackHandComponent {
 
   trackCard(index: number, card: DisplayCard): string {
     return `${index}:${card.rank || '?'}:${card.suit || '?'}:${card.hidden ? 'hidden' : 'visible'}`;
+  }
+
+  cardAsset(card: DisplayCard): string {
+    const rank = card.rank || '';
+    const suit = card.suit || '';
+    const suitShort = this.suitShort(suit);
+
+    return this.faceImageTemplate
+      .replaceAll('{rank}', rank)
+      .replaceAll('{suit}', suit)
+      .replaceAll('{suitShort}', suitShort);
   }
 
   symbol(suit: string | undefined): string {
@@ -59,6 +72,21 @@ export class BlackjackHandComponent {
         return 'black';
       default:
         return 'black';
+    }
+  }
+
+  private suitShort(suit: string): string {
+    switch (suit) {
+      case 'clubs':
+        return 'C';
+      case 'spades':
+        return 'S';
+      case 'hearts':
+        return 'H';
+      case 'diamonds':
+        return 'D';
+      default:
+        return '';
     }
   }
 }

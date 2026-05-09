@@ -7,6 +7,7 @@ import { signAccessToken } from '../../utils/jwt';
 import { hashPassword, verifyPassword } from '../../utils/password';
 import { toPublicUser, type PublicUser } from '../users/user.model';
 import { dailyRewardsService } from '../users/daily-rewards.service';
+import { cardDeckService } from '../users/card-deck.service';
 
 interface AuthResponse {
   accessToken: string;
@@ -139,6 +140,7 @@ class AuthService {
       create: { email }
     });
 
+    await cardDeckService.ensureDefaultOwnership(user.id);
     return this.buildAuthResponse(await dailyRewardsService.grantDailyLoginBonus(user.id));
   }
 
@@ -147,6 +149,7 @@ class AuthService {
     email: string;
     username: string | null;
     avatarUrl: string | null;
+    selectedCardDeckId: string;
     passwordHash: string | null;
     lastDailyLoginAt: string | null;
     balance: number;

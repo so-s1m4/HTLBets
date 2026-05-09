@@ -121,6 +121,32 @@ export class PokerTableComponent {
     return this.displayBoardCardsValue;
   }
 
+  cardAsset(card: PokerDisplayCard, template = '/cards/{suit}_{rank}.png'): string {
+    const rank = card.rank || '';
+    const suit = card.suit || '';
+    const suitShort = this.suitShort(suit);
+
+    return template
+      .replaceAll('{rank}', rank)
+      .replaceAll('{suit}', suit)
+      .replaceAll('{suitShort}', suitShort);
+  }
+
+  private suitShort(suit: string): string {
+    switch (suit) {
+      case 'clubs':
+        return 'C';
+      case 'spades':
+        return 'S';
+      case 'hearts':
+        return 'H';
+      case 'diamonds':
+        return 'D';
+      default:
+        return '';
+    }
+  }
+
   symbol(suit: string | undefined): string {
     switch (suit) {
       case 'hearts':

@@ -149,20 +149,20 @@
     .blackjack-table__deck span:nth-child(1) {
       transform: rotate(-8deg) translate(-0.55rem, 0.25rem);
       background-size: cover;
-      background-image: url("/cards/back_dark.png");
+      background-image: var(--blackjack-card-back-url, url("/cards/back_dark.png"));
       border: 0;
     }
 
     .blackjack-table__deck span:nth-child(2) {
       transform: rotate(4deg) translate(0.35rem, -0.15rem);
       background-size: cover;
-      background-image: url("/cards/back_dark.png");
+      background-image: var(--blackjack-card-back-url, url("/cards/back_dark.png"));
       border: 0;
     }
 
     .blackjack-table__deck span:nth-child(3) {
       background-size: cover;
-      background-image: url("/cards/back_dark.png");
+      background-image: var(--blackjack-card-back-url, url("/cards/back_dark.png"));
       border: 0;
     }
 

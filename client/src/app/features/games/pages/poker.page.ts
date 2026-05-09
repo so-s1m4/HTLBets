@@ -3,7 +3,6 @@ import { ChangeDetectionStrategy, Component, DestroyRef, computed, effect, injec
 import type { PokerDisplayCard, PokerLobbyState, PokerRealtimeState, PokerSeatView, PokerTableState } from '../../../core/models/game.model';
 import { AuthService } from '../../../core/services/auth.service';
 import { GameSocketService } from '../../../core/services/game-socket.service';
-import { CreditsPipe } from '../../../shared/pipes/credits.pipe';
 import { AppButtonComponent } from '../../../shared/ui/app-button.component';
 import { AppCardComponent } from '../../../shared/ui/app-card.component';
 import { AppInputComponent } from '../../../shared/ui/app-input.component';
@@ -17,7 +16,6 @@ import { PokerTableComponent } from '../poker/poker-table.component';
     AppButtonComponent,
     AppCardComponent,
     AppInputComponent,
-    CreditsPipe,
     GameShellComponent,
     PokerTableComponent
   ],
@@ -363,6 +361,9 @@ export class PokerPageComponent {
       userId: `debug-bot-${seatIndex}`,
       playerLabel: `Bot ${botNumber}`,
       avatarUrl: null,
+      selectedCardDeckId: botNumber % 2 === 0 ? 'classic-light' : 'classic-dark',
+      cardBackAsset: botNumber % 2 === 0 ? '/cards/back_light.png' : '/cards/back_dark.png',
+      cardFaceTemplate: '/cards/{suit}_{rank}.png',
       emoteText: null,
       isReady: true,
       buyIn: 1000,

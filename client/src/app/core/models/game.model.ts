@@ -18,6 +18,9 @@ export interface PokerSeatView {
   userId: string;
   playerLabel: string;
   avatarUrl?: string | null;
+  selectedCardDeckId: string;
+  cardBackAsset: string;
+  cardFaceTemplate: string;
   emoteText?: string | null;
   isReady?: boolean;
   buyIn: number;

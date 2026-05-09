@@ -142,6 +142,75 @@
         <div class="page-stack">
           <div class="utility-row">
             <div class="page-heading">
+              <span class="page-heading__eyebrow">Card Decks</span>
+              <h2>Buy and equip deck backs</h2>
+            </div>
+            <span class="pill">Selected {{ auth.currentUser()?.selectedCardDeckId || 'classic-dark' }}</span>
+          </div>
+
+          <p class="status-copy">Your selected card back is visible to everyone at the poker table.</p>
+
+          @if (deckError()) {
+            <p class="status-copy text-danger">{{ deckError() }}</p>
+          } @else if (deckNotice()) {
+            <p class="status-copy text-success">{{ deckNotice() }}</p>
+          }
+
+          @if (loadingDecks()) {
+            <p class="status-copy">Loading card decks...</p>
+          } @else {
+            <div class="deck-grid">
+              @for (deck of cardDecks(); track deck.id) {
+                <div class="deck-card" [class.deck-card--selected]="deck.selected">
+                  <div class="deck-card__preview">
+                    <img [src]="deck.backImageUrl" [alt]="deck.name + ' card back preview'" loading="lazy" decoding="async" referrerpolicy="no-referrer" />
+                  </div>
+
+                  <div class="deck-card__copy">
+                    <div class="deck-card__header">
+                      <strong>{{ deck.name }}</strong>
+                      <span class="pill">{{ deck.price | credits }}</span>
+                    </div>
+                    <div class="deck-card__meta">
+                      @if (deck.selected) {
+                        <span class="pill">Selected</span>
+                      } @else if (deck.owned) {
+                        <span class="pill">Owned</span>
+                      } @else {
+                        <span class="pill">Store</span>
+                      }
+                    </div>
+                  </div>
+
+                  @if (deck.selected) {
+                    <app-button variant="ghost" [disabled]="true">Equipped</app-button>
+                  } @else if (deck.owned) {
+                    <app-button
+                      variant="secondary"
+                      [disabled]="deckActionId() === deck.id"
+                      (click)="selectDeck(deck.id)"
+                    >
+                      {{ deckActionId() === deck.id ? 'Saving...' : 'Equip deck' }}
+                    </app-button>
+                  } @else {
+                    <app-button
+                      [disabled]="deckActionId() === deck.id || !deck.enabled"
+                      (click)="purchaseDeck(deck.id)"
+                    >
+                      {{ deckActionId() === deck.id ? 'Buying...' : 'Buy deck' }}
+                    </app-button>
+                  }
+                </div>
+              }
+            </div>
+          }
+        </div>
+      </app-card>
+
+      <app-card tone="muted">
+        <div class="page-stack">
+          <div class="utility-row">
+            <div class="page-heading">
               <span class="page-heading__eyebrow">History</span>
               <h2>Session history</h2>
             </div>
