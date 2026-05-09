@@ -18,7 +18,7 @@ jobs:
 
       - name: Push to existing GitLab repo
         run: |
-          git remote add gitlab https://oauth2:${GITLAB_TOKEN}@gitlab.com:htlstp/if/2025-3AHIF/projects/VibeB.git
+          git remote add gitlab https://oauth2:${GITLAB_TOKEN}@gitlab.com/htlstp/if/2025-3AHIF/projects/VibeB.git
           git push gitlab --all --force
           git push gitlab --tags --force
         env:
