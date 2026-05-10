@@ -1,6 +1,6 @@
 from pathlib import Path
 
-folder = Path("search-psk-20260509-Y1EkFbYRnd")
+folder = Path("52 Faces of Spongebob")
 
 forward = ["A", "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K"]
 backward = ["K", "Q", "J", "10", "9", "8", "7", "6", "5", "4", "3", "2", "A"]

@@ -3,8 +3,10 @@ from urllib.parse import urljoin
 import re, os, time
 
 targets = [
+    'https://cardscans.piwigo.com/index?/category/2249-52_faces_of_spongebob',
+    # 'https://cardscans.piwigo.com/index?/category/773-8_bit_white'
     # "https://cardscans.piwigo.com/index?/search/psk-20260509-Y1EkFbYRnd",
-    "https://cardscans.piwigo.com/index?/category/2377-bicycle_disney_coco",
+    # "https://cardscans.piwigo.com/index?/category/2377-bicycle_disney_coco",
     # "https://cardscans.piwigo.com/index?/category/2385-bicycle_hello_kitty_50th_anniversary",
 ]
 
