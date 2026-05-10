@@ -6,6 +6,22 @@ interface PositionedSeat {
   seat: PokerSeatView;
   left: number;
   top: number;
+  avatarInitial: string;
+  turnRingStyle: string | null;
+  cards: RenderCard[];
+}
+
+interface RenderCard extends PokerDisplayCard {
+  asset: string;
+  key: string;
+  animationDelay: string;
+}
+
+interface SelfSeatView {
+  seat: PokerSeatView;
+  avatarInitial: string;
+  turnRingStyle: string | null;
+  cards: RenderCard[];
 }
 
 const orbitLayouts: Record<number, Array<{ left: number; top: number }>> = {
@@ -60,10 +76,13 @@ const orbitLayouts: Record<number, Array<{ left: number; top: number }>> = {
 })
 export class PokerTableComponent {
   private seatsValue: PokerSeatView[] = [];
-  private selfSeatValue: PokerSeatView | null = null;
-  private orbitSeatValues: PositionedSeat[] = [];
+  selfSeatView: SelfSeatView | null = null;
+  orbitSeatViews: PositionedSeat[] = [];
   private communityCardsValue: PokerDisplayCard[] = [];
-  private displayBoardCardsValue: PokerDisplayCard[] = [];
+  boardCardViews: RenderCard[] = [];
+  private actingUserIdValue: string | null = null;
+  private actingCountdownMsValue = 0;
+  private actingTurnDurationMsValue = 20_000;
 
   @Input() tableName = 'Realtime poker';
   @Input() phase = 'waiting';
@@ -71,21 +90,41 @@ export class PokerTableComponent {
   @Input() currentBet = 0;
   @Input() tableCardBackAsset = '/cards/back_dark.png';
   @Input() tableCardFaceTemplate = '/cards/{suit}_{rank}.png';
-  @Input() actingUserId: string | null = null;
-  @Input() actingCountdownMs = 0;
-  @Input() actingTurnDurationMs = 20_000;
+
+  @Input()
+  set actingUserId(value: string | null) {
+    this.actingUserIdValue = value;
+    this.rebuildSeatViews();
+  }
+
+  get actingUserId(): string | null {
+    return this.actingUserIdValue;
+  }
+
+  @Input()
+  set actingCountdownMs(value: number) {
+    this.actingCountdownMsValue = value;
+    this.rebuildSeatViews();
+  }
+
+  get actingCountdownMs(): number {
+    return this.actingCountdownMsValue;
+  }
+
+  @Input()
+  set actingTurnDurationMs(value: number) {
+    this.actingTurnDurationMsValue = value;
+    this.rebuildSeatViews();
+  }
+
+  get actingTurnDurationMs(): number {
+    return this.actingTurnDurationMsValue;
+  }
+
   @Input()
   set seats(value: PokerSeatView[]) {
     this.seatsValue = value || [];
-    this.selfSeatValue = this.seatsValue.find((seat) => seat.isSelf) || null;
-
-    const others = this.seatsValue.filter((seat) => !seat.isSelf);
-    const layout = orbitLayouts[others.length] || orbitLayouts[7];
-    this.orbitSeatValues = others.map((seat, index) => ({
-      seat,
-      left: layout[index]?.left || 50,
-      top: layout[index]?.top || 12
-    }));
+    this.rebuildSeatViews();
   }
 
   get seats(): PokerSeatView[] {
@@ -95,10 +134,7 @@ export class PokerTableComponent {
   @Input()
   set communityCards(value: PokerDisplayCard[]) {
     this.communityCardsValue = value || [];
-    this.displayBoardCardsValue = [...this.communityCardsValue];
-    while (this.displayBoardCardsValue.length < 5) {
-      this.displayBoardCardsValue.push({ hidden: true });
-    }
+    this.rebuildBoardCards();
   }
 
   get communityCards(): PokerDisplayCard[] {
@@ -106,33 +142,6 @@ export class PokerTableComponent {
   }
 
   @Input() winners: PokerWinnerView[] | null = null;
-
-  animationDelay(index: number, base = 0): string {
-    return `${base + index * 90}ms`;
-  }
-
-  selfSeat(): PokerSeatView | null {
-    return this.selfSeatValue;
-  }
-
-  orbitSeats(): PositionedSeat[] {
-    return this.orbitSeatValues;
-  }
-
-  displayBoardCards(): PokerDisplayCard[] {
-    return this.displayBoardCardsValue;
-  }
-
-  cardAsset(card: PokerDisplayCard, template = '/cards/{suit}_{rank}.png'): string {
-    const rank = card.rank || '';
-    const suit = card.suit || '';
-    const suitShort = this.suitShort(suit);
-
-    return template
-      .replaceAll('{rank}', rank)
-      .replaceAll('{suit}', suit)
-      .replaceAll('{suitShort}', suitShort);
-  }
 
   private suitShort(suit: string): string {
     switch (suit) {
@@ -182,20 +191,72 @@ export class PokerTableComponent {
   }
 
   turnProgressFor(userId: string): number {
-    if (this.actingUserId !== userId || this.actingTurnDurationMs <= 0) {
+    if (this.actingUserIdValue !== userId || this.actingTurnDurationMsValue <= 0) {
       return 0;
     }
 
-    return Math.max(0, Math.min(1, this.actingCountdownMs / this.actingTurnDurationMs));
+    return Math.max(0, Math.min(1, this.actingCountdownMsValue / this.actingTurnDurationMsValue));
   }
 
   turnRingStyle(userId: string): string | null {
-    if (this.actingUserId !== userId) {
+    if (this.actingUserIdValue !== userId) {
       return null;
     }
 
     const progress = this.turnProgressFor(userId);
     const degrees = `${Math.round(progress * 360)}deg`;
     return `conic-gradient(from -90deg, rgba(108, 255, 176, 0.98) 0deg ${degrees}, rgba(108, 255, 176, 0.18) ${degrees} 360deg)`;
+  }
+
+  private rebuildSeatViews(): void {
+    const selfSeat = this.seatsValue.find((seat) => seat.isSelf) || null;
+    this.selfSeatView = selfSeat
+      ? {
+          seat: selfSeat,
+          avatarInitial: this.avatarInitial(selfSeat.playerLabel),
+          turnRingStyle: this.turnRingStyle(selfSeat.userId),
+          cards: this.buildRenderCards(selfSeat.cards, selfSeat.cardFaceTemplate, 240)
+        }
+      : null;
+
+    const others = this.seatsValue.filter((seat) => !seat.isSelf);
+    const layout = orbitLayouts[others.length] || orbitLayouts[7];
+    this.orbitSeatViews = others.map((seat, index) => ({
+      seat,
+      left: layout[index]?.left || 50,
+      top: layout[index]?.top || 12,
+      avatarInitial: this.avatarInitial(seat.playerLabel),
+      turnRingStyle: this.turnRingStyle(seat.userId),
+      cards: this.buildRenderCards(seat.cards, seat.cardFaceTemplate, 180)
+    }));
+  }
+
+  private rebuildBoardCards(): void {
+    const cards = [...this.communityCardsValue];
+    while (cards.length < 5) {
+      cards.push({ hidden: true });
+    }
+
+    this.boardCardViews = this.buildRenderCards(cards, this.tableCardFaceTemplate, 100);
+  }
+
+  private buildRenderCards(cards: PokerDisplayCard[], template: string, baseDelay: number): RenderCard[] {
+    return cards.map((card, index) => ({
+      ...card,
+      asset: this.resolveCardAsset(card, template),
+      key: `${index}:${card.rank || '?'}:${card.suit || '?'}:${card.hidden ? 'hidden' : 'visible'}`,
+      animationDelay: `${baseDelay + index * 90}ms`
+    }));
+  }
+
+  private resolveCardAsset(card: PokerDisplayCard, template = '/cards/{suit}_{rank}.png'): string {
+    const rank = card.rank || '';
+    const suit = card.suit || '';
+    const suitShort = this.suitShort(suit);
+
+    return template
+      .replaceAll('{rank}', rank)
+      .replaceAll('{suit}', suit)
+      .replaceAll('{suitShort}', suitShort);
   }
 }

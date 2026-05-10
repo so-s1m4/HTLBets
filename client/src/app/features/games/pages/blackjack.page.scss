@@ -27,7 +27,7 @@
       inset: 12% 10%;
       border-radius: 50%;
       border: 1px solid rgba(255, 255, 255, 0.07);
-      box-shadow: 0 0 42px rgba(93, 168, 255, 0.06);
+      box-shadow: 0 0 18px rgba(93, 168, 255, 0.04);
     }
 
     .blackjack-table__content {
@@ -167,7 +167,7 @@
     }
 
     .blackjack-table__deck--active {
-      animation: blackjack-deck-pulse 700ms ease-in-out infinite alternate;
+      transform: translate(-50%, -50%) scale(1.02);
     }
 
     .blackjack-sidebar {
@@ -176,18 +176,6 @@
         top: 50%;
       transform: translate(50%, -50%);
     }
-
-    @keyframes blackjack-deck-pulse {
-      0% {
-        transform: translate(-50%, -50%) scale(1);
-        filter: drop-shadow(0 0 0 rgba(125, 227, 255, 0));
-      }
-      100% {
-        transform: translate(-50%, -50%) scale(1.04);
-        filter: drop-shadow(0 0 18px rgba(125, 227, 255, 0.22));
-      }
-    }
-
     @media (max-width: 860px) {
       .blackjack-table__player-hands--split {
         grid-template-columns: 1fr;

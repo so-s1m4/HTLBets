@@ -7,6 +7,11 @@ interface DisplayCard {
   suit?: string;
 }
 
+interface RenderCard extends DisplayCard {
+  asset: string;
+  key: string;
+}
+
 @Component({
   selector: 'app-blackjack-hand',
   imports: [NgClass],
@@ -16,12 +21,41 @@ interface DisplayCard {
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class BlackjackHandComponent {
+  private cardsValue: DisplayCard[] = [];
+  renderCardViews: RenderCard[] = [];
+  private backImageUrlValue = '/cards/back_dark.png';
+  private faceImageTemplateValue = '/cards/{suit}_{rank}.png';
+
   @Input() label = '';
   @Input() score = 0;
-  @Input() cards: DisplayCard[] = [];
+  @Input()
+  set cards(value: DisplayCard[]) {
+    this.cardsValue = value || [];
+    this.rebuildRenderCards();
+  }
+
+  get cards(): DisplayCard[] {
+    return this.cardsValue;
+  }
   @Input() caption = '';
-  @Input() backImageUrl = '/cards/back_dark.png';
-  @Input() faceImageTemplate = '/cards/{suit}_{rank}.png';
+  @Input()
+  set backImageUrl(value: string) {
+    this.backImageUrlValue = value || '/cards/back_dark.png';
+  }
+
+  get backImageUrl(): string {
+    return this.backImageUrlValue;
+  }
+
+  @Input()
+  set faceImageTemplate(value: string) {
+    this.faceImageTemplateValue = value || '/cards/{suit}_{rank}.png';
+    this.rebuildRenderCards();
+  }
+
+  get faceImageTemplate(): string {
+    return this.faceImageTemplateValue;
+  }
   @HostBinding('class.hidden')
   @Input() hidden = false;
 
@@ -29,20 +63,12 @@ export class BlackjackHandComponent {
   @HostBinding('class.active')
   @Input() active = false;
 
-  isHidden(card: DisplayCard): boolean {
-    return Boolean(card.hidden);
-  }
-
-  trackCard(index: number, card: DisplayCard): string {
-    return `${index}:${card.rank || '?'}:${card.suit || '?'}:${card.hidden ? 'hidden' : 'visible'}`;
-  }
-
-  cardAsset(card: DisplayCard): string {
+  private cardAsset(card: DisplayCard): string {
     const rank = card.rank || '';
     const suit = card.suit || '';
     const suitShort = this.suitShort(suit);
 
-    return this.faceImageTemplate
+    return this.faceImageTemplateValue
       .replaceAll('{rank}', rank)
       .replaceAll('{suit}', suit)
       .replaceAll('{suitShort}', suitShort);
@@ -88,5 +114,13 @@ export class BlackjackHandComponent {
       default:
         return '';
     }
+  }
+
+  private rebuildRenderCards(): void {
+    this.renderCardViews = this.cardsValue.map((card, index) => ({
+      ...card,
+      asset: this.cardAsset(card),
+      key: `${index}:${card.rank || '?'}:${card.suit || '?'}:${card.hidden ? 'hidden' : 'visible'}`
+    }));
   }
 }

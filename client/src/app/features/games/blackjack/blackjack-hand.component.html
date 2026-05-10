@@ -12,15 +12,15 @@
       </div>
 
       <div class="hand__cards">
-        @for (card of cards; track trackCard($index, card)) {
-          <div class="card" [class.hidden]="isHidden(card)">
+        @for (card of renderCardViews; track card.key) {
+          <div class="card" [class.hidden]="card.hidden">
             <div class="card__inner">
               <div class="card__face card__face--back">
                   <img [src]="backImageUrl" alt="">
               </div>
 
               <div class="card__face card__face--front">
-                  <img [src]="cardAsset(card)" alt="">
+                  <img [src]="card.asset" alt="">
               </div>
             </div>
           </div>
