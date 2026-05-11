@@ -243,7 +243,7 @@ class UserService {
       })
     ]);
 
-    const { user } = this.requireAdminActorAndTarget(actor, targetUser, { allowSelf: false, allowAdminTarget: true });
+    const { user } = this.requireAdminActorAndTarget(actor, targetUser, { allowSelf: true, allowAdminTarget: true });
 
     const balanceChange = balance - user.balance;
 

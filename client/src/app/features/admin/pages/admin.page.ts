@@ -3,6 +3,7 @@ import { Component, computed, inject, signal } from '@angular/core';
 
 import { AdminService } from '../../../core/services/admin.service';
 import type { AdminCardDeck, AdminUserCardDeck, GameHistoryRecord, User } from '../../../core/models/user.model';
+import { AuthService } from '../../../core/services/auth.service';
 import { AppButtonComponent } from '../../../shared/ui/app-button.component';
 import { AppCardComponent } from '../../../shared/ui/app-card.component';
 import { AppInputComponent } from '../../../shared/ui/app-input.component';
@@ -20,6 +21,7 @@ type AdminTabId = 'overview' | 'users' | 'history' | 'decks';
 })
 export class AdminPageComponent {
   private readonly adminService = inject(AdminService);
+  private readonly auth = inject(AuthService);
 
   readonly users = signal<User[]>([]);
   readonly cardDecks = signal<AdminCardDeck[]>([]);
@@ -194,6 +196,10 @@ export class AdminPageComponent {
     try {
       const updated = await this.adminService.setBalance(user.id, nextBalance);
       this.replaceUser(updated);
+
+      if (this.auth.currentUser()?.id === updated.id) {
+        this.auth.updateBalance(updated.balance);
+      }
 
       if (this.selectedUser()?.id === user.id) {
         this.selectedUser.set(updated);
