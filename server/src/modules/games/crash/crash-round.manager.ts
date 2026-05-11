@@ -402,6 +402,15 @@ class CrashRoundManager {
               balanceChange: -player.stake
             }
           });
+
+          await tx.user.update({
+            where: { id: player.userId },
+            data: {
+              balance: {
+                decrement: player.stake
+              }
+            }
+          });
         }
       });
 
