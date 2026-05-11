@@ -19,14 +19,23 @@ interface BeginAuthResponse {
   mode: 'password' | 'code';
 }
 
+const assertNotBanned = (user: { bannedAt: Date | null } | null): void => {
+  if (user?.bannedAt) {
+    throw new HttpError(403, 'This account has been suspended by an administrator.');
+  }
+};
+
 class AuthService {
   async beginAuth(email: string): Promise<BeginAuthResponse> {
     const user = await prisma.user.findUnique({
       where: { email },
       select: {
-        passwordHash: true
+        passwordHash: true,
+        bannedAt: true
       }
     });
+
+    assertNotBanned(user);
 
     return {
       mode: user?.passwordHash ? 'password' : 'code'
@@ -36,8 +45,10 @@ class AuthService {
   async requestCode(email: string): Promise<void> {
     const existingUser = await prisma.user.findUnique({
       where: { email },
-      select: { passwordHash: true }
+      select: { passwordHash: true, bannedAt: true }
     });
+
+    assertNotBanned(existingUser);
 
     if (existingUser?.passwordHash) {
       throw new HttpError(400, 'This account already uses a password for sign in.');
@@ -111,6 +122,8 @@ class AuthService {
       where: { email }
     });
 
+    assertNotBanned(user);
+
     if (!user?.passwordHash) {
       throw new HttpError(400, 'This account must be verified by code before password sign in is available.');
     }
@@ -140,6 +153,8 @@ class AuthService {
       create: { email }
     });
 
+    assertNotBanned(user);
+
     await cardDeckService.ensureDefaultOwnership(user.id);
     return this.buildAuthResponse(await dailyRewardsService.grantDailyLoginBonus(user.id));
   }
@@ -151,6 +166,7 @@ class AuthService {
     avatarUrl: string | null;
     selectedCardDeckId: string;
     passwordHash: string | null;
+    bannedAt: Date | null;
     lastDailyLoginAt: string | null;
     balance: number;
     createdAt: Date;

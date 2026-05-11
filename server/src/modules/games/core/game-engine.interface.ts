@@ -33,6 +33,8 @@ export interface GameEngineResult<TState> {
 export interface GameEngine<TState = Record<string, unknown>> {
   readonly gameType: GameType;
   createInitialState(): TState;
+  synchronize?(context: EngineContext<TState>): GameEngineResult<TState> | null;
+  getAutoResolveAt?(state: TState): number | null;
   handleBet(context: EngineContext<TState>, request: BetRequest): GameEngineResult<TState>;
   handleAction(context: EngineContext<TState>, request: ActionRequest): GameEngineResult<TState>;
   calculateResult(state: TState): GameResolution | null;

@@ -126,6 +126,53 @@ userRouter.patch('/admin/users/:userId/balance', adminMiddleware, async (req, re
   }
 });
 
+userRouter.get('/admin/users/:userId/card-decks', adminMiddleware, async (req, res, next) => {
+  try {
+    const decks = await userService.listAdminUserCardDecks(String(req.params.userId));
+    res.status(200).json(decks);
+  } catch (error) {
+    next(error);
+  }
+});
+
+userRouter.post('/admin/users/:userId/card-decks/:deckId/grant', adminMiddleware, async (req, res, next) => {
+  try {
+    const result = await userService.grantAdminCardDeck(String(req.params.userId), String(req.params.deckId), {
+      select: req.body?.select
+    });
+    res.status(200).json(result);
+  } catch (error) {
+    next(error);
+  }
+});
+
+userRouter.post('/admin/users/:userId/ban', adminMiddleware, async (req, res, next) => {
+  try {
+    const user = await userService.setUserBanState(req.auth!.userId, String(req.params.userId), Boolean(req.body?.banned ?? true));
+    res.status(200).json(user);
+  } catch (error) {
+    next(error);
+  }
+});
+
+userRouter.post('/admin/users/:userId/wipe', adminMiddleware, async (req, res, next) => {
+  try {
+    const user = await userService.wipeUser(req.auth!.userId, String(req.params.userId));
+    res.status(200).json(user);
+  } catch (error) {
+    next(error);
+  }
+});
+
+userRouter.delete('/admin/users/:userId', adminMiddleware, async (req, res, next) => {
+  try {
+    const result = await userService.deleteUser(req.auth!.userId, String(req.params.userId));
+    res.status(200).json(result);
+  } catch (error) {
+    next(error);
+  }
+});
+
 userRouter.get('/admin/card-decks', adminMiddleware, async (_req, res, next) => {
   try {
     const decks = await userService.listAdminCardDecks();

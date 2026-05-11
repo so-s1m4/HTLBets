@@ -61,6 +61,14 @@ export class LobbyPageComponent {
       theme: 'miner' as const
     },
     {
+      title: 'Crash',
+      description: 'Watch the multiplier climb in real time and bail out before the line snaps and wipes the round.',
+      route: '/games/crash',
+      badge: 'Live',
+      availability: 'Time-based cashout',
+      theme: 'crash' as const
+    },
+    {
       title: 'Slots',
       description: 'Eight different slot automats with distinct volatility, symbol sets, and top-end payouts.',
       route: '/games/slots',

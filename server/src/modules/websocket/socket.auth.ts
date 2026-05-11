@@ -1,5 +1,6 @@
 import type { Socket } from 'socket.io';
 
+import { prisma } from '../../prisma/client';
 import { verifyAccessToken, type AccessTokenPayload } from '../../utils/jwt';
 
 declare module 'socket.io' {
@@ -33,8 +34,27 @@ export const socketAuth = (socket: Socket, next: (error?: Error) => void): void 
   }
 
   try {
-    socket.data.user = verifyAccessToken(token);
-    next();
+    const auth = verifyAccessToken(token);
+
+    prisma.user.findUnique({
+      where: { id: auth.userId },
+      select: { id: true, bannedAt: true }
+    })
+      .then((user) => {
+        if (!user) {
+          next(new Error('Socket authentication token is invalid or expired.'));
+          return;
+        }
+
+        if (user.bannedAt) {
+          next(new Error('This account has been suspended by an administrator.'));
+          return;
+        }
+
+        socket.data.user = auth;
+        next();
+      })
+      .catch((error) => next(error instanceof Error ? error : new Error('Socket authentication failed.')));
   } catch {
     next(new Error('Socket authentication token is invalid or expired.'));
   }

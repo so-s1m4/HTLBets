@@ -1,44 +1,88 @@
-    <div class="page-stack">
-      <app-card tone="accent">
-        <div class="admin-hero">
-          <div class="page-heading">
-            <span class="page-heading__eyebrow">Admin Control</span>
-            <h1>Balance and user operations</h1>
-            <p class="status-copy">
-              Manage demo balances, inspect user accounts, and review recent game history from one protected control panel.
-            </p>
-          </div>
+<div class="page-stack">
+  <app-card tone="accent">
+    <div class="admin-hero">
+      <div class="page-heading">
+        <span class="page-heading__eyebrow">Admin Control</span>
+        <h1>Operator desk for balances, history, and deck access</h1>
+        <p class="status-copy">
+          Keep player operations, audit history, and card deck management in separate lanes while still working from one focused control room.
+        </p>
+      </div>
 
-          <div class="glass-stat-grid">
-            <div class="glass-stat">
-              <span class="glass-stat__label">Users</span>
-              <strong class="glass-stat__value">{{ filteredUsers().length }}</strong>
-            </div>
-            <div class="glass-stat">
-              <span class="glass-stat__label">Total credits</span>
-              <strong class="glass-stat__value">{{ totalBalance() | credits }}</strong>
-            </div>
-            <div class="glass-stat">
-              <span class="glass-stat__label">Admins</span>
-              <strong class="glass-stat__value">{{ adminCount() }}</strong>
-            </div>
-            <div class="glass-stat">
-              <span class="glass-stat__label">History view</span>
-              <strong class="glass-stat__value">{{ selectedUser()?.email || 'None' }}</strong>
-            </div>
-          </div>
+      <div class="glass-stat-grid">
+        <div class="glass-stat">
+          <span class="glass-stat__label">Players</span>
+          <strong class="glass-stat__value">{{ playerCount() }}</strong>
         </div>
-      </app-card>
+        <div class="glass-stat">
+          <span class="glass-stat__label">Admins</span>
+          <strong class="glass-stat__value">{{ adminCount() }}</strong>
+        </div>
+        <div class="glass-stat">
+          <span class="glass-stat__label">Total credits</span>
+          <strong class="glass-stat__value">{{ totalBalance() | credits }}</strong>
+        </div>
+        <div class="glass-stat">
+          <span class="glass-stat__label">Selected deck</span>
+          <strong class="glass-stat__value">{{ selectedDeck()?.name || 'None' }}</strong>
+        </div>
+      </div>
+    </div>
+  </app-card>
 
+  <app-card tone="muted">
+    <div class="admin-tabbar">
+      <div class="page-heading">
+        <span class="page-heading__eyebrow">Workspaces</span>
+        <h2>Switch between dedicated admin lanes</h2>
+        <p class="status-copy">The player desk is now separate from the audit trail and from deck catalog maintenance.</p>
+      </div>
+
+      <div class="admin-tabs" role="tablist" aria-label="Admin sections">
+        @for (tab of tabs(); track tab.id) {
+          <button
+            type="button"
+            class="admin-tab"
+            [class.admin-tab--active]="activeTab() === tab.id"
+            [attr.aria-selected]="activeTab() === tab.id"
+            (click)="setActiveTab(tab.id)"
+          >
+            <span>{{ tab.label }}</span>
+            <span class="pill">{{ tab.badge }}</span>
+          </button>
+        }
+      </div>
+    </div>
+  </app-card>
+
+  @if (error()) {
+    <app-card tone="muted">
+      <p class="status-copy text-danger">{{ error() }}</p>
+    </app-card>
+  }
+
+  @if (activeTab() === 'overview') {
+    <div class="admin-overview-grid">
       <app-card tone="muted">
-        <div class="admin-toolbar">
-          <app-input
-            label="Search users"
-            helper="Filter by email or username."
-            [value]="query()"
-            (valueChange)="query.set($event)"
-          />
-          <app-button variant="secondary" (click)="refresh()" [disabled]="loading()">Refresh</app-button>
+        <div class="page-stack">
+          <div class="utility-row">
+            <div class="page-heading">
+              <span class="page-heading__eyebrow">Mission Control</span>
+              <h2>Fast operator actions</h2>
+            </div>
+            <span class="pill">{{ tabs().length }} zones</span>
+          </div>
+
+          <p class="status-copy">
+            Jump straight into player support, inspect the audit feed, or tune purchasable decks without digging through a single stacked page.
+          </p>
+
+          <div class="admin-quick-actions">
+            <app-button (click)="setActiveTab('users')">Open player desk</app-button>
+            <app-button variant="secondary" (click)="setActiveTab('history')">Open audit history</app-button>
+            <app-button variant="secondary" (click)="setActiveTab('decks')">Open deck studio</app-button>
+            <app-button variant="ghost" (click)="refresh()" [disabled]="loading() || deckLoading()">Refresh all data</app-button>
+          </div>
         </div>
       </app-card>
 
@@ -46,130 +90,467 @@
         <div class="page-stack">
           <div class="utility-row">
             <div class="page-heading">
-              <span class="page-heading__eyebrow">Card Deck Catalog</span>
-              <h2>Import and tune purchasable decks</h2>
+              <span class="page-heading__eyebrow">Selected player</span>
+              <h2>{{ userLabel(selectedUser()) }}</h2>
             </div>
-            <span class="pill">{{ enabledDeckCount() }} enabled</span>
+            @if (selectedUser()) {
+              <span class="pill">{{ selectedUser()!.balance | credits }}</span>
+            }
           </div>
 
-          @if (deckError()) {
-            <p class="status-copy text-danger">{{ deckError() }}</p>
-          } @else if (deckNotice()) {
-            <p class="status-copy text-success">{{ deckNotice() }}</p>
-          }
+          @if (selectedUser()) {
+            <div class="admin-overview-meta">
+              <div>
+                <span class="admin-meta-label">Role</span>
+                <strong>{{ selectedUser()!.isAdmin ? 'Administrator' : 'Player' }}</strong>
+              </div>
+              <div>
+                <span class="admin-meta-label">Owned decks</span>
+                <strong>{{ selectedOwnedDeckCount() }}</strong>
+              </div>
+              <div>
+                <span class="admin-meta-label">Selected deck</span>
+                <strong>{{ selectedDeck()?.name || 'None' }}</strong>
+              </div>
+              <div>
+                <span class="admin-meta-label">History entries</span>
+                <strong>{{ selectedHistory().length }}</strong>
+              </div>
+            </div>
 
-          <div class="admin-deck-import">
-            <app-input
-              label="Deck id"
-              helper="Slug used in API, for example neon-violet."
-              [value]="importDeckId()"
-              (valueChange)="importDeckId.set($event)"
-            />
-            <app-input
-              label="Display name"
-              [value]="importDeckName()"
-              (valueChange)="importDeckName.set($event)"
-            />
-            <app-input
-              label="Price"
-              inputMode="numeric"
-              [value]="importDeckPrice()"
-              (valueChange)="importDeckPrice.set($event.replace(/\D/g, ''))"
-            />
-            <app-input
-              label="Back image URL or /asset path"
-              helper="Examples: /cards/back_light.png or https://.../deck.png"
-              [value]="importDeckBackImage()"
-              (valueChange)="importDeckBackImage.set($event)"
-            />
-            <app-input
-              label="Face template"
-              helper="Use {rank}, {suit}, or {suitShort}. Example: /cards/{suit}_{rank}.png or /cards/{rank}{suitShort}.png"
-              [value]="importDeckFaceTemplate()"
-              (valueChange)="importDeckFaceTemplate.set($event)"
-            />
-            <label class="admin-toggle">
-              <input
-                type="checkbox"
-                [checked]="importDeckEnabled()"
-                (change)="importDeckEnabled.set($any($event.target).checked)"
-              />
-              <span>Enabled for purchase</span>
-            </label>
-            <app-button (click)="importDeck()" [disabled]="savingDeckId() === 'import'">
-              {{ savingDeckId() === 'import' ? 'Importing...' : 'Import deck' }}
-            </app-button>
-          </div>
-
-          @if (deckLoading()) {
-            <p class="status-copy">Loading card decks...</p>
+            <div class="admin-quick-actions">
+              <app-button variant="secondary" (click)="setActiveTab('users')">Adjust player</app-button>
+              <app-button variant="secondary" (click)="setActiveTab('history')">Review history</app-button>
+            </div>
           } @else {
-            <div class="admin-deck-list">
-              @for (deck of cardDecks(); track deck.id) {
-                <div class="admin-deck-card">
-                  <div class="admin-deck-card__preview">
-                    <img [src]="draftDeckBackImage(deck.id)" [alt]="deck.name + ' preview'" loading="lazy" decoding="async" referrerpolicy="no-referrer" />
+            <p class="status-copy">No player is selected yet. The first player will be pinned automatically once the list loads.</p>
+          }
+        </div>
+      </app-card>
+
+      <app-card tone="muted">
+        <div class="page-stack">
+          <div class="utility-row">
+            <div class="page-heading">
+              <span class="page-heading__eyebrow">Deck distribution</span>
+              <h2>{{ enabledDeckCount() }} enabled decks</h2>
+            </div>
+            <span class="pill">{{ deckCount() }} total</span>
+          </div>
+
+          <div class="admin-overview-meta">
+            <div>
+              <span class="admin-meta-label">Standard deck</span>
+              <strong>{{ defaultDeck()?.name || 'Not set' }}</strong>
+            </div>
+            <div>
+              <span class="admin-meta-label">Grantable for player</span>
+              <strong>{{ selectedGrantableDeckCount() }}</strong>
+            </div>
+            <div>
+              <span class="admin-meta-label">Catalog status</span>
+              <strong>{{ deckLoading() ? 'Syncing' : 'Ready' }}</strong>
+            </div>
+            <div>
+              <span class="admin-meta-label">Import lane</span>
+              <strong>{{ savingDeckId() === 'import' ? 'Running' : 'Idle' }}</strong>
+            </div>
+          </div>
+
+          <app-button variant="secondary" (click)="setActiveTab('decks')">Open deck studio</app-button>
+        </div>
+      </app-card>
+    </div>
+  }
+
+  @if (activeTab() === 'users') {
+    <div class="admin-player-layout">
+      <app-card tone="muted">
+        <div class="page-stack">
+          <div class="utility-row">
+            <div class="page-heading">
+              <span class="page-heading__eyebrow">Player Rail</span>
+              <h2>Find and pin a player</h2>
+            </div>
+            <span class="pill">{{ filteredUsers().length }} visible</span>
+          </div>
+
+          <div class="admin-toolbar admin-toolbar--stacked">
+            <app-input
+              label="Search players"
+              helper="Filter by email or username."
+              [value]="query()"
+              (valueChange)="query.set($event)"
+            />
+            <app-button variant="ghost" (click)="refresh()" [disabled]="loading()">Refresh</app-button>
+          </div>
+
+          @if (loading()) {
+            <p class="status-copy">Loading users...</p>
+          } @else if (filteredUsers().length === 0) {
+            <p class="status-copy">No players match the current search.</p>
+          } @else {
+            <div class="admin-user-rail">
+              @for (user of filteredUsers(); track user.id) {
+                <button
+                  type="button"
+                  class="admin-user-rail__item"
+                  [class.admin-user-rail__item--active]="selectedUser()?.id === user.id"
+                  (click)="selectUser(user)"
+                >
+                  <div class="admin-user-rail__identity">
+                    <span class="admin-user-rail__avatar">{{ userInitials(user) }}</span>
+                    <div>
+                      <strong>{{ userLabel(user) }}</strong>
+                      <p class="status-copy">{{ user.email }}</p>
+                    </div>
+                  </div>
+                  <div class="admin-user-rail__meta">
+                    <span class="pill">{{ user.balance | credits }}</span>
+                    @if (isUserBanned(user)) {
+                      <span class="pill">Suspended</span>
+                    }
+                    @if (user.isAdmin) {
+                      <span class="pill">Admin</span>
+                    }
+                  </div>
+                </button>
+              }
+            </div>
+          }
+        </div>
+      </app-card>
+
+      <div class="page-stack">
+        <app-card tone="accent">
+          <div class="admin-player-hero">
+            <div class="admin-player-hero__identity">
+              <div class="admin-player-hero__avatar">{{ userInitials(selectedUser()) }}</div>
+              <div class="page-heading">
+                <span class="page-heading__eyebrow">Player Desk</span>
+                <h2>{{ userLabel(selectedUser()) }}</h2>
+                <p class="status-copy">
+                  @if (selectedUser()) {
+                    {{ selectedUser()!.email }} • created {{ selectedUser()!.createdAt | date: 'mediumDate' }}
+                  } @else {
+                    Select a player from the rail to open the workspace.
+                  }
+                </p>
+              </div>
+            </div>
+
+            @if (selectedUser()) {
+              <div class="admin-player-hero__stats">
+                <div class="admin-player-chip">
+                  <span class="admin-player-chip__label">Balance</span>
+                  <strong>{{ selectedUser()!.balance | credits }}</strong>
+                </div>
+                <div class="admin-player-chip">
+                  <span class="admin-player-chip__label">Owned decks</span>
+                  <strong>{{ selectedOwnedDeckCount() }}</strong>
+                </div>
+                <div class="admin-player-chip">
+                  <span class="admin-player-chip__label">Equipped</span>
+                  <strong>{{ selectedDeck()?.name || 'None' }}</strong>
+                </div>
+                <div class="admin-player-chip">
+                  <span class="admin-player-chip__label">Status</span>
+                  <strong>{{ isUserBanned(selectedUser()) ? 'Suspended' : 'Active' }}</strong>
+                </div>
+              </div>
+            }
+          </div>
+        </app-card>
+
+        @if (selectedUser()) {
+          <div class="admin-player-grid">
+            <app-card tone="muted">
+              <div class="page-stack">
+                <div class="utility-row">
+                  <div class="page-heading">
+                    <span class="page-heading__eyebrow">Account controls</span>
+                    <h3>Balance and audit shortcuts</h3>
+                  </div>
+                  <div class="section-actions">
+                    @if (isUserBanned(selectedUser())) {
+                      <span class="pill">Suspended</span>
+                    }
+                    <span class="pill">{{ selectedUser()!.isAdmin ? 'Administrator' : 'Player' }}</span>
+                  </div>
+                </div>
+
+                <app-input
+                  label="Set balance"
+                  inputMode="numeric"
+                  [value]="draftBalance(selectedUser()!.id)"
+                  (valueChange)="setDraftBalance(selectedUser()!.id, $event.replace(/\D/g, ''))"
+                />
+
+                <div class="admin-quick-actions">
+                  <app-button (click)="saveBalance(selectedUser()!)">
+                    {{ savingUserId() === selectedUser()!.id ? 'Saving...' : 'Apply balance' }}
+                  </app-button>
+                  <app-button variant="secondary" (click)="openUserHistory(selectedUser()!)">Open full history</app-button>
+                </div>
+
+                @if (userNotice()) {
+                  <p class="status-copy text-success">{{ userNotice() }}</p>
+                }
+
+                <div class="admin-moderation">
+                  <div>
+                    <span class="admin-meta-label">Moderation</span>
+                    <p class="status-copy">
+                      @if (isProtectedUser(selectedUser())) {
+                        Administrator accounts are protected from ban, wipe, and delete actions.
+                      } @else {
+                        Suspend access, wipe game data, or permanently delete the account.
+                      }
+                    </p>
                   </div>
 
-                  <div class="admin-deck-card__fields">
-                    <div class="admin-deck-card__meta">
-                      <strong>{{ deck.id }}</strong>
-                      <div class="section-actions">
-                        @if (deck.isDefault) {
-                          <span class="pill">Standard</span>
-                        }
-                        <span class="pill">{{ deck.purchaseCount }} owners</span>
+                  <div class="admin-moderation__actions">
+                    <app-button
+                      variant="ghost"
+                      [disabled]="isProtectedUser(selectedUser()) || isModerationBusy('ban')"
+                      (click)="toggleSelectedUserBan()"
+                    >
+                      {{
+                        isModerationBusy('ban')
+                          ? (isUserBanned(selectedUser()) ? 'Restoring...' : 'Suspending...')
+                          : (isUserBanned(selectedUser()) ? 'Restore access' : 'Suspend player')
+                      }}
+                    </app-button>
+                    <app-button
+                      variant="secondary"
+                      [disabled]="isProtectedUser(selectedUser()) || isModerationBusy('wipe')"
+                      (click)="wipeSelectedUser()"
+                    >
+                      {{ isModerationBusy('wipe') ? 'Wiping...' : 'Wipe game data' }}
+                    </app-button>
+                    <app-button
+                      variant="ghost"
+                      [disabled]="isProtectedUser(selectedUser()) || isModerationBusy('delete')"
+                      (click)="deleteSelectedUser()"
+                    >
+                      {{ isModerationBusy('delete') ? 'Deleting...' : 'Delete account' }}
+                    </app-button>
+                  </div>
+                </div>
+              </div>
+            </app-card>
+
+            <app-card tone="muted">
+              <div class="page-stack">
+                <div class="utility-row">
+                  <div class="page-heading">
+                    <span class="page-heading__eyebrow">Recent history</span>
+                    <h3>Latest admin-visible activity</h3>
+                  </div>
+                  <span class="pill">{{ selectedHistory().length }} entries</span>
+                </div>
+
+                @if (historyLoading()) {
+                  <p class="status-copy">Loading history...</p>
+                } @else if (selectedRecentHistory().length === 0) {
+                  <p class="status-copy">No history recorded for this user yet.</p>
+                } @else {
+                  <div class="admin-history admin-history--compact">
+                    @for (entry of selectedRecentHistory(); track entry.id) {
+                      <div class="admin-history__item" [class.admin-history__item--admin]="isAdminAdjustment(entry)">
+                        <div>
+                          <strong>{{ entry.gameType | gameLabel }}</strong>
+                          <p class="status-copy">{{ entry.createdAt | date: 'medium' }}</p>
+                        </div>
+                        <div class="admin-history__values">
+                          <span class="pill">{{ isAdminAdjustment(entry) ? 'Manual change' : (entry.betAmount | credits) }}</span>
+                          <span [class]="isAdminAdjustment(entry) ? 'admin-history__adjustment' : (entry.balanceChange >= 0 ? 'text-success' : 'text-danger')">
+                            {{ entry.balanceChange | credits }}
+                          </span>
+                        </div>
+                      </div>
+                    }
+                  </div>
+                }
+              </div>
+            </app-card>
+          </div>
+
+          <app-card tone="muted">
+            <div class="page-stack">
+              <div class="utility-row">
+                <div class="page-heading">
+                  <span class="page-heading__eyebrow">Deck locker</span>
+                  <h3>Grant or equip decks for this player</h3>
+                </div>
+                <span class="pill">{{ selectedOwnedDeckCount() }} owned</span>
+              </div>
+
+              @if (userDeckError()) {
+                <p class="status-copy text-danger">{{ userDeckError() }}</p>
+              } @else if (userDeckNotice()) {
+                <p class="status-copy text-success">{{ userDeckNotice() }}</p>
+              }
+
+              @if (userDeckLoading()) {
+                <p class="status-copy">Loading deck access...</p>
+              } @else {
+                <div class="admin-player-decks">
+                  @for (deck of selectedUserDecks(); track deck.id) {
+                    <div
+                      class="admin-player-deck"
+                      [class.admin-player-deck--owned]="deck.owned"
+                      [class.admin-player-deck--selected]="deck.selected"
+                    >
+                      <div class="admin-player-deck__preview">
+                        <img [src]="deck.backImageUrl" [alt]="deck.name + ' preview'" loading="lazy" decoding="async" referrerpolicy="no-referrer" />
+                      </div>
+
+                      <div class="admin-player-deck__content">
+                        <div class="admin-player-deck__header">
+                          <div>
+                            <strong>{{ deck.name }}</strong>
+                            <p class="status-copy">{{ deck.id }}</p>
+                          </div>
+                          <div class="section-actions">
+                            @if (deck.isDefault) {
+                              <span class="pill">Default</span>
+                            }
+                            <span class="pill">{{ deck.enabled ? 'Store on' : 'Store off' }}</span>
+                          </div>
+                        </div>
+
+                        <div class="admin-player-deck__meta">
+                          <span class="pill">{{ deck.price | credits }}</span>
+                          <span class="pill">{{ deck.purchaseCount }} owners</span>
+                          @if (deck.owned) {
+                            <span class="pill">{{ deck.selected ? 'Equipped' : 'Owned' }}</span>
+                          } @else {
+                            <span class="pill">Locked</span>
+                          }
+                        </div>
+
+                        <div class="admin-player-deck__actions">
+                          @if (deck.selected) {
+                            <app-button variant="ghost" [disabled]="true">Equipped</app-button>
+                          } @else if (deck.owned || deck.isDefault) {
+                            <app-button
+                              variant="secondary"
+                              [disabled]="isDeckActionBusy(deck.id, 'equip')"
+                              (click)="grantDeckToSelected(deck, true)"
+                            >
+                              {{ isDeckActionBusy(deck.id, 'equip') ? 'Equipping...' : 'Equip deck' }}
+                            </app-button>
+                          } @else {
+                            <app-button
+                              variant="ghost"
+                              [disabled]="isDeckActionBusy(deck.id, 'grant')"
+                              (click)="grantDeckToSelected(deck)"
+                            >
+                              {{ isDeckActionBusy(deck.id, 'grant') ? 'Granting...' : 'Grant access' }}
+                            </app-button>
+                            <app-button
+                              [disabled]="isDeckActionBusy(deck.id, 'equip')"
+                              (click)="grantDeckToSelected(deck, true)"
+                            >
+                              {{ isDeckActionBusy(deck.id, 'equip') ? 'Equipping...' : 'Grant & equip' }}
+                            </app-button>
+                          }
+                        </div>
                       </div>
                     </div>
+                  }
+                </div>
+              }
+            </div>
+          </app-card>
+        } @else {
+          <app-card tone="muted">
+            <p class="status-copy">Select a player from the rail to unlock balance controls and deck grants.</p>
+          </app-card>
+        }
+      </div>
+    </div>
+  }
 
-                    <app-input
-                      label="Display name"
-                      [value]="draftDeckName(deck.id)"
-                      (valueChange)="setDraftDeckName(deck.id, $event)"
-                    />
-                    <app-input
-                      label="Price"
-                      inputMode="numeric"
-                      [value]="draftDeckPrice(deck.id)"
-                      (valueChange)="setDraftDeckPrice(deck.id, $event.replace(/\D/g, ''))"
-                    />
-                    <app-input
-                      label="Back image URL or /asset path"
-                      [value]="draftDeckBackImage(deck.id)"
-                      (valueChange)="setDraftDeckBackImage(deck.id, $event)"
-                    />
-                    <app-input
-                      label="Face template"
-                      [value]="draftDeckFaceTemplate(deck.id)"
-                      (valueChange)="setDraftDeckFaceTemplate(deck.id, $event)"
-                    />
+  @if (activeTab() === 'history') {
+    <div class="admin-history-layout">
+      <app-card tone="muted">
+        <div class="page-stack">
+          <div class="utility-row">
+            <div class="page-heading">
+              <span class="page-heading__eyebrow">Audit rail</span>
+              <h2>Choose the history target</h2>
+            </div>
+            <span class="pill">{{ filteredUsers().length }} users</span>
+          </div>
 
-                    <label class="admin-toggle">
-                      <input
-                        type="checkbox"
-                        [checked]="draftDeckEnabled(deck.id)"
-                        (change)="setDraftDeckEnabled(deck.id, $any($event.target).checked)"
-                      />
-                      <span>Enabled for purchase</span>
-                    </label>
+          <div class="admin-toolbar admin-toolbar--stacked">
+            <app-input
+              label="Search users"
+              helper="Filter by email or username."
+              [value]="query()"
+              (valueChange)="query.set($event)"
+            />
+            <app-button variant="ghost" (click)="refresh()" [disabled]="loading()">Refresh</app-button>
+          </div>
 
-                    <div class="admin-user-card__actions">
-                      <span class="pill">{{ deck.createdAt | date: 'mediumDate' }}</span>
-                      <div class="section-actions">
-                        @if (!deck.isDefault) {
-                          <app-button
-                            variant="ghost"
-                            [disabled]="savingDeckId() === 'default:' + deck.id"
-                            (click)="setDefaultDeck(deck)"
-                          >
-                            {{ savingDeckId() === 'default:' + deck.id ? 'Switching...' : 'Make standard' }}
-                          </app-button>
-                        }
-                        <app-button variant="secondary" [disabled]="savingDeckId() === deck.id" (click)="saveDeck(deck)">
-                          {{ savingDeckId() === deck.id ? 'Saving...' : 'Save deck' }}
-                        </app-button>
-                      </div>
-                    </div>
+          @if (loading()) {
+            <p class="status-copy">Loading users...</p>
+          } @else if (filteredUsers().length === 0) {
+            <p class="status-copy">No users match the current search query.</p>
+          } @else {
+            <div class="admin-user-picker">
+              @for (user of filteredUsers(); track user.id) {
+                <button
+                  type="button"
+                  class="admin-user-picker__item"
+                  [class.admin-user-picker__item--active]="selectedUser()?.id === user.id"
+                  (click)="selectUser(user)"
+                >
+                  <div>
+                    <strong>{{ userLabel(user) }}</strong>
+                    <p class="status-copy">{{ user.email }}</p>
+                  </div>
+                  <span class="pill">{{ user.balance | credits }}</span>
+                </button>
+              }
+            </div>
+          }
+        </div>
+      </app-card>
+
+      <app-card tone="muted">
+        <div class="page-stack">
+          <div class="utility-row">
+            <div class="page-heading">
+              <span class="page-heading__eyebrow">User history</span>
+              <h2>{{ userLabel(selectedUser()) }}</h2>
+            </div>
+            @if (selectedUser()) {
+              <span class="pill">{{ selectedHistory().length }} entries</span>
+            }
+          </div>
+
+          @if (historyLoading()) {
+            <p class="status-copy">Loading history...</p>
+          } @else if (!selectedUser()) {
+            <p class="status-copy">Choose a user from the rail to inspect recent rounds.</p>
+          } @else if (selectedHistory().length === 0) {
+            <p class="status-copy">No history recorded for this user yet.</p>
+          } @else {
+            <div class="admin-history">
+              @for (entry of selectedHistory(); track entry.id) {
+                <div class="admin-history__item" [class.admin-history__item--admin]="isAdminAdjustment(entry)">
+                  <div>
+                    <strong>{{ entry.gameType | gameLabel }}</strong>
+                    <p class="status-copy">{{ entry.createdAt | date: 'medium' }}</p>
+                  </div>
+                  <div class="admin-history__values">
+                    <span class="pill">{{ isAdminAdjustment(entry) ? 'Manual change' : (entry.betAmount | credits) }}</span>
+                    <span [class]="isAdminAdjustment(entry) ? 'admin-history__adjustment' : (entry.balanceChange >= 0 ? 'text-success' : 'text-danger')">
+                      {{ entry.balanceChange | credits }}
+                    </span>
                   </div>
                 </div>
               }
@@ -177,90 +558,144 @@
           }
         </div>
       </app-card>
+    </div>
+  }
 
-      @if (error()) {
-        <app-card tone="muted">
-          <p class="status-copy text-danger">{{ error() }}</p>
-        </app-card>
-      }
+  @if (activeTab() === 'decks') {
+    <app-card tone="muted">
+      <div class="page-stack">
+        <div class="utility-row">
+          <div class="page-heading">
+            <span class="page-heading__eyebrow">Deck Studio</span>
+            <h2>Import, price, and publish purchasable decks</h2>
+          </div>
+          <span class="pill">{{ enabledDeckCount() }} enabled</span>
+        </div>
 
-      <div class="admin-grid">
-        <div class="page-stack">
-          @if (loading()) {
-            <app-card tone="muted">
-              <p class="status-copy">Loading users...</p>
-            </app-card>
-          } @else {
-            @for (user of filteredUsers(); track user.id) {
-              <app-card>
-                <div class="admin-user-card">
-                  <div class="admin-user-card__header">
-                    <div class="page-heading">
-                      <span class="page-heading__eyebrow">{{ user.isAdmin ? 'Administrator' : 'Player' }}</span>
-                      <h3>{{ user.email }}</h3>
-                      <p class="status-copy">Created {{ user.createdAt | date: 'mediumDate' }}</p>
+        @if (deckError()) {
+          <p class="status-copy text-danger">{{ deckError() }}</p>
+        } @else if (deckNotice()) {
+          <p class="status-copy text-success">{{ deckNotice() }}</p>
+        }
+
+        <div class="admin-deck-import">
+          <app-input
+            label="Deck id"
+            helper="Slug used in API, for example neon-violet."
+            [value]="importDeckId()"
+            (valueChange)="importDeckId.set($event)"
+          />
+          <app-input
+            label="Display name"
+            [value]="importDeckName()"
+            (valueChange)="importDeckName.set($event)"
+          />
+          <app-input
+            label="Price"
+            inputMode="numeric"
+            [value]="importDeckPrice()"
+            (valueChange)="importDeckPrice.set($event.replace(/\D/g, ''))"
+          />
+          <app-input
+            label="Back image URL or /asset path"
+            helper="Examples: /cards/back_light.png or https://.../deck.png"
+            [value]="importDeckBackImage()"
+            (valueChange)="importDeckBackImage.set($event)"
+          />
+          <app-input
+            label="Face template"
+            helper="Use {rank}, {suit}, or {suitShort}. Example: /cards/{suit}_{rank}.png or /cards/{rank}{suitShort}.png"
+            [value]="importDeckFaceTemplate()"
+            (valueChange)="importDeckFaceTemplate.set($event)"
+          />
+          <label class="admin-toggle">
+            <input
+              type="checkbox"
+              [checked]="importDeckEnabled()"
+              (change)="importDeckEnabled.set($any($event.target).checked)"
+            />
+            <span>Enabled for purchase</span>
+          </label>
+          <app-button (click)="importDeck()" [disabled]="savingDeckId() === 'import'">
+            {{ savingDeckId() === 'import' ? 'Importing...' : 'Import deck' }}
+          </app-button>
+        </div>
+
+        @if (deckLoading()) {
+          <p class="status-copy">Loading card decks...</p>
+        } @else {
+          <div class="admin-deck-list">
+            @for (deck of cardDecks(); track deck.id) {
+              <div class="admin-deck-card">
+                <div class="admin-deck-card__preview">
+                  <img [src]="draftDeckBackImage(deck.id)" [alt]="deck.name + ' preview'" loading="lazy" decoding="async" referrerpolicy="no-referrer" />
+                </div>
+
+                <div class="admin-deck-card__fields">
+                  <div class="admin-deck-card__meta">
+                    <strong>{{ deck.id }}</strong>
+                    <div class="section-actions">
+                      @if (deck.isDefault) {
+                        <span class="pill">Standard</span>
+                      }
+                      <span class="pill">{{ deck.purchaseCount }} owners</span>
                     </div>
-                    <span class="pill">{{ user.balance | credits }}</span>
                   </div>
 
-                  <div class="admin-user-card__controls">
-                    <app-input
-                      label="Set balance"
-                      inputMode="numeric"
-                      [value]="draftBalance(user.id)"
-                      (valueChange)="setDraftBalance(user.id, $event.replace(/\D/g, ''))"
-                    />
+                  <app-input
+                    label="Display name"
+                    [value]="draftDeckName(deck.id)"
+                    (valueChange)="setDraftDeckName(deck.id, $event)"
+                  />
+                  <app-input
+                    label="Price"
+                    inputMode="numeric"
+                    [value]="draftDeckPrice(deck.id)"
+                    (valueChange)="setDraftDeckPrice(deck.id, $event.replace(/\D/g, ''))"
+                  />
+                  <app-input
+                    label="Back image URL or /asset path"
+                    [value]="draftDeckBackImage(deck.id)"
+                    (valueChange)="setDraftDeckBackImage(deck.id, $event)"
+                  />
+                  <app-input
+                    label="Face template"
+                    [value]="draftDeckFaceTemplate(deck.id)"
+                    (valueChange)="setDraftDeckFaceTemplate(deck.id, $event)"
+                  />
 
-                    <div class="admin-user-card__actions">
-                      <app-button variant="secondary" (click)="selectUser(user)">View history</app-button>
-                      <app-button (click)="saveBalance(user)">
-                        {{ savingUserId() === user.id ? 'Saving...' : 'Apply balance' }}
+                  <label class="admin-toggle">
+                    <input
+                      type="checkbox"
+                      [checked]="draftDeckEnabled(deck.id)"
+                      (change)="setDraftDeckEnabled(deck.id, $any($event.target).checked)"
+                    />
+                    <span>Enabled for purchase</span>
+                  </label>
+
+                  <div class="admin-user-card__actions">
+                    <span class="pill">{{ deck.createdAt | date: 'mediumDate' }}</span>
+                    <div class="section-actions">
+                      @if (!deck.isDefault) {
+                        <app-button
+                          variant="ghost"
+                          [disabled]="savingDeckId() === 'default:' + deck.id"
+                          (click)="setDefaultDeck(deck)"
+                        >
+                          {{ savingDeckId() === 'default:' + deck.id ? 'Switching...' : 'Make standard' }}
+                        </app-button>
+                      }
+                      <app-button variant="secondary" [disabled]="savingDeckId() === deck.id" (click)="saveDeck(deck)">
+                        {{ savingDeckId() === deck.id ? 'Saving...' : 'Save deck' }}
                       </app-button>
                     </div>
                   </div>
                 </div>
-              </app-card>
-            }
-          }
-        </div>
-
-        <app-card tone="muted">
-          <div class="page-stack">
-            <div class="utility-row">
-              <div class="page-heading">
-                <span class="page-heading__eyebrow">User History</span>
-                <h2>{{ selectedUser()?.email || 'Select a user' }}</h2>
-              </div>
-              @if (selectedUser()) {
-                <span class="pill">{{ selectedHistory().length }} entries</span>
-              }
-            </div>
-
-            @if (historyLoading()) {
-              <p class="status-copy">Loading history...</p>
-            } @else if (!selectedUser()) {
-              <p class="status-copy">Choose a user from the list to inspect recent rounds.</p>
-            } @else if (selectedHistory().length === 0) {
-              <p class="status-copy">No history recorded for this user yet.</p>
-            } @else {
-              <div class="admin-history">
-                @for (entry of selectedHistory(); track entry.id) {
-                  <div class="admin-history__item" [class.admin-history__item--admin]="isAdminAdjustment(entry)">
-                    <div>
-                      <strong>{{ entry.gameType | gameLabel }}</strong>
-                      <p class="status-copy">{{ entry.createdAt | date: 'medium' }}</p>
-                    </div>
-                    <div class="admin-history__values">
-                      <span class="pill">{{ isAdminAdjustment(entry) ? 'Manual change' : (entry.betAmount | credits) }}</span>
-                      <span [class]="isAdminAdjustment(entry) ? 'admin-history__adjustment' : (entry.balanceChange >= 0 ? 'text-success' : 'text-danger')">
-                        {{ entry.balanceChange | credits }}
-                      </span>
-                    </div>
-                  </div>
-                }
               </div>
             }
           </div>
-        </app-card>
+        }
       </div>
-    </div>
+    </app-card>
+  }
+</div>

@@ -4,6 +4,7 @@ export interface User {
   username: string | null;
   avatarUrl: string | null;
   selectedCardDeckId: string;
+  bannedAt: string | null;
   balance: number;
   isAdmin: boolean;
   hasPassword: boolean;
@@ -41,6 +42,17 @@ export interface AdminCardDeck {
   updatedAt: string;
 }
 
+export interface AdminUserCardDeck extends AdminCardDeck {
+  owned: boolean;
+  selected: boolean;
+  grantedAt: string | null;
+}
+
+export interface AdminUserDeckMutationResponse {
+  user: User;
+  decks: AdminUserCardDeck[];
+}
+
 export interface DailyTask {
   key: string;
   title: string;
@@ -59,7 +71,7 @@ export interface DailyTaskClaimResponse {
 
 export interface GameHistoryRecord {
   id: string;
-  gameType: 'ROULETTE' | 'BLACKJACK' | 'POKER' | 'MINER' | 'SLOTS' | 'ADMIN';
+  gameType: 'ROULETTE' | 'BLACKJACK' | 'POKER' | 'MINER' | 'CRASH' | 'SLOTS' | 'ADMIN';
   betAmount: number;
   result: string;
   balanceChange: number;

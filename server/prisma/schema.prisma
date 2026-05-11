@@ -12,6 +12,7 @@ enum GameType {
   BLACKJACK
   POKER
   MINER
+  CRASH
   SLOTS
   ADMIN
 }
@@ -28,6 +29,7 @@ model User {
   username          String?
   avatarUrl         String?
   selectedCardDeckId String                @default("classic-dark")
+  bannedAt          DateTime?
   passwordHash      String?
   lastDailyLoginAt  String?
   balance           Int                     @default(1000)

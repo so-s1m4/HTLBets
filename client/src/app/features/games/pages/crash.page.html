@@ -1,0 +1,91 @@
+<app-game-shell
+  title="Crash"
+  subtitle="The multiplier climbs until it doesn't. Cash out before the round snaps and locks in the loss."
+  [connectionState]="socket.connectionState()"
+  [currentBet]="currentBet()"
+  [error]="socket.lastError() || ''"
+>
+  <app-card table>
+    <div class="crash-stage">
+      <div class="crash-stage__surface"></div>
+
+      @if (resultBanner(); as result) {
+        <div class="crash-stage__overlay">
+          <div class="crash-status-banner" [class.crash-status-banner--loss]="result.tone === 'loss'" [class.crash-status-banner--win]="result.tone === 'win'">
+            <strong>{{ result.title }}</strong>
+            <span>{{ result.amount | credits }}</span>
+          </div>
+        </div>
+      }
+
+      <div class="crash-stage__content">
+        <div class="crash-stage__stats">
+          <span class="pill">{{ phaseLabel() }}</span>
+          @if (isRoundActive()) {
+            <span class="pill">Server decides the crash</span>
+            <span class="pill">Cash out before the signal drops</span>
+          } @else {
+            <span class="pill">Last settled: x{{ (viewState()?.lastSettledMultiplier || 1).toFixed(2) }}</span>
+          }
+        </div>
+
+        <div class="crash-chart" [class.is-live]="isRoundActive()" [class.is-crashed]="outcome()?.result === 'BUST'" [style.--crash-progress]="crashProgress()">
+          <div class="crash-chart__grid"></div>
+          <div class="crash-chart__bars">
+            @for (bar of bars(); track bar.index) {
+              <span class="crash-chart__bar" [class.is-active]="bar.active" [style.height.%]="bar.height"></span>
+            }
+          </div>
+
+          <div class="crash-chart__line"></div>
+          <div class="crash-chart__multiplier">
+            <strong>x{{ liveMultiplier().toFixed(2) }}</strong>
+            <span>{{ isRoundActive() ? 'Live multiplier' : 'Last settled multiplier' }}</span>
+          </div>
+        </div>
+
+        <p class="status-copy crash-stage__message">{{ viewState()?.message || 'Set a stake and launch the next round.' }}</p>
+
+        @if (history().length) {
+          <div class="crash-history">
+            <span class="page-heading__eyebrow">Recent rounds</span>
+            <div class="crash-history__list">
+              @for (entry of history(); track $index) {
+                <div class="pill">{{ entry.result }} · x{{ entry.multiplier.toFixed(2) }}</div>
+              }
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+  </app-card>
+
+  <app-card sidebar class="crash-sidebar">
+    <div class="page-stack">
+      @if (isRoundActive()) {
+        <app-button block (click)="cashOut()">
+          Cash out at x{{ liveMultiplier().toFixed(2) }}
+        </app-button>
+      } @else {
+        <app-input
+          label="Bet amount"
+          inputMode="numeric"
+          [value]="betAmount()"
+          (valueChange)="betAmount.set($event.replace(/\D/g, ''))"
+        />
+        <app-button block (click)="startRound()">Start round</app-button>
+      }
+
+      <div class="page-stack">
+        <div class="glass-stat">
+          <span class="glass-stat__label">Current stake</span>
+          <strong class="glass-stat__value">{{ currentBet() | credits }}</strong>
+        </div>
+        <div class="glass-stat">
+          <span class="glass-stat__label">Visible multiplier</span>
+          <strong class="glass-stat__value">x{{ liveMultiplier().toFixed(2) }}</strong>
+        </div>
+      </div>
+    </div>
+  </app-card>
+</app-game-shell>

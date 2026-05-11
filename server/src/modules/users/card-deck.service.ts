@@ -30,6 +30,12 @@ export interface AdminCardDeck {
   updatedAt: Date;
 }
 
+export interface AdminUserCardDeck extends AdminCardDeck {
+  owned: boolean;
+  selected: boolean;
+  grantedAt: Date | null;
+}
+
 interface CardDeckInput {
   id: string;
   name: string;
@@ -123,6 +129,30 @@ const mapPublicCardDeck = (
   enabled: deck.enabled,
   owned: ownedDeckIds.has(deck.id) || deck.isDefault,
   selected: selectedCardDeckId === deck.id
+});
+
+const mapAdminCardDeck = (deck: {
+  id: string;
+  name: string;
+  price: number;
+  backImageUrl: string;
+  faceImageTemplate: string;
+  isDefault: boolean;
+  enabled: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+  _count: { owners: number };
+}): AdminCardDeck => ({
+  id: deck.id,
+  name: deck.name,
+  price: deck.price,
+  backImageUrl: deck.backImageUrl,
+  faceImageTemplate: deck.faceImageTemplate,
+  isDefault: deck.isDefault,
+  enabled: deck.enabled,
+  purchaseCount: deck._count.owners,
+  createdAt: deck.createdAt,
+  updatedAt: deck.updatedAt
 });
 
 export class CardDeckService {
@@ -324,17 +354,49 @@ export class CardDeckService {
       orderBy: [{ enabled: 'desc' }, { createdAt: 'asc' }]
     });
 
+    return decks.map(mapAdminCardDeck);
+  }
+
+  async listForAdminUser(userId: string): Promise<AdminUserCardDeck[]> {
+    await this.ensureDefaultOwnership(userId);
+
+    const [user, ownerships, decks] = await Promise.all([
+      prisma.user.findUnique({
+        where: { id: userId },
+        select: {
+          selectedCardDeckId: true
+        }
+      }),
+      prisma.userCardDeck.findMany({
+        where: { userId },
+        select: {
+          deckId: true,
+          createdAt: true
+        }
+      }),
+      prisma.cardDeck.findMany({
+        include: {
+          _count: {
+            select: {
+              owners: true
+            }
+          }
+        },
+        orderBy: [{ enabled: 'desc' }, { price: 'asc' }, { createdAt: 'asc' }]
+      })
+    ]);
+
+    if (!user) {
+      throw new HttpError(404, 'User was not found.');
+    }
+
+    const ownershipByDeckId = new Map(ownerships.map((entry) => [entry.deckId, entry.createdAt]));
+
     return decks.map((deck) => ({
-      id: deck.id,
-      name: deck.name,
-      price: deck.price,
-      backImageUrl: deck.backImageUrl,
-      faceImageTemplate: deck.faceImageTemplate,
-      isDefault: deck.isDefault,
-      enabled: deck.enabled,
-      purchaseCount: deck._count.owners,
-      createdAt: deck.createdAt,
-      updatedAt: deck.updatedAt
+      ...mapAdminCardDeck(deck),
+      owned: ownershipByDeckId.has(deck.id) || deck.isDefault,
+      selected: user.selectedCardDeckId === deck.id,
+      grantedAt: ownershipByDeckId.get(deck.id) || null
     }));
   }
 
@@ -360,18 +422,7 @@ export class CardDeckService {
       }
     });
 
-    return {
-      id: deck.id,
-      name: deck.name,
-      price: deck.price,
-      backImageUrl: deck.backImageUrl,
-      faceImageTemplate: deck.faceImageTemplate,
-      isDefault: deck.isDefault,
-      enabled: deck.enabled,
-      purchaseCount: deck._count.owners,
-      createdAt: deck.createdAt,
-      updatedAt: deck.updatedAt
-    };
+    return mapAdminCardDeck(deck);
   }
 
   async setDefaultForAdmin(deckId: string): Promise<AdminCardDeck> {
@@ -442,17 +493,90 @@ export class CardDeckService {
       return updatedDefault;
     });
 
+    return mapAdminCardDeck(result);
+  }
+
+  async grantForAdmin(
+    userId: string,
+    deckId: string,
+    options?: { select?: boolean }
+  ): Promise<{ user: PublicUser; decks: AdminUserCardDeck[] }> {
+    await this.ensureDefaultOwnership(userId);
+
+    const normalizedDeckId = normalizeDeckId(deckId);
+    const shouldSelect = Boolean(options?.select);
+
+    const [user, deck, ownership] = await Promise.all([
+      prisma.user.findUnique({
+        where: { id: userId }
+      }),
+      prisma.cardDeck.findUnique({
+        where: { id: normalizedDeckId }
+      }),
+      prisma.userCardDeck.findUnique({
+        where: {
+          userId_deckId: {
+            userId,
+            deckId: normalizedDeckId
+          }
+        }
+      })
+    ]);
+
+    if (!user) {
+      throw new HttpError(404, 'User was not found.');
+    }
+
+    if (!deck) {
+      throw new HttpError(404, 'That card deck was not found.');
+    }
+
+    const createdOwnership = !ownership && !deck.isDefault;
+    const selectionChanged = user.selectedCardDeckId !== normalizedDeckId;
+
+    const updatedUser = await prisma.$transaction(async (tx) => {
+      if (createdOwnership) {
+        await tx.userCardDeck.create({
+          data: {
+            userId,
+            deckId: normalizedDeckId
+          }
+        });
+      }
+
+      if (createdOwnership || (shouldSelect && selectionChanged)) {
+        await tx.gameHistory.create({
+          data: {
+            userId,
+            gameType: GameType.ADMIN,
+            betAmount: 0,
+            result: createdOwnership && shouldSelect
+              ? 'ADMIN_CARD_DECK_GRANT_AND_SELECT'
+              : createdOwnership
+                ? 'ADMIN_CARD_DECK_GRANT'
+                : 'ADMIN_CARD_DECK_SELECT',
+            balanceChange: 0
+          }
+        });
+      }
+
+      if (shouldSelect && selectionChanged) {
+        return tx.user.update({
+          where: { id: userId },
+          data: {
+            selectedCardDeckId: normalizedDeckId
+          }
+        });
+      }
+
+      return tx.user.findUniqueOrThrow({
+        where: { id: userId }
+      });
+    });
+
     return {
-      id: result.id,
-      name: result.name,
-      price: result.price,
-      backImageUrl: result.backImageUrl,
-      faceImageTemplate: result.faceImageTemplate,
-      isDefault: result.isDefault,
-      enabled: result.enabled,
-      purchaseCount: result._count.owners,
-      createdAt: result.createdAt,
-      updatedAt: result.updatedAt
+      user: toPublicUser(updatedUser),
+      decks: await this.listForAdminUser(userId)
     };
   }
 }

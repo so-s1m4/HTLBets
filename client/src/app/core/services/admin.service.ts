@@ -2,7 +2,7 @@ import { inject, Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
 
-import type { AdminCardDeck, GameHistoryRecord, User } from '../models/user.model';
+import type { AdminCardDeck, AdminUserCardDeck, AdminUserDeckMutationResponse, GameHistoryRecord, User } from '../models/user.model';
 import { AppConfigService } from './app-config.service';
 
 @Injectable({
@@ -22,6 +22,30 @@ export class AdminService {
 
   setBalance(userId: string, balance: number): Promise<User> {
     return firstValueFrom(this.http.patch<User>(`${this.config.apiUrl}/admin/users/${userId}/balance`, { balance }));
+  }
+
+  setUserBanState(userId: string, banned: boolean): Promise<User> {
+    return firstValueFrom(this.http.post<User>(`${this.config.apiUrl}/admin/users/${userId}/ban`, { banned }));
+  }
+
+  wipeUser(userId: string): Promise<User> {
+    return firstValueFrom(this.http.post<User>(`${this.config.apiUrl}/admin/users/${userId}/wipe`, {}));
+  }
+
+  deleteUser(userId: string): Promise<{ deletedUserId: string }> {
+    return firstValueFrom(this.http.delete<{ deletedUserId: string }>(`${this.config.apiUrl}/admin/users/${userId}`));
+  }
+
+  listUserCardDecks(userId: string): Promise<AdminUserCardDeck[]> {
+    return firstValueFrom(this.http.get<AdminUserCardDeck[]>(`${this.config.apiUrl}/admin/users/${userId}/card-decks`));
+  }
+
+  grantCardDeck(userId: string, deckId: string, options?: { select?: boolean }): Promise<AdminUserDeckMutationResponse> {
+    return firstValueFrom(
+      this.http.post<AdminUserDeckMutationResponse>(`${this.config.apiUrl}/admin/users/${userId}/card-decks/${deckId}/grant`, {
+        select: Boolean(options?.select)
+      })
+    );
   }
 
   listCardDecks(): Promise<AdminCardDeck[]> {

@@ -2,6 +2,7 @@ import { GameType } from '../../../generated/prisma';
 import { prisma } from '../../prisma/client';
 import { env } from '../../config/env';
 import { HttpError } from '../../utils/http-error';
+import { isAdminEmail } from '../../utils/admin';
 import { dailyRewardsService } from './daily-rewards.service';
 import {
   type PublicLeaderboard,
@@ -12,11 +13,25 @@ import {
   type PublicGameHistory,
   type PublicUser
 } from './user.model';
-import { cardDeckService, type AdminCardDeck, type PublicCardDeck } from './card-deck.service';
+import { cardDeckService, DEFAULT_CARD_DECK_ID, type AdminCardDeck, type AdminUserCardDeck, type PublicCardDeck } from './card-deck.service';
 import { pokerTableManager } from '../games/poker/poker-table.manager';
+
+const DEFAULT_USER_BALANCE = 1000;
 
 class UserService {
   async getCurrentUser(userId: string): Promise<PublicUser> {
+    const user = await prisma.user.findUnique({
+      where: { id: userId }
+    });
+
+    if (!user) {
+      throw new HttpError(404, 'User was not found.');
+    }
+
+    if (user.bannedAt) {
+      throw new HttpError(403, 'This account has been suspended by an administrator.');
+    }
+
     await cardDeckService.ensureDefaultOwnership(userId);
     return toPublicUser(await dailyRewardsService.grantDailyLoginBonus(userId));
   }
@@ -65,6 +80,10 @@ class UserService {
     return cardDeckService.listForAdmin();
   }
 
+  async listAdminUserCardDecks(userId: string): Promise<AdminUserCardDeck[]> {
+    return cardDeckService.listForAdminUser(userId);
+  }
+
   async importAdminCardDeck(payload?: Record<string, unknown>): Promise<AdminCardDeck> {
     return cardDeckService.importForAdmin(payload);
   }
@@ -83,6 +102,26 @@ class UserService {
     }
 
     return nextDefault;
+  }
+
+  async grantAdminCardDeck(
+    userId: string,
+    deckId: string,
+    options?: { select?: boolean }
+  ): Promise<{ user: PublicUser; decks: AdminUserCardDeck[] }> {
+    const result = await cardDeckService.grantForAdmin(userId, deckId, options);
+    const selectedDeck = result.decks.find((deck) => deck.selected);
+
+    if (selectedDeck) {
+      pokerTableManager.updateUserCardDeck(
+        userId,
+        selectedDeck.id,
+        selectedDeck.backImageUrl,
+        selectedDeck.faceImageTemplate
+      );
+    }
+
+    return result;
   }
 
   async claimDailyTask(userId: string, taskKey: string): Promise<{ user: PublicUser; task: PublicDailyTask }> {
@@ -195,7 +234,7 @@ class UserService {
       throw new HttpError(400, 'Balance must be a non-negative whole number.');
     }
 
-    const [actor, user] = await Promise.all([
+    const [actor, targetUser] = await Promise.all([
       prisma.user.findUnique({
         where: { id: actorUserId }
       }),
@@ -204,9 +243,7 @@ class UserService {
       })
     ]);
 
-    if (!actor || !user) {
-      throw new HttpError(404, 'User was not found.');
-    }
+    const { user } = this.requireAdminActorAndTarget(actor, targetUser, { allowSelf: false, allowAdminTarget: true });
 
     const balanceChange = balance - user.balance;
 
@@ -232,6 +269,156 @@ class UserService {
     });
 
     return toPublicUser(updatedUser);
+  }
+
+  async setUserBanState(actorUserId: string, userId: string, banned: boolean): Promise<PublicUser> {
+    const [actor, targetUser] = await Promise.all([
+      prisma.user.findUnique({
+        where: { id: actorUserId }
+      }),
+      prisma.user.findUnique({
+        where: { id: userId }
+      })
+    ]);
+
+    const { user } = this.requireAdminActorAndTarget(actor, targetUser, { allowSelf: false, allowAdminTarget: false });
+
+    if (Boolean(user.bannedAt) === banned) {
+      return toPublicUser(user);
+    }
+
+    const updatedUser = await prisma.$transaction(async (tx) => {
+      const nextUser = await tx.user.update({
+        where: { id: userId },
+        data: {
+          bannedAt: banned ? new Date() : null
+        }
+      });
+
+      await tx.gameHistory.create({
+        data: {
+          userId,
+          gameType: GameType.ADMIN,
+          betAmount: 0,
+          result: banned ? 'ADMIN_BAN' : 'ADMIN_UNBAN',
+          balanceChange: 0
+        }
+      });
+
+      return nextUser;
+    });
+
+    return toPublicUser(updatedUser);
+  }
+
+  async wipeUser(actorUserId: string, userId: string): Promise<PublicUser> {
+    const [actor, targetUser, defaultDeck] = await Promise.all([
+      prisma.user.findUnique({
+        where: { id: actorUserId }
+      }),
+      prisma.user.findUnique({
+        where: { id: userId }
+      }),
+      cardDeckService.getDefaultDeck()
+    ]);
+
+    this.requireAdminActorAndTarget(actor, targetUser, { allowSelf: false, allowAdminTarget: false });
+
+    const defaultDeckId = defaultDeck?.id || DEFAULT_CARD_DECK_ID;
+
+    await pokerTableManager.leaveTable(userId);
+
+    const updatedUser = await prisma.$transaction(async (tx) => {
+      await tx.gameSession.deleteMany({
+        where: { userId }
+      });
+
+      await tx.gameHistory.deleteMany({
+        where: { userId }
+      });
+
+      await tx.dailyTaskClaim.deleteMany({
+        where: { userId }
+      });
+
+      await tx.userCardDeck.deleteMany({
+        where: {
+          userId,
+          deckId: {
+            not: defaultDeckId
+          }
+        }
+      });
+
+      await tx.userCardDeck.upsert({
+        where: {
+          userId_deckId: {
+            userId,
+            deckId: defaultDeckId
+          }
+        },
+        update: {},
+        create: {
+          userId,
+          deckId: defaultDeckId
+        }
+      });
+
+      const nextUser = await tx.user.update({
+        where: { id: userId },
+        data: {
+          balance: DEFAULT_USER_BALANCE,
+          selectedCardDeckId: defaultDeckId,
+          lastDailyLoginAt: null
+        }
+      });
+
+      await tx.gameHistory.create({
+        data: {
+          userId,
+          gameType: GameType.ADMIN,
+          betAmount: 0,
+          result: 'ADMIN_WIPE',
+          balanceChange: 0
+        }
+      });
+
+      return nextUser;
+    });
+
+    if (defaultDeck) {
+      pokerTableManager.updateUserCardDeck(
+        userId,
+        defaultDeck.id,
+        defaultDeck.backImageUrl,
+        defaultDeck.faceImageTemplate
+      );
+    }
+
+    return toPublicUser(updatedUser);
+  }
+
+  async deleteUser(actorUserId: string, userId: string): Promise<{ deletedUserId: string }> {
+    const [actor, targetUser] = await Promise.all([
+      prisma.user.findUnique({
+        where: { id: actorUserId }
+      }),
+      prisma.user.findUnique({
+        where: { id: userId }
+      })
+    ]);
+
+    this.requireAdminActorAndTarget(actor, targetUser, { allowSelf: false, allowAdminTarget: false });
+
+    await pokerTableManager.leaveTable(userId);
+
+    await prisma.user.delete({
+      where: { id: userId }
+    });
+
+    return {
+      deletedUserId: userId
+    };
   }
 
   async updateProfile(userId: string, input: { username?: string; avatarUrl?: string | null }): Promise<PublicUser> {
@@ -273,6 +460,26 @@ class UserService {
     });
 
     return toPublicUser(user);
+  }
+
+  private requireAdminActorAndTarget<TUser extends { id: string; email: string; bannedAt: Date | null }>(
+    actor: { id: string; email: string } | null,
+    user: TUser | null,
+    options?: { allowSelf?: boolean; allowAdminTarget?: boolean }
+  ): { actor: { id: string; email: string }; user: TUser } {
+    if (!actor || !user) {
+      throw new HttpError(404, 'User was not found.');
+    }
+
+    if (!options?.allowSelf && actor.id === user.id) {
+      throw new HttpError(400, 'You cannot perform this action on your own account.');
+    }
+
+    if (!options?.allowAdminTarget && isAdminEmail(user.email)) {
+      throw new HttpError(400, 'Administrator accounts cannot be modified with this action.');
+    }
+
+    return { actor, user };
   }
 }
 

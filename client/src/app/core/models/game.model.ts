@@ -1,5 +1,5 @@
-export type GameSlug = 'roulette' | 'blackjack' | 'poker' | 'miner' | 'slots';
-export type GameType = 'ROULETTE' | 'BLACKJACK' | 'POKER' | 'MINER' | 'SLOTS' | 'ADMIN';
+export type GameSlug = 'roulette' | 'blackjack' | 'poker' | 'miner' | 'crash' | 'slots';
+export type GameType = 'ROULETTE' | 'BLACKJACK' | 'POKER' | 'MINER' | 'CRASH' | 'SLOTS' | 'ADMIN';
 export type GameStatus = 'IDLE' | 'WAITING_ACTION' | 'COMPLETED';
 
 export interface GameOutcome {
@@ -109,6 +109,19 @@ export interface MinerViewState {
   cells: MinerCellView[];
 }
 
+export interface CrashHistoryEntry {
+  result: string;
+  multiplier: number;
+}
+
+export interface CrashViewState {
+  phase: 'ready' | 'live' | 'resolved';
+  startTime: string | null;
+  lastSettledMultiplier: number;
+  message: string;
+  history: CrashHistoryEntry[];
+}
+
 export interface SlotsMachineSummary {
   id: string;
   name: string;
@@ -138,6 +151,7 @@ export const gameSlugToType: Record<GameSlug, GameType> = {
   blackjack: 'BLACKJACK',
   poker: 'POKER',
   miner: 'MINER',
+  crash: 'CRASH',
   slots: 'SLOTS'
 };
 
@@ -146,6 +160,7 @@ export const gameTypeLabels: Record<GameType, string> = {
   BLACKJACK: 'Blackjack',
   POKER: 'Poker',
   MINER: 'Miner',
+  CRASH: 'Crash',
   SLOTS: 'Slots',
   ADMIN: 'Admin'
 };

@@ -10,6 +10,7 @@ import type {
   GameResolution
 } from './game-engine.interface';
 import { BlackjackEngine } from '../blackjack/blackjack.engine';
+import { CrashEngine } from '../crash/crash.engine';
 import { MinerEngine } from '../miner/miner.engine';
 import { PokerEngine } from '../poker/poker.engine';
 import { RouletteEngine } from '../roulette/roulette.engine';
@@ -18,7 +19,7 @@ import { SlotsEngine } from '../slots/slots.engine';
 const toJsonValue = (value: unknown): Prisma.InputJsonValue =>
   JSON.parse(JSON.stringify(value)) as Prisma.InputJsonValue;
 
-type RealtimeGameType = 'ROULETTE' | 'BLACKJACK' | 'POKER' | 'MINER' | 'SLOTS';
+type RealtimeGameType = 'ROULETTE' | 'BLACKJACK' | 'POKER' | 'MINER' | 'CRASH' | 'SLOTS';
 
 export interface JoinGameInput {
   userId: string;
@@ -59,6 +60,7 @@ export const parseGameType = (value: string): RealtimeGameType => {
     normalized === GameType.BLACKJACK ||
     normalized === GameType.POKER ||
     normalized === GameType.MINER ||
+    normalized === GameType.CRASH ||
     normalized === GameType.SLOTS
   ) {
     return normalized as RealtimeGameType;
@@ -73,30 +75,42 @@ class GameRoomManager {
     [GameType.BLACKJACK]: new BlackjackEngine(),
     [GameType.POKER]: new PokerEngine(),
     [GameType.MINER]: new MinerEngine(),
+    [GameType.CRASH]: new CrashEngine(),
     [GameType.SLOTS]: new SlotsEngine()
   };
 
   async joinGame(input: JoinGameInput): Promise<GameStateEnvelope> {
-    const user = await this.getUser(input.userId);
-    const session = await this.getOrCreateSession(input);
+    let user = await this.getUser(input.userId);
+    let session = await this.getOrCreateSession(input);
     const engine = this.engines[input.gameType];
+    const synchronized = await this.synchronizeSessionIfNeeded(user, session, engine);
+
+    user = synchronized.user;
+    session = synchronized.session;
+
+    if (synchronized.envelope) {
+      return synchronized.envelope;
+    }
 
     return this.buildEnvelope(user.balance, session, engine);
   }
 
   async placeBet(input: BetOperationInput): Promise<GameStateEnvelope> {
-    const user = await this.getUser(input.userId);
-
     if (input.amount <= 0) {
       throw new HttpError(400, 'Bet amount must be greater than zero.');
     }
 
+    let user = await this.getUser(input.userId);
+    let session = await this.getOrCreateSession(input);
+    const engine = this.engines[input.gameType];
+    const synchronized = await this.synchronizeSessionIfNeeded(user, session, engine);
+
+    user = synchronized.user;
+    session = synchronized.session;
+
     if (input.amount > user.balance) {
       throw new HttpError(400, 'Insufficient demo balance for this bet.');
     }
-
-    const session = await this.getOrCreateSession(input);
-    const engine = this.engines[input.gameType];
     const result = engine.handleBet(
       {
         sessionId: session.id,
@@ -114,9 +128,18 @@ class GameRoomManager {
   }
 
   async performAction(input: ActionOperationInput): Promise<GameStateEnvelope> {
-    const user = await this.getUser(input.userId);
-    const session = await this.requireSession(input.userId, input.gameType, input.sessionId);
+    let user = await this.getUser(input.userId);
+    let session = await this.requireSession(input.userId, input.gameType, input.sessionId);
     const engine = this.engines[input.gameType];
+    const synchronized = await this.synchronizeSessionIfNeeded(user, session, engine);
+
+    user = synchronized.user;
+    session = synchronized.session;
+
+    if (synchronized.envelope) {
+      return synchronized.envelope;
+    }
+
     const result = engine.handleAction(
       {
         sessionId: session.id,
@@ -131,6 +154,19 @@ class GameRoomManager {
     );
 
     return this.persistResult(user, session, engine, result);
+  }
+
+  async getAutoResolveAt(input: JoinGameInput): Promise<number | null> {
+    const session = input.sessionId
+      ? await this.requireSession(input.userId, input.gameType, input.sessionId)
+      : await this.getOrCreateSession(input);
+    const engine = this.engines[input.gameType];
+
+    if (!engine.getAutoResolveAt) {
+      return null;
+    }
+
+    return engine.getAutoResolveAt(session.state as Record<string, unknown>);
   }
 
   private async getUser(userId: string): Promise<User> {
@@ -264,6 +300,41 @@ class GameRoomManager {
     });
 
     return this.buildEnvelope(user.balance, updatedSession, engine);
+  }
+
+  private async synchronizeSessionIfNeeded(
+    user: User,
+    session: GameSession,
+    engine: GameEngine<any>
+  ): Promise<{ user: User; session: GameSession; envelope: GameStateEnvelope | null }> {
+    if (!engine.synchronize) {
+      return { user, session, envelope: null };
+    }
+
+    const result = engine.synchronize({
+      sessionId: session.id,
+      user,
+      state: session.state as Record<string, unknown>,
+      currentBet: session.currentBet
+    });
+
+    if (!result) {
+      return { user, session, envelope: null };
+    }
+
+    const envelope = await this.persistResult(user, session, engine, result);
+    const [updatedUser, updatedSession] = await Promise.all([
+      this.getUser(user.id),
+      prisma.gameSession.findUniqueOrThrow({
+        where: { id: session.id }
+      })
+    ]);
+
+    return {
+      user: updatedUser,
+      session: updatedSession,
+      envelope
+    };
   }
 
   private buildEnvelope(balance: number, session: GameSession, engine: GameEngine<any>): GameStateEnvelope {

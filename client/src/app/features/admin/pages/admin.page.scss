@@ -1,19 +1,306 @@
-    .admin-hero,
-    .admin-toolbar,
-    .admin-user-card,
-    .admin-history {
-      display: grid;
-      gap: 1rem;
-    }
-
-    .admin-toolbar {
-      grid-template-columns: minmax(0, 1fr) auto;
-      align-items: end;
-    }
-
-.admin-grid {
+.admin-hero,
+.admin-tabbar,
+.admin-toolbar,
+.admin-user-card,
+.admin-history,
+.admin-player-hero,
+.admin-player-hero__identity,
+.admin-player-hero__stats {
   display: grid;
   gap: 1rem;
+}
+
+.admin-tabbar {
+  gap: 1.25rem;
+}
+
+.admin-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.admin-tab {
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  min-width: 11rem;
+  padding: 0.95rem 1rem;
+  border: 1px solid rgba(149, 171, 211, 0.14);
+  border-radius: 999px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0)),
+    linear-gradient(180deg, rgba(14, 21, 34, 0.98), rgba(9, 15, 25, 0.98));
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: transform 180ms ease, border-color 180ms ease, box-shadow 180ms ease;
+}
+
+.admin-tab:hover {
+  transform: translateY(-1px);
+  border-color: rgba(125, 227, 255, 0.3);
+}
+
+.admin-tab--active {
+  border-color: rgba(125, 227, 255, 0.5);
+  box-shadow: 0 0 0 1px rgba(125, 227, 255, 0.12), 0 16px 32px rgba(4, 10, 18, 0.24);
+}
+
+.admin-overview-grid,
+.admin-player-layout,
+.admin-player-grid,
+.admin-history-layout {
+  display: grid;
+  gap: 1rem;
+}
+
+.admin-quick-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.admin-overview-meta {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+}
+
+.admin-meta-label {
+  display: block;
+  margin-bottom: 0.35rem;
+  color: var(--text-secondary);
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.admin-toolbar {
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: end;
+}
+
+.admin-toolbar--stacked {
+  grid-template-columns: 1fr;
+}
+
+.admin-user-rail,
+.admin-user-picker,
+.admin-player-decks,
+.admin-deck-list {
+  display: grid;
+  gap: 0.85rem;
+}
+
+.admin-user-rail__item,
+.admin-user-picker__item {
+  width: 100%;
+  padding: 0.95rem 1rem;
+  border: 1px solid rgba(149, 171, 211, 0.12);
+  border-radius: var(--radius-md);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0)),
+    linear-gradient(180deg, rgba(16, 23, 36, 0.98), rgba(11, 17, 27, 0.98));
+  color: var(--text-primary);
+  text-align: left;
+  cursor: pointer;
+  transition: transform 180ms ease, border-color 180ms ease, box-shadow 180ms ease;
+}
+
+.admin-user-rail__item:hover,
+.admin-user-picker__item:hover {
+  transform: translateY(-1px);
+  border-color: rgba(125, 227, 255, 0.26);
+}
+
+.admin-user-rail__item--active,
+.admin-user-picker__item--active {
+  border-color: rgba(125, 227, 255, 0.46);
+  box-shadow: 0 0 0 1px rgba(125, 227, 255, 0.12), 0 16px 32px rgba(4, 10, 18, 0.24);
+}
+
+.admin-user-rail__item,
+.admin-user-rail__identity,
+.admin-user-rail__meta,
+.admin-user-picker__item,
+.admin-player-deck__header,
+.admin-player-deck__actions,
+.admin-player-deck__meta,
+.admin-user-card__header,
+.admin-user-card__actions,
+.admin-history__item,
+.admin-history__values,
+.admin-deck-card__meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.admin-user-rail__avatar,
+.admin-player-hero__avatar {
+  display: grid;
+  place-items: center;
+  width: 3rem;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.25), transparent 42%),
+    linear-gradient(135deg, rgba(93, 168, 255, 0.95), rgba(125, 227, 255, 0.78), rgba(136, 123, 255, 0.7));
+  color: #07111e;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  box-shadow: 0 12px 24px rgba(10, 18, 32, 0.28);
+}
+
+.admin-player-hero__avatar {
+  width: 4rem;
+}
+
+.admin-user-rail__item strong,
+.admin-user-rail__item p,
+.admin-user-picker__item strong,
+.admin-user-picker__item p,
+.admin-player-deck__header p,
+.admin-history__item strong,
+.admin-history__item p {
+  margin: 0;
+}
+
+.admin-player-hero {
+  grid-template-columns: minmax(0, 1.2fr) minmax(260px, 0.9fr);
+  align-items: center;
+}
+
+.admin-player-hero__identity {
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+}
+
+.admin-player-hero__stats {
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+}
+
+.admin-player-chip {
+  display: grid;
+  gap: 0.2rem;
+  padding: 0.9rem 1rem;
+  border-radius: 1rem;
+  border: 1px solid rgba(149, 171, 211, 0.14);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0)),
+    linear-gradient(180deg, rgba(11, 17, 27, 0.95), rgba(7, 12, 20, 0.95));
+}
+
+.admin-player-chip__label {
+  color: var(--text-secondary);
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.admin-moderation {
+  display: grid;
+  gap: 0.85rem;
+  padding: 1rem;
+  border-radius: 1rem;
+  border: 1px solid rgba(149, 171, 211, 0.12);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0)),
+    linear-gradient(180deg, rgba(11, 17, 27, 0.92), rgba(7, 12, 20, 0.92));
+}
+
+.admin-moderation__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.admin-player-decks {
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+}
+
+.admin-player-deck {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: 92px minmax(0, 1fr);
+  padding: 1rem;
+  border-radius: var(--radius-lg);
+  border: 1px solid rgba(149, 171, 211, 0.12);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0)),
+    linear-gradient(180deg, rgba(16, 23, 36, 0.98), rgba(11, 17, 27, 0.98));
+}
+
+.admin-player-deck--owned {
+  border-color: rgba(125, 227, 255, 0.18);
+}
+
+.admin-player-deck--selected {
+  border-color: rgba(125, 227, 255, 0.45);
+  box-shadow: 0 0 0 1px rgba(125, 227, 255, 0.14), 0 18px 32px rgba(4, 10, 18, 0.28);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0)),
+    radial-gradient(circle at top right, rgba(93, 168, 255, 0.16), transparent 42%),
+    linear-gradient(180deg, rgba(18, 27, 42, 0.98), rgba(11, 16, 25, 0.98));
+}
+
+.admin-player-deck__preview,
+.admin-deck-card__preview {
+  display: grid;
+  place-items: center;
+  padding: 0.9rem;
+  border-radius: 1rem;
+  border: 1px solid rgba(149, 171, 211, 0.12);
+  background: linear-gradient(180deg, rgba(8, 13, 24, 0.96), rgba(14, 19, 30, 0.94));
+}
+
+.admin-player-deck__preview {
+  min-height: 8rem;
+}
+
+.admin-player-deck__preview img,
+.admin-deck-card__preview img {
+  width: 100%;
+  object-fit: contain;
+  display: block;
+}
+
+.admin-deck-card__preview img {
+  max-width: 7rem;
+}
+
+.admin-player-deck__content,
+.admin-deck-card__fields,
+.admin-user-card__controls {
+  display: grid;
+  gap: 0.9rem;
+}
+
+.admin-history__item {
+  padding: 0.95rem 1rem;
+  border-radius: var(--radius-md);
+  border: 1px solid rgba(149, 171, 211, 0.12);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0)),
+    linear-gradient(180deg, rgba(16, 23, 36, 0.98), rgba(11, 17, 27, 0.98));
+}
+
+.admin-history--compact .admin-history__item {
+  padding: 0.85rem 0.95rem;
+}
+
+.admin-history__item--admin {
+  border-color: rgba(255, 199, 116, 0.18);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0)),
+    linear-gradient(180deg, rgba(45, 33, 14, 0.98), rgba(22, 16, 8, 0.98));
+}
+
+.admin-history__adjustment {
+  color: #ffd18a;
 }
 
 .admin-deck-import {
@@ -21,11 +308,6 @@
   gap: 1rem;
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
   align-items: end;
-}
-
-.admin-deck-list {
-  display: grid;
-  gap: 1rem;
 }
 
 .admin-deck-card {
@@ -40,36 +322,6 @@
     linear-gradient(180deg, rgba(16, 23, 36, 0.98), rgba(11, 17, 27, 0.98));
 }
 
-.admin-deck-card__preview {
-  display: grid;
-  place-items: center;
-  min-height: 9rem;
-  padding: 1rem;
-  border-radius: 1rem;
-  border: 1px solid rgba(149, 171, 211, 0.12);
-  background: linear-gradient(180deg, rgba(8, 13, 24, 0.96), rgba(14, 19, 30, 0.94));
-}
-
-.admin-deck-card__preview img {
-  width: 100%;
-  max-width: 7rem;
-  object-fit: contain;
-  display: block;
-}
-
-.admin-deck-card__fields {
-  display: grid;
-  gap: 0.9rem;
-}
-
-.admin-deck-card__meta {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.75rem;
-  flex-wrap: wrap;
-}
-
 .admin-toggle {
   display: inline-flex;
   align-items: center;
@@ -81,64 +333,57 @@
   accent-color: #7de3ff;
 }
 
-    .admin-user-card__header,
-    .admin-user-card__actions,
-    .admin-history__item,
-    .admin-history__values {
-      display: flex;
-      gap: 0.75rem;
-      align-items: center;
-      justify-content: space-between;
-      flex-wrap: wrap;
-    }
+@media (min-width: 980px) {
+  .admin-overview-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    align-items: start;
+  }
 
-    .admin-user-card__controls {
-      display: grid;
-      gap: 0.9rem;
-    }
+  .admin-player-layout {
+    grid-template-columns: minmax(300px, 0.8fr) minmax(0, 1.45fr);
+    align-items: start;
+  }
 
-    .admin-history__item {
-      padding: 0.95rem 1rem;
-      border-radius: var(--radius-md);
-      border: 1px solid rgba(149, 171, 211, 0.12);
-      background:
-        linear-gradient(180deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0)),
-        linear-gradient(180deg, rgba(16, 23, 36, 0.98), rgba(11, 17, 27, 0.98));
-    }
+  .admin-player-grid {
+    grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+    align-items: start;
+  }
 
-    .admin-history__item--admin {
-      border-color: rgba(255, 199, 116, 0.18);
-      background:
-        linear-gradient(180deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0)),
-        linear-gradient(180deg, rgba(45, 33, 14, 0.98), rgba(22, 16, 8, 0.98));
-    }
+  .admin-history-layout {
+    grid-template-columns: minmax(300px, 0.85fr) minmax(0, 1.35fr);
+    align-items: start;
+  }
+}
 
-    .admin-history__item strong,
-    .admin-history__item p {
-      margin: 0;
-    }
-
-    .admin-history__adjustment {
-      color: #ffd18a;
-    }
-
-    @media (min-width: 980px) {
-      .admin-grid {
-        grid-template-columns: minmax(0, 1.4fr) minmax(320px, 0.9fr);
-        align-items: start;
-      }
-    }
-
-@media (max-width: 640px) {
-  .admin-toolbar {
+@media (max-width: 900px) {
+  .admin-player-hero {
     grid-template-columns: 1fr;
   }
 
-  .admin-user-card__actions {
-    flex-direction: column;
+  .admin-player-hero__stats {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 720px) {
+  .admin-tab {
+    min-width: 0;
+    width: 100%;
   }
 
+  .admin-player-deck,
   .admin-deck-card {
     grid-template-columns: 1fr;
+  }
+
+  .admin-user-rail__item,
+  .admin-user-rail__meta,
+  .admin-moderation__actions,
+  .admin-player-deck__actions,
+  .admin-user-card__actions,
+  .admin-history__item,
+  .admin-history__values {
+    align-items: stretch;
+    flex-direction: column;
   }
 }

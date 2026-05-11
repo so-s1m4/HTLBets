@@ -3,6 +3,7 @@ import type { Server as HttpServer } from 'node:http';
 import { Server, type Socket } from 'socket.io';
 
 import { env } from '../../config/env';
+import { prisma } from '../../prisma/client';
 import {
   gameRoomManager,
   parseGameType,
@@ -17,6 +18,7 @@ import { socketEvents } from './socket.events';
 
 const getRoomName = (gameType: string, sessionId: string): string => `game:${gameType}:${sessionId}`;
 const pokerRoomPrefix = 'game:POKER:';
+const crashTimers = new Map<string, NodeJS.Timeout>();
 
 export const createSocketServer = (httpServer: HttpServer): Server => {
   const io = new Server(httpServer, {
@@ -39,6 +41,7 @@ export const createSocketServer = (httpServer: HttpServer): Server => {
   io.on('connection', (socket) => {
     socket.on(socketEvents.join, async (payload: { gameType: string; sessionId?: string }) => {
       try {
+        await assertSocketUserActive(socket);
         const gameType = parseGameType(payload.gameType);
 
         if (gameType === 'ROULETTE') {
@@ -65,6 +68,10 @@ export const createSocketServer = (httpServer: HttpServer): Server => {
 
         socket.join(getRoomName(state.gameType, state.sessionId));
         socket.emit(socketEvents.state, state);
+
+        if (state.gameType === 'CRASH') {
+          await syncCrashSchedule(io, socket.data.user.userId, state.sessionId, state.status === 'WAITING_ACTION');
+        }
       } catch (error) {
         emitGameError(socket, error);
       }
@@ -72,6 +79,7 @@ export const createSocketServer = (httpServer: HttpServer): Server => {
 
     socket.on(socketEvents.leave, async (payload: { gameType: string; sessionId: string }) => {
       try {
+        await assertSocketUserActive(socket);
         const gameType = parseGameType(payload.gameType);
 
         if (gameType === 'ROULETTE') {
@@ -93,6 +101,7 @@ export const createSocketServer = (httpServer: HttpServer): Server => {
 
     socket.on(socketEvents.bet, async (payload: { gameType: string; sessionId?: string; amount: number; payload?: Record<string, unknown> }) => {
       try {
+        await assertSocketUserActive(socket);
         const request: BetOperationInput = {
           userId: socket.data.user.userId,
           gameType: parseGameType(payload.gameType),
@@ -116,6 +125,10 @@ export const createSocketServer = (httpServer: HttpServer): Server => {
         const room = getRoomName(state.gameType, state.sessionId);
         socket.join(room);
         io.to(room).emit(socketEvents.state, state);
+
+        if (state.gameType === 'CRASH') {
+          await syncCrashSchedule(io, request.userId, state.sessionId, state.status === 'WAITING_ACTION');
+        }
       } catch (error) {
         emitGameError(socket, error);
       }
@@ -125,6 +138,7 @@ export const createSocketServer = (httpServer: HttpServer): Server => {
       socketEvents.action,
       async (payload: { gameType: string; sessionId: string; action: string; payload?: Record<string, unknown> }) => {
         try {
+          await assertSocketUserActive(socket);
           const request: ActionOperationInput = {
             userId: socket.data.user.userId,
             gameType: parseGameType(payload.gameType),
@@ -183,6 +197,10 @@ export const createSocketServer = (httpServer: HttpServer): Server => {
           const room = getRoomName(state.gameType, state.sessionId);
           socket.join(room);
           io.to(room).emit(socketEvents.state, state);
+
+          if (state.gameType === 'CRASH') {
+            await syncCrashSchedule(io, request.userId, state.sessionId, state.status === 'WAITING_ACTION');
+          }
         } catch (error) {
           emitGameError(socket, error);
         }
@@ -191,6 +209,21 @@ export const createSocketServer = (httpServer: HttpServer): Server => {
   });
 
   return io;
+};
+
+const assertSocketUserActive = async (socket: Socket): Promise<void> => {
+  const user = await prisma.user.findUnique({
+    where: { id: socket.data.user.userId },
+    select: { id: true, bannedAt: true }
+  });
+
+  if (!user) {
+    throw new HttpError(401, 'Authentication token is invalid or expired.');
+  }
+
+  if (user.bannedAt) {
+    throw new HttpError(403, 'This account has been suspended by an administrator.');
+  }
 };
 
 const emitRouletteTableState = async (io: Server): Promise<void> => {
@@ -227,6 +260,60 @@ const syncPokerSocketSession = (socket: Socket, sessionId: string) => {
 
   socket.data.pokerSessionId = sessionId;
   socket.join(getRoomName('POKER', sessionId));
+};
+
+const clearCrashSchedule = (sessionId: string) => {
+  const timer = crashTimers.get(sessionId);
+  if (!timer) {
+    return;
+  }
+
+  clearTimeout(timer);
+  crashTimers.delete(sessionId);
+};
+
+const syncCrashSchedule = async (io: Server, userId: string, sessionId: string, isLive: boolean) => {
+  clearCrashSchedule(sessionId);
+
+  if (!isLive) {
+    return;
+  }
+
+  const autoResolveAt = await gameRoomManager.getAutoResolveAt({
+    userId,
+    gameType: 'CRASH',
+    sessionId
+  });
+
+  if (!autoResolveAt) {
+    return;
+  }
+
+  const delayMs = Math.max(0, autoResolveAt - Date.now()) + 25;
+  const timer = setTimeout(() => {
+    crashTimers.delete(sessionId);
+    void emitCrashRoomState(io, sessionId);
+  }, delayMs);
+
+  crashTimers.set(sessionId, timer);
+};
+
+const emitCrashRoomState = async (io: Server, sessionId: string) => {
+  const room = getRoomName('CRASH', sessionId);
+  const sockets = await io.in(room).fetchSockets();
+
+  await Promise.all(
+    sockets.map(async (socket) => {
+      const state = await gameRoomManager.joinGame({
+        userId: socket.data.user.userId,
+        gameType: 'CRASH',
+        sessionId
+      });
+
+      socket.emit(socketEvents.state, state);
+      await syncCrashSchedule(io, socket.data.user.userId, sessionId, state.status === 'WAITING_ACTION');
+    })
+  );
 };
 
 const emitGameError = (socket: Socket, error: unknown) => {

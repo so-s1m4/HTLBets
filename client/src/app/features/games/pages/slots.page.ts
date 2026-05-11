@@ -2,7 +2,6 @@ import { ChangeDetectionStrategy, Component, DestroyRef, computed, effect, injec
 
 import type { SlotsMachineSummary, SlotsViewState } from '../../../core/models/game.model';
 import { GameSocketService } from '../../../core/services/game-socket.service';
-import { AppButtonComponent } from '../../../shared/ui/app-button.component';
 import { AppCardComponent } from '../../../shared/ui/app-card.component';
 import { AppInputComponent } from '../../../shared/ui/app-input.component';
 import { CreditsPipe } from '../../../shared/pipes/credits.pipe';
@@ -27,7 +26,7 @@ const SYMBOL_LABELS: Record<string, string> = {
 @Component({
   selector: 'app-slots-page',
   standalone: true,
-  imports: [AppButtonComponent, AppCardComponent, AppInputComponent, CreditsPipe, GameShellComponent],
+  imports: [AppCardComponent, AppInputComponent, CreditsPipe, GameShellComponent],
   templateUrl: './slots.page.html',
   styleUrl: './slots.page.scss',
   changeDetection: ChangeDetectionStrategy.OnPush

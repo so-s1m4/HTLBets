@@ -1,0 +1,219 @@
+.crash-stage {
+  position: relative;
+  min-height: 34rem;
+  border-radius: var(--radius-xl);
+  overflow: hidden;
+}
+
+.crash-stage__surface {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at 16% 18%, rgba(111, 231, 255, 0.16), transparent 28%),
+    radial-gradient(circle at 82% 22%, rgba(255, 122, 89, 0.18), transparent 26%),
+    linear-gradient(180deg, rgba(12, 22, 37, 0.98), rgba(7, 12, 21, 1));
+}
+
+.crash-stage__content {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  gap: 1rem;
+  padding: 1rem;
+}
+
+.crash-stage__stats {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.crash-chart {
+  position: relative;
+  min-height: 18rem;
+  border-radius: 1.35rem;
+  border: 1px solid rgba(149, 171, 211, 0.14);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0)),
+    linear-gradient(180deg, rgba(9, 16, 28, 0.96), rgba(6, 10, 18, 0.98));
+  overflow: hidden;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+
+.crash-chart__grid {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(rgba(255, 255, 255, 0.04) 1px, transparent 1px) 0 0 / 100% 20%,
+    linear-gradient(90deg, rgba(255, 255, 255, 0.035) 1px, transparent 1px) 0 0 / 12% 100%;
+  mask-image: linear-gradient(180deg, rgba(0, 0, 0, 0.92), transparent);
+}
+
+.crash-chart__bars {
+  position: absolute;
+  inset: auto 8% 12% 8%;
+  display: flex;
+  align-items: end;
+  gap: 0.45rem;
+  height: 48%;
+}
+
+.crash-chart__bar {
+  flex: 1;
+  border-radius: 999px 999px 0 0;
+  background: linear-gradient(180deg, rgba(92, 106, 130, 0.28), rgba(55, 65, 84, 0.06));
+  transition: background 140ms ease, box-shadow 140ms ease, opacity 140ms ease;
+  opacity: 0.65;
+}
+
+.crash-chart__bar.is-active {
+  background: linear-gradient(180deg, rgba(111, 231, 255, 0.92), rgba(255, 122, 89, 0.82));
+  box-shadow: 0 0 20px rgba(111, 231, 255, 0.16);
+  opacity: 1;
+}
+
+.crash-chart__line {
+  position: absolute;
+  left: 8%;
+  bottom: 18%;
+  width: 70%;
+  height: 0.32rem;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #6fe7ff, #ffd166 58%, #ff7a59 100%);
+  transform-origin: left center;
+  transform: scaleX(calc(0.18 + var(--crash-progress, 0) * 0.82)) rotate(-18deg);
+  box-shadow:
+    0 0 24px rgba(111, 231, 255, 0.22),
+    0 0 38px rgba(255, 122, 89, 0.12);
+}
+
+.crash-chart__line::after {
+  content: '';
+  position: absolute;
+  right: -0.35rem;
+  top: 50%;
+  width: 0.85rem;
+  height: 0.85rem;
+  border-radius: 50%;
+  transform: translateY(-50%);
+  background: radial-gradient(circle at 35% 35%, #fff9ef, #ff916b 70%);
+  box-shadow: 0 0 20px rgba(255, 145, 107, 0.35);
+}
+
+.crash-chart__multiplier {
+  position: absolute;
+  inset: 50% auto auto 50%;
+  transform: translate(-50%, -50%);
+  display: grid;
+  gap: 0.45rem;
+  text-align: center;
+}
+
+.crash-chart__multiplier strong,
+.crash-chart__multiplier span {
+  margin: 0;
+}
+
+.crash-chart__multiplier strong {
+  font-size: clamp(3rem, 8vw, 5.5rem);
+  letter-spacing: -0.04em;
+  color: #f8fbff;
+  text-shadow:
+    0 0 30px rgba(111, 231, 255, 0.18),
+    0 0 42px rgba(255, 122, 89, 0.08);
+}
+
+.crash-chart__multiplier span {
+  color: var(--text-soft);
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  font-size: 0.78rem;
+  font-family: 'SF Mono', 'IBM Plex Mono', ui-monospace, monospace;
+}
+
+.crash-chart.is-live .crash-chart__multiplier strong {
+  color: #fff6e9;
+}
+
+.crash-chart.is-crashed .crash-chart__line {
+  background: linear-gradient(90deg, #ff9c8c, #ff5a5a);
+  box-shadow: 0 0 24px rgba(255, 90, 90, 0.18);
+}
+
+.crash-stage__overlay {
+  position: absolute;
+  top: 1rem;
+  left: 1rem;
+  right: 1rem;
+  z-index: 3;
+  display: flex;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.crash-status-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  width: min(100%, 24rem);
+  padding: 0.9rem 1rem;
+  border-radius: 1.1rem;
+  border: 1px solid rgba(149, 171, 211, 0.14);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0)),
+    rgba(10, 19, 28, 0.78);
+}
+
+.crash-status-banner strong,
+.crash-status-banner span {
+  margin: 0;
+}
+
+.crash-status-banner--loss {
+  border-color: rgba(255, 117, 143, 0.24);
+}
+
+.crash-status-banner--loss span {
+  color: var(--danger);
+}
+
+.crash-status-banner--win {
+  border-color: rgba(117, 243, 191, 0.24);
+}
+
+.crash-status-banner--win span {
+  color: var(--success);
+}
+
+.crash-stage__message {
+  margin: 0;
+}
+
+.crash-history {
+  display: grid;
+  gap: 0.6rem;
+}
+
+.crash-history__list {
+  display: flex;
+  gap: 0.55rem;
+  flex-wrap: wrap;
+}
+
+.crash-sidebar {
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translate(50%, -50%);
+}
+
+@media (max-width: 720px) {
+  .crash-chart {
+    min-height: 15rem;
+  }
+
+  .crash-chart__multiplier strong {
+    font-size: clamp(2.5rem, 11vw, 4rem);
+  }
+}
