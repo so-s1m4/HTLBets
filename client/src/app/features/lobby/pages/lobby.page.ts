@@ -59,6 +59,14 @@ export class LobbyPageComponent {
       badge: 'Live',
       availability: '25-tile board',
       theme: 'miner' as const
+    },
+    {
+      title: 'Slots',
+      description: 'Eight different slot automats with distinct volatility, symbol sets, and top-end payouts.',
+      route: '/games/slots',
+      badge: 'Live',
+      availability: '8 automats',
+      theme: 'slots' as const
     }
   ];
 

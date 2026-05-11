@@ -1,0 +1,106 @@
+<app-game-shell
+  title="Slots"
+  subtitle="Eight different slot automats with their own volatility and top-end payouts."
+  [connectionState]="socket.connectionState()"
+  [currentBet]="currentBet()"
+  [error]="socket.lastError() || ''"
+  [splitSidebar]="false"
+>
+  <app-card table>
+    <div class="slots-table">
+      <div class="slots-machines">
+        @for (machine of machines(); track machine.id) {
+          <button
+            type="button"
+            class="slots-machine"
+            [class.is-active]="selectedMachine() && selectedMachine()!.id === machine.id"
+            [style.--machine-accent]="machine.accent"
+            (click)="chooseMachine(machine.id)"
+          >
+            <strong>{{ machine.name }}</strong>
+            <span>{{ machine.volatility }} volatility</span>
+            <small>Top x{{ machine.topMultiplier }}</small>
+          </button>
+        }
+      </div>
+
+      <div class="slots-stage">
+        <div class="slots-stage__header">
+          <div class="page-heading">
+            <span class="page-heading__eyebrow">Selected Automat</span>
+            <h2>{{ selectedMachine() ? selectedMachine()!.name : 'Slots' }}</h2>
+            <p class="status-copy">{{ selectedMachine() ? selectedMachine()!.description : 'Choose a machine and spin.' }}</p>
+          </div>
+          <div class="slots-stage__meta">
+            <span class="pill">Volatility: {{ selectedMachine() ? selectedMachine()!.volatility : 'medium' }}</span>
+            <span class="pill">Payout: x{{ (viewState()?.payoutMultiplier || 0).toFixed(2) }}</span>
+            @if (isSpinning()) {
+              <span class="pill">Spinning</span>
+            }
+          </div>
+        </div>
+
+        <div class="slots-reels" [class.is-spinning]="isSpinning()">
+            <img class="slots--background" src="/SlotMachine.png" alt="">
+            <img class="slots--lever" src="/lever.png" (click) = "spin()" onClick="this.classList.add('is-pulled'); setTimeout(() => this.classList.remove('is-pulled'), 1000);" alt="">
+            <div class="slots-reels__viewport">
+
+                  @for (row of grid(); track $index; let rowIndex = $index) {
+                    <div class="slots-reels__row" [class.is-winning]="(viewState()?.winLines || []).includes(rowIndex)">
+                      @for (cell of row; track cell.key) {
+                        <div class="slots-reels__cell">{{ cell.symbol }}</div>
+                      }
+                    </div>
+                  }
+                </div>
+
+            @if (resultBanner(); as result) {
+                <div class="slots-table__overlay">
+                    <div class="slots-status-banner" [class.slots-status-banner--loss]="result.tone === 'loss'" [class.slots-status-banner--win]="result.tone === 'win'">
+                        <strong>{{ result.title }}</strong>
+                        <span>{{ result.amount | credits }}</span>
+                    </div>
+                </div>
+            }
+
+            <app-input
+                    class="slots--bet-input"
+                    label="Bet amount"
+                    inputMode="numeric"
+                    [value]="betAmount()"
+                    (valueChange)="betAmount.set($event.replace(/\D/g, ''))"
+            />
+        </div>
+
+
+        <p class="status-copy">{{ viewState()?.message || 'Choose a machine and spin.' }}</p>
+
+        @if (history().length) {
+          <div class="slots-history">
+            <span class="page-heading__eyebrow">Recent spins</span>
+            <div class="slots-history__list">
+              @for (entry of history(); track $index) {
+                <div class="pill">{{ entry.machineId }} · {{ entry.result }} · x{{ entry.payoutMultiplier }}</div>
+              }
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+  </app-card>
+
+<!--  <app-card sidebar class="slots-sidebar">-->
+<!--    <div class="page-stack">-->
+<!--      <div class="page-stack">-->
+<!--        <div class="glass-stat">-->
+<!--          <span class="glass-stat__label">Current machine</span>-->
+<!--          <strong class="glass-stat__value">{{ selectedMachine() ? selectedMachine()!.name : 'Slots' }}</strong>-->
+<!--        </div>-->
+<!--        <div class="glass-stat">-->
+<!--          <span class="glass-stat__label">Top multiplier</span>-->
+<!--          <strong class="glass-stat__value">x{{ selectedMachine() ? selectedMachine()!.topMultiplier : 0 }}</strong>-->
+<!--        </div>-->
+<!--      </div>-->
+<!--    </div>-->
+<!--  </app-card>-->
+</app-game-shell>

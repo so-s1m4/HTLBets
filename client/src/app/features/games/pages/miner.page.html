@@ -30,6 +30,7 @@
             <button
               type="button"
               class="miner-grid__cell"
+              [class.opened]="cell.view !== 'hidden'"
               [class.is-safe]="cell.tone === 'safe'"
               [class.is-mine]="cell.tone === 'mine'"
               [disabled]="!isRoundActive() || cell.view !== 'hidden'"

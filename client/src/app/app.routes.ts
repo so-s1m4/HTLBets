@@ -73,6 +73,12 @@ export const routes: Routes = [
           import('./features/games/pages/miner.page').then((module) => module.MinerPageComponent)
       },
       {
+        path: 'games/slots',
+        data: { title: 'Slots' },
+        loadComponent: () =>
+          import('./features/games/pages/slots.page').then((module) => module.SlotsPageComponent)
+      },
+      {
         path: 'games/leaderboard',
         data: { title: 'Leaderboard' },
         loadComponent: () =>
