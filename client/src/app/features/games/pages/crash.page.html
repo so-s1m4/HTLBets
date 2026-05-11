@@ -4,13 +4,15 @@
   [connectionState]="socket.connectionState()"
   [currentBet]="currentBet()"
   [error]="socket.lastError() || ''"
+  [hasSidebar]="false"
 >
   <app-card table>
-    <div class="crash-stage">
-      <div class="crash-stage__surface"></div>
+    <div class="crash-desk">
+      <div class="crash-desk__surface"></div>
+      <div class="crash-desk__noise"></div>
 
       @if (resultBanner(); as result) {
-        <div class="crash-stage__overlay">
+        <div class="crash-desk__overlay">
           <div class="crash-status-banner" [class.crash-status-banner--loss]="result.tone === 'loss'" [class.crash-status-banner--win]="result.tone === 'win'">
             <strong>{{ result.title }}</strong>
             <span>{{ result.amount | credits }}</span>
@@ -18,72 +20,192 @@
         </div>
       }
 
-      <div class="crash-stage__content">
-        <div class="crash-stage__stats">
-          <span class="pill">{{ phaseLabel() }}</span>
-          @if (isRoundActive()) {
-            <span class="pill">Server decides the crash</span>
-            <span class="pill">Cash out before the signal drops</span>
-          } @else {
-            <span class="pill">Last settled: x{{ (viewState()?.lastSettledMultiplier || 1).toFixed(2) }}</span>
-          }
-        </div>
-
-        <div class="crash-chart" [class.is-live]="isRoundActive()" [class.is-crashed]="outcome()?.result === 'BUST'" [style.--crash-progress]="crashProgress()">
-          <div class="crash-chart__grid"></div>
-          <div class="crash-chart__bars">
-            @for (bar of bars(); track bar.index) {
-              <span class="crash-chart__bar" [class.is-active]="bar.active" [style.height.%]="bar.height"></span>
+      <div class="crash-desk__content">
+        <div class="crash-desk__topline">
+          <div class="crash-desk__labels">
+            <span class="pill" [class.pill--live]="statusTone() === 'live'" [class.pill--loss]="statusTone() === 'loss'" [class.pill--win]="statusTone() === 'win'">
+              {{ phaseLabel() }}
+            </span>
+            @if (isBetting()) {
+              <span class="pill">{{ launchCountdownLabel() }}</span>
             }
           </div>
-
-          <div class="crash-chart__line"></div>
-          <div class="crash-chart__multiplier">
-            <strong>x{{ liveMultiplier().toFixed(2) }}</strong>
-            <span>{{ isRoundActive() ? 'Live multiplier' : 'Last settled multiplier' }}</span>
-          </div>
-        </div>
-
-        <p class="status-copy crash-stage__message">{{ viewState()?.message || 'Set a stake and launch the next round.' }}</p>
-
-        @if (history().length) {
-          <div class="crash-history">
-            <span class="page-heading__eyebrow">Recent rounds</span>
-            <div class="crash-history__list">
-              @for (entry of history(); track $index) {
-                <div class="pill">{{ entry.result }} · x{{ entry.multiplier.toFixed(2) }}</div>
-              }
+          <div class="crash-desk__mini-stats">
+            <div class="crash-chip">
+              <span>Last crash</span>
+              <strong>{{ lastCrashLabel() }}</strong>
             </div>
           </div>
-        }
-      </div>
-    </div>
-  </app-card>
-
-  <app-card sidebar class="crash-sidebar">
-    <div class="page-stack">
-      @if (isRoundActive()) {
-        <app-button block (click)="cashOut()">
-          Cash out at x{{ liveMultiplier().toFixed(2) }}
-        </app-button>
-      } @else {
-        <app-input
-          label="Bet amount"
-          inputMode="numeric"
-          [value]="betAmount()"
-          (valueChange)="betAmount.set($event.replace(/\D/g, ''))"
-        />
-        <app-button block (click)="startRound()">Start round</app-button>
-      }
-
-      <div class="page-stack">
-        <div class="glass-stat">
-          <span class="glass-stat__label">Current stake</span>
-          <strong class="glass-stat__value">{{ currentBet() | credits }}</strong>
         </div>
-        <div class="glass-stat">
-          <span class="glass-stat__label">Visible multiplier</span>
-          <strong class="glass-stat__value">x{{ liveMultiplier().toFixed(2) }}</strong>
+
+        <div class="crash-desk__body">
+          <section
+            class="crash-stage"
+            [class.is-live]="isRoundActive()"
+            [class.is-crashed]="outcome()?.result === 'BUST'"
+            [style.--flight-progress]="flightProgress()"
+            [style.--flight-elevation]="flightElevation()"
+          >
+            <div class="crash-stage__eyebrow">
+              <span class="page-heading__eyebrow">Crash graph</span>
+              <span class="crash-stage__hint">{{ isRoundActive() ? 'Multiplier is rising right now' : 'Waiting for the next launch' }}</span>
+            </div>
+
+            <div class="crash-stage__chart">
+              @for (marker of chartMarkers(); track marker.value) {
+                <div class="crash-stage__axis" [style.bottom.%]="marker.offset">
+                  <span>x{{ marker.value }}</span>
+                </div>
+              }
+
+              <svg class="crash-stage__svg" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+                <path class="crash-stage__ghost-line" [attr.d]="fullCurvePath()"></path>
+                <path class="crash-stage__area" [attr.d]="areaPath()"></path>
+                <path class="crash-stage__line" [attr.d]="curvePath()"></path>
+              </svg>
+
+              <div class="crash-stage__point" [style.left]="livePoint().x" [style.top]="livePoint().y"></div>
+
+              <div class="crash-stage__hud">
+                <strong>{{ visibleMultiplierLabel() }}</strong>
+                <span>{{ isRoundActive() ? 'Live multiplier' : isBetting() ? 'Next launch' : 'Last locked multiplier' }}</span>
+              </div>
+            </div>
+
+            <p class="status-copy crash-stage__message">{{ viewState()?.message || 'Set a stake and join the next shared launch.' }}</p>
+
+            <div class="crash-stage__round-meta">
+              <div class="crash-round-tile">
+                <span>Round</span>
+                <strong>#{{ viewState()?.roundId || 1 }}</strong>
+              </div>
+              <div class="crash-round-tile">
+                <span>Total pot</span>
+                <strong>{{ (viewState()?.totalPot || 0) | credits }}</strong>
+              </div>
+              <div class="crash-round-tile">
+                <span>Players</span>
+                <strong>{{ viewState()?.players?.length || 0 }}</strong>
+              </div>
+              <div class="crash-round-tile">
+                <span>Status</span>
+                <strong>{{ participantSummary() }}</strong>
+              </div>
+            </div>
+
+            @if (recentBursts().length) {
+              <div class="crash-history">
+                <div class="crash-history__header">
+                  <span class="page-heading__eyebrow">Recent bursts</span>
+                  <span class="status-copy">Newest crashes first</span>
+                </div>
+
+                <div class="crash-history__list">
+                  @for (entry of recentBursts(); track entry.index) {
+                    <div class="crash-history__pill" [class.is-loss]="entry.tone === 'loss'" [class.is-win]="entry.tone === 'win'" [class.is-jackpot]="entry.tone === 'jackpot'">
+                      <strong>x{{ entry.multiplier.toFixed(2) }}</strong>
+                      <span>{{ entry.winners || 0 }}/{{ entry.players || 0 }} out</span>
+                    </div>
+                  }
+                </div>
+              </div>
+            }
+          </section>
+
+          <aside class="crash-pit">
+            <div class="crash-panel crash-panel--action">
+              <span class="page-heading__eyebrow">Launch control</span>
+              <p class="status-copy">Join during betting, then cash out before the shared round explodes.</p>
+
+              @if (canCashOut()) {
+                <app-button block (click)="cashOut()">
+                  {{ launchActionLabel() }}
+                </app-button>
+              } @else if (canPlaceBet()) {
+                <app-input
+                  label="Bet amount"
+                  inputMode="numeric"
+                  [value]="betAmount()"
+                  (valueChange)="betAmount.set($event.replace(/\D/g, ''))"
+                />
+                <app-button block (click)="startRound()">{{ launchActionLabel() }}</app-button>
+              } @else {
+                <div class="crash-lock">
+                  <strong>{{ launchActionLabel() }}</strong>
+                  <span>{{ isBetting() ? 'Your stake is already queued for this shared launch.' : 'Wait for the round to reopen after the crash.' }}</span>
+                </div>
+              }
+            </div>
+
+            <div class="crash-panel crash-panel--stats">
+              <div class="crash-stat-card">
+                <span>Current stake</span>
+                <strong>{{ currentBet() | credits }}</strong>
+              </div>
+              <div class="crash-stat-card">
+                <span>Visible multiplier</span>
+                <strong>{{ visibleMultiplierLabel() }}</strong>
+              </div>
+              <div class="crash-stat-card">
+                <span>Your last settle</span>
+                <strong>{{ lastSettledLabel() }}</strong>
+              </div>
+              <div class="crash-stat-card">
+                <span>Tracked bursts</span>
+                <strong>{{ trackedRoundsLabel() }}</strong>
+              </div>
+            </div>
+
+            <div class="crash-panel crash-panel--players">
+              <div class="crash-history__header">
+                <span class="page-heading__eyebrow">Player board</span>
+                <span class="status-copy">{{ participantSummary() }}</span>
+              </div>
+
+              @if (players().length) {
+                <div class="crash-player-board">
+                  <div class="crash-player-board__column">
+                    @for (player of playerColumns().left; track player.userId) {
+                      <div class="crash-player" [class.is-self]="player.isSelf" [class.is-live]="player.status === 'live'" [class.is-cashed]="player.status === 'cashed-out'" [class.is-busted]="player.status === 'busted'">
+                        <div class="crash-player__copy">
+                          <strong>{{ player.playerLabel }}</strong>
+                          <span>{{ player.status }}</span>
+                        </div>
+                        <div class="crash-player__meta">
+                          <span>{{ player.stake | credits }}</span>
+                          @if (player.cashOutMultiplier) {
+                            <small>x{{ player.cashOutMultiplier.toFixed(2) }}</small>
+                          }
+                        </div>
+                      </div>
+                    }
+                  </div>
+
+                  <div class="crash-player-board__column">
+                    @for (player of playerColumns().right; track player.userId) {
+                      <div class="crash-player" [class.is-self]="player.isSelf" [class.is-live]="player.status === 'live'" [class.is-cashed]="player.status === 'cashed-out'" [class.is-busted]="player.status === 'busted'">
+                        <div class="crash-player__copy">
+                          <strong>{{ player.playerLabel }}</strong>
+                          <span>{{ player.status }}</span>
+                        </div>
+                        <div class="crash-player__meta">
+                          <span>{{ player.stake | credits }}</span>
+                          @if (player.cashOutMultiplier) {
+                            <small>x{{ player.cashOutMultiplier.toFixed(2) }}</small>
+                          }
+                        </div>
+                      </div>
+                    }
+                  </div>
+                </div>
+              } @else {
+                <div class="crash-lock">
+                  <strong>No players queued</strong>
+                  <span>The next shared round starts once players lock in during the betting window.</span>
+                </div>
+              }
+            </div>
+          </aside>
         </div>
       </div>
     </div>

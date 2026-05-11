@@ -10,6 +10,7 @@ import {
   type ActionOperationInput,
   type BetOperationInput
 } from '../games/core/game-room.manager';
+import { crashRoundManager } from '../games/crash/crash-round.manager';
 import { pokerTableManager } from '../games/poker/poker-table.manager';
 import { rouletteTableManager } from '../games/roulette/roulette-table.manager';
 import { HttpError } from '../../utils/http-error';
@@ -18,7 +19,6 @@ import { socketEvents } from './socket.events';
 
 const getRoomName = (gameType: string, sessionId: string): string => `game:${gameType}:${sessionId}`;
 const pokerRoomPrefix = 'game:POKER:';
-const crashTimers = new Map<string, NodeJS.Timeout>();
 
 export const createSocketServer = (httpServer: HttpServer): Server => {
   const io = new Server(httpServer, {
@@ -36,6 +36,10 @@ export const createSocketServer = (httpServer: HttpServer): Server => {
 
   pokerTableManager.onStateChange(() => {
     void emitPokerTableState(io);
+  });
+
+  crashRoundManager.onStateChange(() => {
+    void emitCrashTableState(io);
   });
 
   io.on('connection', (socket) => {
@@ -60,6 +64,13 @@ export const createSocketServer = (httpServer: HttpServer): Server => {
           return;
         }
 
+        if (gameType === 'CRASH') {
+          const state = await crashRoundManager.getStateForUser(socket.data.user.userId);
+          socket.join(getRoomName(state.gameType, crashRoundManager.getSessionId()));
+          socket.emit(socketEvents.state, state);
+          return;
+        }
+
         const state = await gameRoomManager.joinGame({
           userId: socket.data.user.userId,
           gameType,
@@ -68,10 +79,6 @@ export const createSocketServer = (httpServer: HttpServer): Server => {
 
         socket.join(getRoomName(state.gameType, state.sessionId));
         socket.emit(socketEvents.state, state);
-
-        if (state.gameType === 'CRASH') {
-          await syncCrashSchedule(io, socket.data.user.userId, state.sessionId, state.status === 'WAITING_ACTION');
-        }
       } catch (error) {
         emitGameError(socket, error);
       }
@@ -90,6 +97,11 @@ export const createSocketServer = (httpServer: HttpServer): Server => {
         if (gameType === 'POKER') {
           const state = await pokerTableManager.getStateForUser(socket.data.user.userId, pokerTableManager.getLobbySessionId());
           syncPokerSocketSession(socket, state.sessionId);
+          return;
+        }
+
+        if (gameType === 'CRASH') {
+          socket.leave(getRoomName(gameType, crashRoundManager.getSessionId()));
           return;
         }
 
@@ -121,14 +133,16 @@ export const createSocketServer = (httpServer: HttpServer): Server => {
           return;
         }
 
+        if (request.gameType === 'CRASH') {
+          socket.join(getRoomName('CRASH', crashRoundManager.getSessionId()));
+          await crashRoundManager.placeBet(request.userId, request.amount);
+          return;
+        }
+
         const state = await gameRoomManager.placeBet(request);
         const room = getRoomName(state.gameType, state.sessionId);
         socket.join(room);
         io.to(room).emit(socketEvents.state, state);
-
-        if (state.gameType === 'CRASH') {
-          await syncCrashSchedule(io, request.userId, state.sessionId, state.status === 'WAITING_ACTION');
-        }
       } catch (error) {
         emitGameError(socket, error);
       }
@@ -146,6 +160,12 @@ export const createSocketServer = (httpServer: HttpServer): Server => {
             action: payload.action,
             payload: payload.payload
           };
+
+          if (request.gameType === 'CRASH') {
+            socket.join(getRoomName('CRASH', crashRoundManager.getSessionId()));
+            await crashRoundManager.cashOut(request.userId);
+            return;
+          }
 
           if (request.gameType === 'POKER') {
             if (request.action === 'create-table') {
@@ -197,10 +217,6 @@ export const createSocketServer = (httpServer: HttpServer): Server => {
           const room = getRoomName(state.gameType, state.sessionId);
           socket.join(room);
           io.to(room).emit(socketEvents.state, state);
-
-          if (state.gameType === 'CRASH') {
-            await syncCrashSchedule(io, request.userId, state.sessionId, state.status === 'WAITING_ACTION');
-          }
         } catch (error) {
           emitGameError(socket, error);
         }
@@ -262,56 +278,14 @@ const syncPokerSocketSession = (socket: Socket, sessionId: string) => {
   socket.join(getRoomName('POKER', sessionId));
 };
 
-const clearCrashSchedule = (sessionId: string) => {
-  const timer = crashTimers.get(sessionId);
-  if (!timer) {
-    return;
-  }
-
-  clearTimeout(timer);
-  crashTimers.delete(sessionId);
-};
-
-const syncCrashSchedule = async (io: Server, userId: string, sessionId: string, isLive: boolean) => {
-  clearCrashSchedule(sessionId);
-
-  if (!isLive) {
-    return;
-  }
-
-  const autoResolveAt = await gameRoomManager.getAutoResolveAt({
-    userId,
-    gameType: 'CRASH',
-    sessionId
-  });
-
-  if (!autoResolveAt) {
-    return;
-  }
-
-  const delayMs = Math.max(0, autoResolveAt - Date.now()) + 25;
-  const timer = setTimeout(() => {
-    crashTimers.delete(sessionId);
-    void emitCrashRoomState(io, sessionId);
-  }, delayMs);
-
-  crashTimers.set(sessionId, timer);
-};
-
-const emitCrashRoomState = async (io: Server, sessionId: string) => {
-  const room = getRoomName('CRASH', sessionId);
+const emitCrashTableState = async (io: Server) => {
+  const room = getRoomName('CRASH', crashRoundManager.getSessionId());
   const sockets = await io.in(room).fetchSockets();
 
   await Promise.all(
     sockets.map(async (socket) => {
-      const state = await gameRoomManager.joinGame({
-        userId: socket.data.user.userId,
-        gameType: 'CRASH',
-        sessionId
-      });
-
+      const state = await crashRoundManager.getStateForUser(socket.data.user.userId);
       socket.emit(socketEvents.state, state);
-      await syncCrashSchedule(io, socket.data.user.userId, sessionId, state.status === 'WAITING_ACTION');
     })
   );
 };

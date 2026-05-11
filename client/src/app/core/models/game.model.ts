@@ -112,14 +112,35 @@ export interface MinerViewState {
 export interface CrashHistoryEntry {
   result: string;
   multiplier: number;
+  winners?: number;
+  players?: number;
+}
+
+export interface CrashPlayerView {
+  userId: string;
+  playerLabel: string;
+  avatarUrl?: string | null;
+  stake: number;
+  status: 'queued' | 'live' | 'cashed-out' | 'busted';
+  cashOutMultiplier: number | null;
+  isSelf: boolean;
 }
 
 export interface CrashViewState {
-  phase: 'ready' | 'live' | 'resolved';
+  phase: 'betting' | 'live' | 'resolved';
+  roundId: number;
+  bettingClosesAt: string | null;
   startTime: string | null;
   lastSettledMultiplier: number;
+  lastCrashMultiplier: number;
   message: string;
   history: CrashHistoryEntry[];
+  players: CrashPlayerView[];
+  totalPot: number;
+  queuedCount: number;
+  liveCount: number;
+  cashedOutCount: number;
+  bustedCount: number;
 }
 
 export interface SlotsMachineSummary {
