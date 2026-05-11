@@ -1,0 +1,128 @@
+.miner-table {
+  position: relative;
+  min-height: 34rem;
+  border-radius: var(--radius-xl);
+  overflow: hidden;
+}
+
+.miner-table__surface {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at 50% 30%, rgba(117, 243, 191, 0.1), transparent 24%),
+    radial-gradient(circle at 50% 78%, rgba(93, 168, 255, 0.08), transparent 28%),
+    linear-gradient(180deg, rgba(16, 33, 29, 0.98), rgba(8, 17, 16, 1));
+}
+
+.miner-table__content {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  gap: 1rem;
+  padding: 1rem;
+}
+
+.miner-table__stats {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.miner-grid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 0.7rem;
+}
+
+.miner-grid__cell {
+  aspect-ratio: 1;
+  border: 1px solid rgba(149, 171, 211, 0.16);
+  border-radius: 1rem;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0)),
+    linear-gradient(180deg, rgba(20, 30, 45, 0.98), rgba(10, 16, 28, 0.98));
+  color: var(--text);
+  font-size: 4.35rem;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  transition: transform 140ms ease, border-color 140ms ease, background 140ms ease;
+}
+
+.miner-grid__cell:not(:disabled):hover {
+  transform: translateY(-1px);
+  border-color: rgba(117, 243, 191, 0.28);
+}
+
+.miner-grid__cell.is-safe {
+  border-color: rgba(117, 243, 191, 0.34);
+  background:
+    radial-gradient(circle at 50% 40%, rgba(117, 243, 191, 0.34), transparent 26%),
+    linear-gradient(180deg, rgba(23, 56, 47, 0.98), rgba(9, 24, 20, 0.98));
+}
+
+.miner-grid__cell.is-mine {
+  border-color: rgba(255, 117, 143, 0.34);
+  background:
+    radial-gradient(circle at 50% 40%, rgba(255, 117, 143, 0.3), transparent 26%),
+    linear-gradient(180deg, rgba(61, 18, 31, 0.98), rgba(24, 9, 16, 0.98));
+}
+
+.miner-grid__cell:disabled {
+  cursor: default;
+}
+
+.miner-table__overlay {
+  position: absolute;
+  top: 1rem;
+  left: 1rem;
+  right: 1rem;
+  z-index: 3;
+  display: flex;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.miner-status-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  width: min(100%, 24rem);
+  padding: 0.9rem 1rem;
+  border-radius: 1.1rem;
+  border: 1px solid rgba(149, 171, 211, 0.14);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0)),
+    rgba(10, 19, 28, 0.78);
+}
+
+.miner-status-banner strong,
+.miner-status-banner span {
+  margin: 0;
+}
+
+.miner-status-banner--loss {
+  border-color: rgba(255, 117, 143, 0.24);
+}
+
+.miner-status-banner--loss span {
+  color: var(--danger);
+}
+
+.miner-status-banner--win {
+  border-color: rgba(117, 243, 191, 0.24);
+}
+
+.miner-status-banner--win span {
+  color: var(--success);
+}
+
+.miner-table__message {
+  margin: 0;
+}
+
+.miner-sidebar {
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translate(50%, -50%);
+}

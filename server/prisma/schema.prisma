@@ -11,6 +11,7 @@ enum GameType {
   ROULETTE
   BLACKJACK
   POKER
+  MINER
   ADMIN
 }
 

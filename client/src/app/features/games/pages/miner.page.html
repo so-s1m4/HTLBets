@@ -1,0 +1,86 @@
+<app-game-shell
+  title="Miner"
+  subtitle="Pick safe tiles, grow the multiplier, and cash out before a hidden mine blows the run."
+  [connectionState]="socket.connectionState()"
+  [currentBet]="currentBet()"
+  [error]="socket.lastError() || ''"
+>
+  <app-card table>
+    <div class="miner-table">
+      <div class="miner-table__surface"></div>
+
+      @if (resultBanner(); as result) {
+        <div class="miner-table__overlay">
+          <div class="miner-status-banner" [class.miner-status-banner--loss]="result.tone === 'loss'" [class.miner-status-banner--win]="result.tone === 'win'">
+            <strong>{{ result.title }}</strong>
+            <span>{{ result.amount | credits }}</span>
+          </div>
+        </div>
+      }
+
+      <div class="miner-table__content">
+        <div class="miner-table__stats">
+          <span class="pill">Mines: {{ viewState()?.mineCount || mineCount() }}</span>
+          <span class="pill">Safe left: {{ safeRemaining() }}</span>
+          <span class="pill">Multiplier: x{{ (viewState()?.payoutMultiplier || 1).toFixed(2) }}</span>
+        </div>
+
+        <div class="miner-grid">
+          @for (cell of cellViews(); track cell.index) {
+            <button
+              type="button"
+              class="miner-grid__cell"
+              [class.is-safe]="cell.tone === 'safe'"
+              [class.is-mine]="cell.tone === 'mine'"
+              [disabled]="!isRoundActive() || cell.view !== 'hidden'"
+              (click)="revealCell(cell.index)"
+            >
+              @if (cell.view === 'safe') {
+                <span>💎</span>
+              } @else if (cell.view === 'mine') {
+                <span>💣</span>
+              } @else {
+                <span></span>
+              }
+            </button>
+          }
+        </div>
+
+        <p class="status-copy miner-table__message">{{ viewState()?.message || 'Configure the round and start digging.' }}</p>
+      </div>
+    </div>
+  </app-card>
+
+  <app-card sidebar class="miner-sidebar">
+    <div class="page-stack">
+      @if (isRoundActive()) {
+        <app-button block (click)="cashOut()">Cash out</app-button>
+      } @else {
+        <app-input
+          label="Bet amount"
+          inputMode="numeric"
+          [value]="betAmount()"
+          (valueChange)="betAmount.set($event.replace(/\D/g, ''))"
+        />
+        <app-input
+          label="Mine count"
+          inputMode="numeric"
+          [value]="mineCount()"
+          (valueChange)="mineCount.set($event.replace(/\D/g, ''))"
+        />
+        <app-button block (click)="startRound()">Start round</app-button>
+      }
+
+      <div class="page-stack">
+        <div class="glass-stat">
+          <span class="glass-stat__label">Current stake</span>
+          <strong class="glass-stat__value">{{ currentBet() | credits }}</strong>
+        </div>
+        <div class="glass-stat">
+          <span class="glass-stat__label">Safe picks</span>
+          <strong class="glass-stat__value">{{ viewState()?.revealedSafeCount || 0 }}</strong>
+        </div>
+      </div>
+    </div>
+  </app-card>
+</app-game-shell>

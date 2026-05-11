@@ -10,13 +10,14 @@ import type {
   GameResolution
 } from './game-engine.interface';
 import { BlackjackEngine } from '../blackjack/blackjack.engine';
+import { MinerEngine } from '../miner/miner.engine';
 import { PokerEngine } from '../poker/poker.engine';
 import { RouletteEngine } from '../roulette/roulette.engine';
 
 const toJsonValue = (value: unknown): Prisma.InputJsonValue =>
   JSON.parse(JSON.stringify(value)) as Prisma.InputJsonValue;
 
-type RealtimeGameType = 'ROULETTE' | 'BLACKJACK' | 'POKER';
+type RealtimeGameType = 'ROULETTE' | 'BLACKJACK' | 'POKER' | 'MINER';
 
 export interface JoinGameInput {
   userId: string;
@@ -52,7 +53,7 @@ export interface GameStateEnvelope {
 export const parseGameType = (value: string): RealtimeGameType => {
   const normalized = value.trim().toUpperCase();
 
-  if (normalized === GameType.ROULETTE || normalized === GameType.BLACKJACK || normalized === GameType.POKER) {
+  if (normalized === GameType.ROULETTE || normalized === GameType.BLACKJACK || normalized === GameType.POKER || normalized === GameType.MINER) {
     return normalized as RealtimeGameType;
   }
 
@@ -63,7 +64,8 @@ class GameRoomManager {
   private readonly engines: Record<RealtimeGameType, GameEngine<any>> = {
     [GameType.ROULETTE]: new RouletteEngine(),
     [GameType.BLACKJACK]: new BlackjackEngine(),
-    [GameType.POKER]: new PokerEngine()
+    [GameType.POKER]: new PokerEngine(),
+    [GameType.MINER]: new MinerEngine()
   };
 
   async joinGame(input: JoinGameInput): Promise<GameStateEnvelope> {

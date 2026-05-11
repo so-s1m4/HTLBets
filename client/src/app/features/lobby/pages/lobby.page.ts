@@ -51,6 +51,14 @@ export class LobbyPageComponent {
       badge: 'Live',
       availability: 'Join the Table',
       theme: 'poker' as const
+    },
+    {
+      title: 'Miner',
+      description: 'Uncover safe tiles, dodge the hidden mines, and cash out before greed blows up the round.',
+      route: '/games/miner',
+      badge: 'Live',
+      availability: '25-tile board',
+      theme: 'miner' as const
     }
   ];
 
