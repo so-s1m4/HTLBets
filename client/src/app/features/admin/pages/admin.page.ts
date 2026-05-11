@@ -11,6 +11,7 @@ import { CreditsPipe } from '../../../shared/pipes/credits.pipe';
 import { GameLabelPipe } from '../../../shared/pipes/game-label.pipe';
 
 type AdminTabId = 'overview' | 'users' | 'history' | 'decks';
+const MAX_BALANCE = 10_000_000_000_000;
 
 @Component({
   selector: 'app-admin-page',
@@ -186,6 +187,11 @@ export class AdminPageComponent {
 
     if (!Number.isInteger(nextBalance) || nextBalance < 0) {
       this.error.set('Balance must be a non-negative whole number.');
+      return;
+    }
+
+    if (nextBalance > MAX_BALANCE) {
+      this.error.set(`Balance must not exceed ${MAX_BALANCE.toLocaleString('en-US')}.`);
       return;
     }
 

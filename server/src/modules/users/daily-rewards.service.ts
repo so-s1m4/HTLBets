@@ -1,6 +1,7 @@
 import { Prisma, type User } from '../../../generated/prisma';
 import { prisma } from '../../prisma/client';
 import { HttpError } from '../../utils/http-error';
+import { fromDbAmount, toDbAmount } from '../../utils/money';
 import { toPublicUser, type PublicDailyTask, type PublicUser } from './user.model';
 import {
   buildDailyTaskStates,
@@ -21,7 +22,7 @@ class DailyRewardsService {
       },
       data: {
         balance: {
-          increment: DAILY_LOGIN_REWARD
+          increment: toDbAmount(DAILY_LOGIN_REWARD)
         },
         lastDailyLoginAt: today
       }
@@ -79,7 +80,7 @@ class DailyRewardsService {
           where: { id: userId },
           data: {
             balance: {
-              increment: task.reward
+              increment: toDbAmount(task.reward)
             }
           }
         });
@@ -134,7 +135,10 @@ class DailyRewardsService {
     ]);
 
     return buildDailyTaskStates(
-      history,
+      history.map((entry) => ({
+        ...entry,
+        balanceChange: fromDbAmount(entry.balanceChange)
+      })),
       new Set(claims.map((claim) => claim.taskKey)),
       today
     );

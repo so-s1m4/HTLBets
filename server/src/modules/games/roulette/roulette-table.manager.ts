@@ -3,6 +3,7 @@ import { GameSessionStatus, GameType } from '../../../../generated/prisma';
 import { prisma } from '../../../prisma/client';
 import { HttpError } from '../../../utils/http-error';
 import type { GameResolution } from '../core/game-engine.interface';
+import { fromDbAmount, toDbAmount } from '../../../utils/money';
 
 type RouletteColor = 'red' | 'black' | 'green';
 type RoulettePocket = number | '00';
@@ -217,7 +218,7 @@ export class RouletteTableManager {
       sessionId: TABLE_SESSION_ID,
       gameType: GameType.ROULETTE,
       status: this.phase === 'betting' ? GameSessionStatus.WAITING_ACTION : GameSessionStatus.COMPLETED,
-      balance: user.balance,
+      balance: fromDbAmount(user.balance),
       currentBet: this.getUserCurrentBet(userId),
       state: this.buildSharedState(userId),
       outcome: this.lastOutcomeByUser.get(userId) || null
@@ -244,7 +245,7 @@ export class RouletteTableManager {
 
     const reserved = this.getUserCurrentBet(userId);
 
-    if (reserved + amount > user.balance) {
+    if (reserved + amount > fromDbAmount(user.balance)) {
       throw new HttpError(400, 'Insufficient demo balance for this roulette bet.');
     }
 
@@ -365,9 +366,9 @@ export class RouletteTableManager {
           data: {
             userId,
             gameType: GameType.ROULETTE,
-            betAmount: totalBetAmount,
+            betAmount: toDbAmount(totalBetAmount),
             result: netChange > 0 ? 'WIN' : netChange < 0 ? 'LOSS' : 'PUSH',
-            balanceChange: netChange
+            balanceChange: toDbAmount(netChange)
           }
         });
 
@@ -376,7 +377,7 @@ export class RouletteTableManager {
             where: { id: userId },
             data: {
               balance: {
-                increment: netChange
+                increment: toDbAmount(netChange)
               }
             }
           });

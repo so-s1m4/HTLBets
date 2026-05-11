@@ -2,6 +2,7 @@ import { GameSessionStatus, GameType } from '../../../../generated/prisma';
 
 import { prisma } from '../../../prisma/client';
 import { HttpError } from '../../../utils/http-error';
+import { fromDbAmount, toDbAmount } from '../../../utils/money';
 import { createDeck, drawCard, shuffleDeck, type PlayingCard } from '../core/card.utils';
 import type { GameResolution } from '../core/game-engine.interface';
 import {
@@ -851,7 +852,7 @@ class PokerTableInstance {
         where: { id: userId },
         data: {
           balance: {
-            increment: refundAmount
+            increment: toDbAmount(refundAmount)
           }
         }
       });
@@ -1343,7 +1344,11 @@ class PokerTableInstance {
     }
 
     await prisma.gameHistory.createMany({
-      data: rows
+      data: rows.map((row) => ({
+        ...row,
+        betAmount: toDbAmount(row.betAmount),
+        balanceChange: toDbAmount(row.balanceChange)
+      }))
     });
   }
 
@@ -1449,7 +1454,7 @@ class PokerTableManager {
         sessionId: LOBBY_SESSION_ID,
         gameType: GameType.POKER,
         status: GameSessionStatus.IDLE,
-        balance: user.balance,
+        balance: fromDbAmount(user.balance),
         currentBet: 0,
         state: {
           kind: 'lobby',
@@ -1472,7 +1477,7 @@ class PokerTableManager {
       sessionId: table.sessionId,
       gameType: GameType.POKER,
       status: ['showdown', 'resolved'].includes(state.phase) ? GameSessionStatus.COMPLETED : GameSessionStatus.WAITING_ACTION,
-      balance: user.balance,
+      balance: fromDbAmount(user.balance),
       currentBet: state.currentBet,
       state,
       outcome: table.getLastOutcome(userId)
@@ -1587,7 +1592,7 @@ class PokerTableManager {
         where: { id: userId },
         data: {
           balance: {
-            increment: refundAmount
+            increment: toDbAmount(refundAmount)
           }
         }
       });
@@ -1698,12 +1703,12 @@ class PokerTableManager {
       where: {
         id: userId,
         balance: {
-          gte: amount
+          gte: toDbAmount(amount)
         }
       },
       data: {
         balance: {
-          decrement: amount
+          decrement: toDbAmount(amount)
         }
       }
     });

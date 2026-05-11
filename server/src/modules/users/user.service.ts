@@ -3,6 +3,7 @@ import { prisma } from '../../prisma/client';
 import { env } from '../../config/env';
 import { HttpError } from '../../utils/http-error';
 import { isAdminEmail } from '../../utils/admin';
+import { fromDbAmount, parseBalanceAmount, toDbAmount } from '../../utils/money';
 import { dailyRewardsService } from './daily-rewards.service';
 import {
   type PublicLeaderboard,
@@ -173,19 +174,21 @@ class UserService {
     });
 
     const richest = [...users]
-      .sort((left, right) => right.balance - left.balance)
+      .sort((left, right) => fromDbAmount(right.balance) - fromDbAmount(left.balance))
       .slice(0, leaderboardLimit)
-      .map((user) => toEntry(user, user.balance));
+      .map((user) => toEntry(user, fromDbAmount(user.balance)));
 
     const mostLosses = users
       .map((user) => ({
         user,
         metricValue: user.gameHistory.reduce((totalLosses, entry) => {
-          if (entry.balanceChange >= 0 || entry.result === 'ADMIN_ADJUSTMENT') {
+          const balanceChange = fromDbAmount(entry.balanceChange);
+
+          if (balanceChange >= 0 || entry.result === 'ADMIN_ADJUSTMENT') {
             return totalLosses;
           }
 
-          return totalLosses + Math.abs(entry.balanceChange);
+          return totalLosses + Math.abs(balanceChange);
         }, 0)
       }))
       .filter((entry) => entry.metricValue > 0)
@@ -201,7 +204,7 @@ class UserService {
             return best;
           }
 
-          return Math.max(best, entry.balanceChange);
+          return Math.max(best, fromDbAmount(entry.balanceChange));
         }, 0)
       }))
       .filter((entry) => entry.metricValue > 0)
@@ -230,9 +233,7 @@ class UserService {
   }
 
   async setBalance(actorUserId: string, userId: string, balance: number): Promise<PublicUser> {
-    if (!Number.isInteger(balance) || balance < 0) {
-      throw new HttpError(400, 'Balance must be a non-negative whole number.');
-    }
+    balance = parseBalanceAmount(balance);
 
     const [actor, targetUser] = await Promise.all([
       prisma.user.findUnique({
@@ -245,12 +246,12 @@ class UserService {
 
     const { user } = this.requireAdminActorAndTarget(actor, targetUser, { allowSelf: true, allowAdminTarget: true });
 
-    const balanceChange = balance - user.balance;
+    const balanceChange = balance - fromDbAmount(user.balance);
 
     const updatedUser = await prisma.$transaction(async (tx) => {
       const nextUser = await tx.user.update({
         where: { id: userId },
-        data: { balance }
+        data: { balance: toDbAmount(balance) }
       });
 
       if (balanceChange !== 0) {
@@ -258,9 +259,9 @@ class UserService {
           data: {
             userId,
             gameType: GameType.ADMIN,
-            betAmount: 0,
+            betAmount: 0n,
             result: 'ADMIN_ADJUSTMENT',
-            balanceChange
+            balanceChange: toDbAmount(balanceChange)
           }
         });
       }
@@ -299,9 +300,9 @@ class UserService {
         data: {
           userId,
           gameType: GameType.ADMIN,
-          betAmount: 0,
+          betAmount: 0n,
           result: banned ? 'ADMIN_BAN' : 'ADMIN_UNBAN',
-          balanceChange: 0
+          balanceChange: 0n
         }
       });
 
@@ -367,7 +368,7 @@ class UserService {
       const nextUser = await tx.user.update({
         where: { id: userId },
         data: {
-          balance: DEFAULT_USER_BALANCE,
+          balance: toDbAmount(DEFAULT_USER_BALANCE),
           selectedCardDeckId: defaultDeckId,
           lastDailyLoginAt: null
         }
@@ -377,9 +378,9 @@ class UserService {
         data: {
           userId,
           gameType: GameType.ADMIN,
-          betAmount: 0,
+          betAmount: 0n,
           result: 'ADMIN_WIPE',
-          balanceChange: 0
+          balanceChange: 0n
         }
       });
 

@@ -3,6 +3,7 @@ import { GameSessionStatus, GameType } from '../../../../generated/prisma';
 import { prisma } from '../../../prisma/client';
 import type { GameResolution } from '../core/game-engine.interface';
 import { HttpError } from '../../../utils/http-error';
+import { fromDbAmount, toDbAmount } from '../../../utils/money';
 
 type CrashPhase = 'betting' | 'live' | 'resolved';
 type CrashPlayerStatus = 'queued' | 'live' | 'cashed-out' | 'busted';
@@ -221,9 +222,9 @@ class CrashRoundManager {
         data: {
           userId,
           gameType: GameType.CRASH,
-          betAmount: player.stake,
+          betAmount: toDbAmount(player.stake),
           result,
-          balanceChange
+          balanceChange: toDbAmount(balanceChange)
         }
       });
 
@@ -231,7 +232,7 @@ class CrashRoundManager {
         where: { id: userId },
         data: {
           balance: {
-            increment: balanceChange
+            increment: toDbAmount(balanceChange)
           }
         }
       });
@@ -267,7 +268,10 @@ class CrashRoundManager {
       throw new HttpError(404, 'Authenticated user could not be found.');
     }
 
-    return user;
+    return {
+      ...user,
+      balance: fromDbAmount(user.balance)
+    };
   }
 
   private buildStateForUser(userId: string): CrashSharedState {
@@ -397,9 +401,9 @@ class CrashRoundManager {
             data: {
               userId: player.userId,
               gameType: GameType.CRASH,
-              betAmount: player.stake,
+              betAmount: toDbAmount(player.stake),
               result: 'BUST',
-              balanceChange: -player.stake
+              balanceChange: toDbAmount(-player.stake)
             }
           });
 
@@ -407,7 +411,7 @@ class CrashRoundManager {
             where: { id: player.userId },
             data: {
               balance: {
-                decrement: player.stake
+                decrement: toDbAmount(player.stake)
               }
             }
           });

@@ -1,13 +1,28 @@
 import type { GameHistory, User } from '../../../generated/prisma';
 
 import { isAdminEmail } from '../../utils/admin';
+import { fromDbAmount } from '../../utils/money';
 
-export interface PublicUser extends Pick<User, 'id' | 'email' | 'username' | 'avatarUrl' | 'balance' | 'createdAt' | 'updatedAt' | 'selectedCardDeckId' | 'bannedAt'> {
+export interface PublicUser {
+  id: string;
+  email: string;
+  username: string | null;
+  avatarUrl: string | null;
+  balance: number;
+  createdAt: Date;
+  updatedAt: Date;
+  selectedCardDeckId: string;
+  bannedAt: Date | null;
   isAdmin: boolean;
   hasPassword: boolean;
 }
 
-export interface PublicGameHistory extends Pick<GameHistory, 'id' | 'betAmount' | 'result' | 'balanceChange' | 'createdAt'> {
+export interface PublicGameHistory {
+  id: string;
+  betAmount: number;
+  result: string;
+  balanceChange: number;
+  createdAt: Date;
   gameType: GameHistory['gameType'];
 }
 
@@ -41,7 +56,7 @@ export const toPublicUser = (user: User): PublicUser => ({
   email: user.email,
   username: user.username,
   avatarUrl: user.avatarUrl,
-  balance: user.balance,
+  balance: fromDbAmount(user.balance),
   selectedCardDeckId: user.selectedCardDeckId,
   bannedAt: user.bannedAt,
   isAdmin: isAdminEmail(user.email),
@@ -53,8 +68,8 @@ export const toPublicUser = (user: User): PublicUser => ({
 export const toPublicGameHistory = (history: GameHistory): PublicGameHistory => ({
   id: history.id,
   gameType: history.gameType,
-  betAmount: history.betAmount,
+  betAmount: fromDbAmount(history.betAmount),
   result: history.result,
-  balanceChange: history.balanceChange,
+  balanceChange: fromDbAmount(history.balanceChange),
   createdAt: history.createdAt
 });

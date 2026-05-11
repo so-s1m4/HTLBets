@@ -1,0 +1,13 @@
+ALTER TABLE "User"
+ALTER COLUMN "balance" TYPE BIGINT
+USING "balance"::BIGINT;
+
+ALTER TABLE "GameSession"
+ALTER COLUMN "currentBet" TYPE BIGINT
+USING "currentBet"::BIGINT;
+
+ALTER TABLE "GameHistory"
+ALTER COLUMN "betAmount" TYPE BIGINT
+USING "betAmount"::BIGINT,
+ALTER COLUMN "balanceChange" TYPE BIGINT
+USING "balanceChange"::BIGINT;

@@ -2,6 +2,7 @@ import { GameSessionStatus, GameType, Prisma, type GameSession, type User } from
 
 import { prisma } from '../../../prisma/client';
 import { HttpError } from '../../../utils/http-error';
+import { fromDbAmount, toDbAmount } from '../../../utils/money';
 import type {
   ActionRequest,
   BetRequest,
@@ -51,6 +52,10 @@ export interface GameStateEnvelope {
   state: Record<string, unknown>;
   outcome: GameResolution | null;
 }
+
+type RuntimeUser = Omit<User, 'balance'> & {
+  balance: number;
+};
 
 export const parseGameType = (value: string): RealtimeGameType => {
   const normalized = value.trim().toUpperCase();
@@ -116,7 +121,7 @@ class GameRoomManager {
         sessionId: session.id,
         user,
         state: session.state as Record<string, unknown>,
-        currentBet: session.currentBet
+        currentBet: fromDbAmount(session.currentBet)
       },
       {
         amount: input.amount,
@@ -145,7 +150,7 @@ class GameRoomManager {
         sessionId: session.id,
         user,
         state: session.state as Record<string, unknown>,
-        currentBet: session.currentBet
+        currentBet: fromDbAmount(session.currentBet)
       },
       {
         action: input.action,
@@ -169,7 +174,7 @@ class GameRoomManager {
     return engine.getAutoResolveAt(session.state as Record<string, unknown>);
   }
 
-  private async getUser(userId: string): Promise<User> {
+  private async getUser(userId: string): Promise<RuntimeUser> {
     const user = await prisma.user.findUnique({
       where: { id: userId }
     });
@@ -178,7 +183,10 @@ class GameRoomManager {
       throw new HttpError(404, 'Authenticated user could not be found.');
     }
 
-    return user;
+    return {
+      ...user,
+      balance: fromDbAmount(user.balance)
+    };
   }
 
   private async getOrCreateSession(input: JoinGameInput): Promise<GameSession> {
@@ -210,7 +218,7 @@ class GameRoomManager {
         userId: input.userId,
         gameType: input.gameType,
         status: GameSessionStatus.IDLE,
-        currentBet: 0,
+        currentBet: 0n,
         state: toJsonValue(engine.createInitialState())
       }
     });
@@ -237,7 +245,7 @@ class GameRoomManager {
   }
 
   private async persistResult(
-    user: User,
+    user: RuntimeUser,
     session: GameSession,
     engine: GameEngine<any>,
     result: GameEngineResult<Record<string, unknown>>
@@ -252,7 +260,7 @@ class GameRoomManager {
           where: { id: session.id },
           data: {
             state,
-            currentBet: result.currentBet,
+            currentBet: toDbAmount(result.currentBet),
             status: result.status
           }
         });
@@ -261,9 +269,9 @@ class GameRoomManager {
           data: {
             userId: user.id,
             gameType: session.gameType,
-            betAmount: resolution.betAmount,
+            betAmount: toDbAmount(resolution.betAmount),
             result: resolution.result,
-            balanceChange: resolution.balanceChange
+            balanceChange: toDbAmount(resolution.balanceChange)
           }
         });
 
@@ -276,7 +284,7 @@ class GameRoomManager {
                 where: { id: user.id },
                 data: {
                   balance: {
-                    increment: resolution.balanceChange
+                    increment: toDbAmount(resolution.balanceChange)
                   }
                 }
               });
@@ -287,14 +295,14 @@ class GameRoomManager {
         };
       });
 
-      return this.buildEnvelope(updatedUser.balance, updatedSession, engine);
+      return this.buildEnvelope(fromDbAmount(updatedUser.balance), updatedSession, engine);
     }
 
     const updatedSession = await prisma.gameSession.update({
       where: { id: session.id },
       data: {
         state,
-        currentBet: result.currentBet,
+        currentBet: toDbAmount(result.currentBet),
         status: result.status
       }
     });
@@ -303,10 +311,10 @@ class GameRoomManager {
   }
 
   private async synchronizeSessionIfNeeded(
-    user: User,
+    user: RuntimeUser,
     session: GameSession,
     engine: GameEngine<any>
-  ): Promise<{ user: User; session: GameSession; envelope: GameStateEnvelope | null }> {
+  ): Promise<{ user: RuntimeUser; session: GameSession; envelope: GameStateEnvelope | null }> {
     if (!engine.synchronize) {
       return { user, session, envelope: null };
     }
@@ -315,7 +323,7 @@ class GameRoomManager {
       sessionId: session.id,
       user,
       state: session.state as Record<string, unknown>,
-      currentBet: session.currentBet
+      currentBet: fromDbAmount(session.currentBet)
     });
 
     if (!result) {
@@ -345,7 +353,7 @@ class GameRoomManager {
       gameType: session.gameType as RealtimeGameType,
       status: session.status,
       balance,
-      currentBet: session.currentBet,
+      currentBet: fromDbAmount(session.currentBet),
       state: engine.serializeState(typedState),
       outcome: engine.calculateResult(typedState)
     };

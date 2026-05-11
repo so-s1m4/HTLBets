@@ -1,4 +1,4 @@
-import type { GameSessionStatus, GameType, User } from '../../../../generated/prisma';
+import type { GameSessionStatus, GameType } from '../../../../generated/prisma';
 
 export interface GameResolution {
   result: string;
@@ -8,7 +8,11 @@ export interface GameResolution {
 
 export interface EngineContext<TState> {
   sessionId: string;
-  user: Pick<User, 'id' | 'email' | 'balance'>;
+  user: {
+    id: string;
+    email: string;
+    balance: number;
+  };
   state: TState;
   currentBet: number;
 }

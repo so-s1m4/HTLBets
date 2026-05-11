@@ -168,7 +168,7 @@ class AuthService {
     passwordHash: string | null;
     bannedAt: Date | null;
     lastDailyLoginAt: string | null;
-    balance: number;
+    balance: bigint;
     createdAt: Date;
     updatedAt: Date;
   }): AuthResponse {

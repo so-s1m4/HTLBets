@@ -32,7 +32,7 @@ model User {
   bannedAt          DateTime?
   passwordHash      String?
   lastDailyLoginAt  String?
-  balance           Int                     @default(1000)
+  balance           BigInt                  @default(1000)
   createdAt         DateTime                @default(now())
   updatedAt         DateTime                @updatedAt
   gameSessions      GameSession[]
@@ -87,7 +87,7 @@ model GameSession {
   user       User              @relation(fields: [userId], references: [id], onDelete: Cascade)
   gameType   GameType
   status     GameSessionStatus @default(IDLE)
-  currentBet Int               @default(0)
+  currentBet BigInt            @default(0)
   state      Json
   createdAt  DateTime          @default(now())
   updatedAt  DateTime          @updatedAt
@@ -100,9 +100,9 @@ model GameHistory {
   userId        String
   user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   gameType      GameType
-  betAmount     Int
+  betAmount     BigInt
   result        String
-  balanceChange Int
+  balanceChange BigInt
   createdAt     DateTime @default(now())
 
   @@index([userId, createdAt])

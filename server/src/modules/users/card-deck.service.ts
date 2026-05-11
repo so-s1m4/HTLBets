@@ -1,6 +1,7 @@
 import { GameType } from '../../../generated/prisma';
 import { prisma } from '../../prisma/client';
 import { HttpError } from '../../utils/http-error';
+import { fromDbAmount, toDbAmount } from '../../utils/money';
 import { toPublicUser, type PublicUser } from './user.model';
 
 export const DEFAULT_CARD_DECK_ID = 'classic-dark';
@@ -263,7 +264,7 @@ export class CardDeckService {
       throw new HttpError(400, 'You already own that card deck.');
     }
 
-    if (user.balance < deck.price) {
+    if (fromDbAmount(user.balance) < deck.price) {
       throw new HttpError(400, 'Insufficient demo balance to buy that card deck.');
     }
 
@@ -272,7 +273,7 @@ export class CardDeckService {
         where: { id: userId },
         data: {
           balance: {
-            decrement: deck.price
+            decrement: toDbAmount(deck.price)
           }
         }
       });
@@ -288,9 +289,9 @@ export class CardDeckService {
         data: {
           userId,
           gameType: GameType.ADMIN,
-          betAmount: deck.price,
+          betAmount: toDbAmount(deck.price),
           result: 'CARD_DECK_PURCHASE',
-          balanceChange: -deck.price
+          balanceChange: toDbAmount(-deck.price)
         }
       });
 
@@ -549,13 +550,13 @@ export class CardDeckService {
           data: {
             userId,
             gameType: GameType.ADMIN,
-            betAmount: 0,
+            betAmount: 0n,
             result: createdOwnership && shouldSelect
               ? 'ADMIN_CARD_DECK_GRANT_AND_SELECT'
               : createdOwnership
                 ? 'ADMIN_CARD_DECK_GRANT'
                 : 'ADMIN_CARD_DECK_SELECT',
-            balanceChange: 0
+            balanceChange: 0n
           }
         });
       }
