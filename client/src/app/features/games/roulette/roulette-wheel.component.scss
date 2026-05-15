@@ -1,8 +1,16 @@
+:host {
+  container-type: inline-size;
+  display: block;
+  width: 100%;
+  aspect-ratio: 1;
+}
+
 .roulette-wheel {
   position: relative;
-  width: min(100%, 20rem);
+  width: 100%;
   aspect-ratio: 1;
   margin: 0 auto;
+  font-size: calc(100cqw / 20);
 }
 
     .roulette-wheel__ball-track,
@@ -21,9 +29,9 @@
 .roulette-wheel__ball {
   position: absolute;
   top: 50%;
-  left: 1.92rem;
-  width: 0.88rem;
-  height: 0.88rem;
+  left: 1.92em;
+  width: 0.88em;
+  height: 0.88em;
   transform: translateY(-50%);
   border-radius: 50%;
   background:
@@ -50,7 +58,7 @@
 
 .roulette-wheel__outer-ring {
   position: absolute;
-  inset: 0.28rem;
+  inset: 0.28em;
   border-radius: 50%;
   background:
         radial-gradient(circle at top left, rgba(255, 255, 255, 0.15), transparent 28%),
@@ -62,7 +70,7 @@
 
 .roulette-wheel__segments {
   position: absolute;
-  inset: 1.38rem;
+  inset: 1.38em;
   border-radius: 50%;
   background: conic-gradient(from -90deg, #1f8c5d 0deg 9.47deg, #262b37 9.47deg 18.94deg);
   box-shadow:
@@ -82,7 +90,7 @@
   left: 50%;
   transform-origin: center center;
   color: rgba(248, 250, 255, 0.92);
-  font-size: 0.44rem;
+  font-size: 0.8em;
   font-weight: 700;
       line-height: 1;
       letter-spacing: -0.03em;
@@ -92,7 +100,7 @@
 
 .roulette-wheel__label span {
   display: block;
-  min-width: 0.72rem;
+  min-width: 0.72em;
   text-align: center;
 }
 
@@ -106,7 +114,7 @@
 
 .roulette-wheel__inner-ring {
   position: absolute;
-  inset: 3.45rem;
+  inset: 3.45em;
   border-radius: 50%;
   background:
         radial-gradient(circle at 35% 25%, rgba(255, 255, 255, 0.14), transparent 36%),
@@ -118,7 +126,7 @@
 
     .roulette-wheel__hub {
       position: absolute;
-      inset: 5.45rem;
+      inset: 5.45em;
       border-radius: 50%;
       background:
         radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.3), transparent 26%),
@@ -130,8 +138,8 @@
 
 .roulette-wheel__shadow {
       z-index: 1;
-      inset: auto 12% -0.9rem 12%;
-      height: 2.4rem;
+      inset: auto 12% -0.9em 12%;
+      height: 2.4em;
       background: radial-gradient(circle, rgba(0, 0, 0, 0.34), transparent 70%);
       filter: blur(8px);
     }
@@ -142,7 +150,7 @@
 
     @keyframes roulette-ball-physics {
       0% {
-        left: 1.1rem;
+        left: 1.1em;
         transform: translateY(-50%) scale(0.98);
         box-shadow:
       0 0 0 2px rgba(255, 255, 255, 0.08),
@@ -151,32 +159,32 @@
       }
 
       18% {
-        left: 1.16rem;
+        left: 1.16em;
         transform: translateY(calc(-50% - 3px)) scale(1);
       }
 
       36% {
-        left: 1.24rem;
+        left: 1.24em;
         transform: translateY(calc(-50% + 2px)) scale(0.985);
       }
 
       58% {
-        left: 1.38rem;
+        left: 1.38em;
         transform: translateY(calc(-50% - 2px)) scale(1);
       }
 
       74% {
-        left: 1.56rem;
+        left: 1.56em;
         transform: translateY(calc(-50% + 1px)) scale(0.995);
       }
 
       88% {
-        left: 1.76rem;
+        left: 1.76em;
         transform: translateY(-50%) scale(1);
       }
 
       100% {
-        left: 1.92rem;
+        left: 1.92em;
         transform: translateY(-50%) scale(1);
         box-shadow:
           0 0 0 2px rgba(255, 255, 255, 0.08),

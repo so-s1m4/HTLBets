@@ -20,7 +20,7 @@ export class RouletteWheelComponent {
   readonly segmentsBackground = this.buildSegmentsBackground();
   readonly labelTransforms = this.wheel.map((_, index) => {
     const angle = this.slotCenterAngle(index);
-    return `translate(-50%, -50%) rotate(${angle}deg) translateX(-6.18rem)`;
+    return `translate(-50%, -50%) rotate(${angle}deg) translateX(-7.725em)`;
   });
   readonly labelTextTransforms = this.wheel.map((_, index) => {
     const angle = this.slotCenterAngle(index);
