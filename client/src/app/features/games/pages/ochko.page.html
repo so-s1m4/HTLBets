@@ -1,0 +1,385 @@
+<app-game-shell
+  title="Ochko"
+  subtitle="Five-round room battles for 2-5 players. Everyone starts with one open card and one secret card, then spell cards start bending the table."
+  [connectionState]="socket.connectionState()"
+  [currentBet]="currentBet()"
+  [error]="socket.lastError() || ''"
+  [splitSidebar]="hasRoomState()"
+>
+  @if (lobbyState(); as lobby) {
+    <app-card table>
+      <div class="page-stack ochko-lobby">
+        <div class="auth-split-shell">
+          <app-card tone="muted">
+            <div class="page-stack">
+              <div class="page-heading">
+                <span class="page-heading__eyebrow">Create room</span>
+                <h2>Build a five-round arena</h2>
+                <p class="status-copy">Every seat buys in once. After five rounds the top score takes the pot.</p>
+              </div>
+
+              <app-input label="Room name" [value]="roomName()" (valueChange)="roomName.set($event)" />
+              <div class="utility-row">
+                <app-button [variant]="roomVisibility() === 'public' ? 'primary' : 'ghost'" (click)="roomVisibility.set('public')">Public</app-button>
+                <app-button [variant]="roomVisibility() === 'private' ? 'primary' : 'ghost'" (click)="roomVisibility.set('private')">Private</app-button>
+              </div>
+
+              @if (roomVisibility() === 'private') {
+                <app-input
+                  label="5-digit password"
+                  inputMode="numeric"
+                  [value]="roomPassword()"
+                  (valueChange)="roomPassword.set($event.replace(/\D/g, '').slice(0, 5))"
+                />
+              }
+
+              <app-input
+                label="Buy-in"
+                inputMode="numeric"
+                [value]="roomBuyIn()"
+                (valueChange)="roomBuyIn.set($event.replace(/\D/g, ''))"
+              />
+
+              <app-input
+                label="Max players (2-5)"
+                inputMode="numeric"
+                [value]="roomMaxPlayers()"
+                (valueChange)="roomMaxPlayers.set($event.replace(/\D/g, '').slice(0, 1))"
+              />
+
+              <app-button block (click)="createRoom()">Create Ochko room</app-button>
+            </div>
+          </app-card>
+
+          <app-card tone="muted">
+            <div class="page-stack">
+              <div class="page-heading">
+                <span class="page-heading__eyebrow">Join room</span>
+                <h2>Open tables</h2>
+                <p class="status-copy">{{ lobby.notes }}</p>
+              </div>
+
+              <app-input
+                label="Private room password"
+                inputMode="numeric"
+                [value]="joinPassword()"
+                (valueChange)="joinPassword.set($event.replace(/\D/g, '').slice(0, 5))"
+              />
+
+              <div class="ochko-room-list">
+                @for (room of roomList(); track room.sessionId) {
+                  <button type="button" class="ochko-room-row" [class.is-selected]="selectedRoomId() === room.sessionId" (click)="joinRoom(room)">
+                    <div>
+                      <strong>{{ room.roomName }}</strong>
+                      <p>{{ room.playerCount }}/{{ room.maxPlayers }} players · {{ room.buyIn | credits }} · {{ room.phase }}</p>
+                    </div>
+                    <span class="pill">{{ room.visibility }}</span>
+                  </button>
+                }
+              </div>
+            </div>
+          </app-card>
+        </div>
+      </div>
+    </app-card>
+  }
+
+  @if (lobbyState()) {
+    <app-card sidebar>
+      <div class="page-stack">
+        <div class="glass-stat-grid">
+          <div class="glass-stat">
+            <span class="glass-stat__label">Wallet</span>
+            <strong class="glass-stat__value">{{ auth.currentUser()?.balance || 0 | credits }}</strong>
+          </div>
+          <div class="glass-stat">
+            <span class="glass-stat__label">Rooms</span>
+            <strong class="glass-stat__value">{{ roomList().length }}</strong>
+          </div>
+        </div>
+      </div>
+    </app-card>
+  }
+
+  @if (roomState(); as room) {
+    <app-card table>
+      <div class="page-stack ochko-room-shell">
+        <app-card tone="muted">
+          <div class="utility-row">
+            <div class="page-heading">
+              <span class="page-heading__eyebrow">{{ room.visibility }} room</span>
+              <h2>{{ room.roomName }}</h2>
+            </div>
+            <div class="section-meta">
+              <span class="pill">Round {{ room.roundNumber }}/{{ room.totalRounds }}</span>
+              <span class="pill">{{ roomTimerLabel() }}</span>
+              <span class="pill">Pot {{ room.pot | credits }}</span>
+            </div>
+          </div>
+          <p class="status-copy">{{ room.notes }}</p>
+        </app-card>
+
+        <div class="ochko-table-shell">
+          <div class="ochko-table-bg">
+            <img src="/poker_table.png" alt="">
+          </div>
+
+          <div class="ochko-table-arena">
+            <div class="ochko-board">
+              <div class="ochko-board__hero">
+                <span class="page-heading__eyebrow">Live round</span>
+                <h3>{{ room.phase === 'waiting' ? 'Waiting for ready checks' : room.currentPlayerLabel || 'Table resolving' }}</h3>
+                <p>{{ headlineEvent() }}</p>
+              </div>
+
+              <div class="ochko-board__stats">
+                <div class="ochko-board__stat">
+                  <span>Pot</span>
+                  <strong>{{ room.pot | credits }}</strong>
+                </div>
+                <div class="ochko-board__stat">
+                  <span>Round</span>
+                  <strong>{{ room.roundNumber }}/{{ room.totalRounds }}</strong>
+                </div>
+                <div class="ochko-board__stat">
+                  <span>Clock</span>
+                  <strong>{{ roomTimerLabel() }}</strong>
+                </div>
+              </div>
+
+              @if (room.winners.length > 0) {
+                <div class="ochko-board__feed">
+                  @for (winner of room.winners; track winner.userId) {
+                    <span class="pill">{{ winner.playerLabel }} · {{ winner.roundWins }} wins · {{ winner.payout | credits }}</span>
+                  }
+                </div>
+              }
+            </div>
+
+            @for (entry of orbitSeats(); track entry.player.userId) {
+              <section
+                class="ochko-seat ochko-seat--orbit"
+                [class.ochko-seat--acting]="room.currentPlayerId === entry.player.userId && room.phase === 'round'"
+                [style.left.%]="entry.left"
+                [style.top.%]="entry.top"
+              >
+                <div class="ochko-seat__identity">
+                  <div class="ochko-seat__avatar-shell">
+                    <span class="ochko-seat__turn-ring"></span>
+                    <div class="ochko-seat__avatar">
+                      @if (entry.player.avatarUrl) {
+                        <img [src]="entry.player.avatarUrl || ''" [alt]="entry.player.playerLabel + ' profile picture'" loading="lazy" decoding="async" referrerpolicy="no-referrer" />
+                      } @else {
+                        <span>{{ entry.avatarInitial }}</span>
+                      }
+                    </div>
+                  </div>
+
+                  <div class="ochko-seat__meta">
+                    <strong>{{ entry.player.playerLabel }}</strong>
+                    <span class="ochko-seat__info">{{ entry.player.status }} · {{ entry.player.roundWins }}W · cap {{ entry.player.targetTotal }}</span>
+                  </div>
+                </div>
+
+                <div class="ochko-seat__cards">
+                  @for (card of entry.player.publicCards; track $index) {
+                    <span class="ochko-card" [class.is-red]="cardToneClass(card.suit) === 'is-red'" [class.is-dark]="cardToneClass(card.suit) === 'is-dark'">
+                      <strong>{{ card.rank }}</strong>
+                      <em>{{ suitSymbol(card.suit) }}</em>
+                    </span>
+                  }
+                  @for (card of entry.player.privateCards; track $index) {
+                    <span
+                      class="ochko-card ochko-card--private"
+                      [class.ochko-card--hidden]="card.hidden"
+                      [class.is-red]="!card.hidden && cardToneClass(card.suit) === 'is-red'"
+                      [class.is-dark]="!card.hidden && cardToneClass(card.suit) === 'is-dark'"
+                    >
+                      <strong>{{ card.hidden ? '?' : card.rank }}</strong>
+                      <em>{{ card.hidden ? '•' : suitSymbol(card.suit) }}</em>
+                    </span>
+                  }
+                </div>
+
+              </section>
+            }
+
+            @if (self(); as selfSeat) {
+              <section class="ochko-seat ochko-seat--self" [class.ochko-seat--acting]="room.currentPlayerId === selfSeat.userId && room.phase === 'round'">
+                <div class="ochko-seat__identity">
+                  <div class="ochko-seat__avatar-shell">
+                    <span class="ochko-seat__turn-ring"></span>
+                    <div class="ochko-seat__avatar">
+                      @if (selfSeat.avatarUrl) {
+                        <img [src]="selfSeat.avatarUrl || ''" [alt]="selfSeat.playerLabel + ' profile picture'" loading="lazy" decoding="async" referrerpolicy="no-referrer" />
+                      } @else {
+                        <span>{{ avatarInitial(selfSeat.playerLabel) }}</span>
+                      }
+                    </div>
+                  </div>
+
+                  <div class="ochko-seat__meta">
+                    <strong>You</strong>
+                    <span class="ochko-seat__info">{{ selfSeat.status }} · {{ selfSeat.roundWins }}W · cap {{ selfSeat.targetTotal }}</span>
+                  </div>
+                </div>
+
+                <div class="ochko-seat__cards ochko-seat__cards--self">
+                  @for (card of selfSeat.publicCards; track $index) {
+                    <span class="ochko-card" [class.is-red]="cardToneClass(card.suit) === 'is-red'" [class.is-dark]="cardToneClass(card.suit) === 'is-dark'">
+                      <strong>{{ card.rank }}</strong>
+                      <em>{{ suitSymbol(card.suit) }}</em>
+                    </span>
+                  }
+                  @for (card of selfSeat.privateCards; track $index) {
+                    <span
+                      class="ochko-card ochko-card--private"
+                      [class.ochko-card--hidden]="card.hidden"
+                      [class.is-red]="!card.hidden && cardToneClass(card.suit) === 'is-red'"
+                      [class.is-dark]="!card.hidden && cardToneClass(card.suit) === 'is-dark'"
+                    >
+                      <strong>{{ card.hidden ? '?' : card.rank }}</strong>
+                      <em>{{ card.hidden ? '•' : suitSymbol(card.suit) }}</em>
+                    </span>
+                  }
+                </div>
+
+                <div class="ochko-seat__foot">
+                  <span class="pill">Visible {{ selfSeat.visibleTotal }}</span>
+                  <span class="pill">Total {{ selfSeat.total ?? '??' }}</span>
+                  @if (selfSeat.immunityArmed) {
+                    <span class="pill">Shield</span>
+                  }
+                </div>
+              </section>
+            }
+
+            @if (room.phase === 'round' && self(); as selfSeat) {
+              <div class="ochko-spell-dock" [class.ochko-spell-dock--active]="isMyTurn()">
+                <div class="ochko-board__action-head">
+                  <div class="page-heading">
+                    <span class="page-heading__eyebrow">Your spell tokens</span>
+                    <h3>{{ selfSeat.actionCards.length }}/3 held</h3>
+                  </div>
+                </div>
+
+                @if (targetCandidates().length > 0) {
+                  <div class="ochko-targets">
+                    @for (target of targetCandidates(); track target.userId) {
+                      <button type="button" class="ochko-target-chip" [class.is-selected]="selectedTargetUserId() === target.userId" (click)="chooseTarget(target.userId)">
+                        {{ target.playerLabel }}
+                      </button>
+                    }
+                  </div>
+                }
+
+                @if (selfSeat.actionCards.length > 0) {
+                  <div class="ochko-board__action-belt ochko-board__action-belt--dock">
+                    @for (card of selfSeat.actionCards; track $index) {
+                      <button
+                        type="button"
+                        class="ochko-spell-token"
+                        [class.ochko-spell-token--active]="isMyTurn()"
+                        [class.ochko-spell-token--armed]="selectedTargetUserId() !== null && needsTarget(card)"
+                        [disabled]="!isMyTurn() || (needsTarget(card) && !selectedTargetUserId())"
+                        (click)="playActionCard(card)"
+                      >
+                        <span class="ochko-spell-token__label">{{ card.label }}</span>
+                        <span class="ochko-spell-token__mode">{{ card.targetMode }}</span>
+                      </button>
+                    }
+                  </div>
+                } @else {
+                  <div class="ochko-board__empty-spells">No spell tokens this round.</div>
+                }
+              </div>
+            }
+          </div>
+        </div>
+      </div>
+    </app-card>
+  }
+
+  @if (roomState(); as room) {
+    <app-card sidebar>
+      <div class="page-stack">
+        @if (room.phase === 'waiting') {
+          <app-card tone="muted">
+            <div class="page-stack">
+              <span class="pill">{{ room.players.length }}/{{ room.maxPlayers }} seated</span>
+              <p class="status-copy">Everyone gets 1 open card and 1 secret card at the start of each round. Ready up to launch the full five-round match.</p>
+              <app-button block [disabled]="!canReady()" (click)="readyRoom()">{{ self()?.isReady ? 'Ready' : 'Ready up' }}</app-button>
+              <app-button variant="ghost" block (click)="leaveRoom()">Leave room</app-button>
+            </div>
+          </app-card>
+        } @else if (room.phase === 'round') {
+          <app-card tone="muted">
+            <div class="page-stack">
+              <span class="pill">{{ isMyTurn() ? 'Your turn' : 'Waiting' }}</span>
+              <p class="status-copy">
+                @if (isMyTurn()) {
+                  This turn is open-ended: chain as many draws and spell tokens as you want, then end the turn. If you end it without acting, the round resolves immediately.
+                } @else {
+                  {{ room.currentPlayerLabel || 'Another player' }} is acting.
+                }
+              </p>
+
+              <app-button block [disabled]="!isMyTurn()" (click)="drawCard()">Draw public card</app-button>
+              <app-button variant="secondary" block [disabled]="!isMyTurn()" (click)="stand()">End turn</app-button>
+            </div>
+          </app-card>
+
+        } @else {
+          <app-card tone="muted">
+            <div class="page-stack">
+              <span class="pill">{{ room.phase === 'finished' ? 'Match settled' : 'Next round loading' }}</span>
+              <p class="status-copy">{{ room.notes }}</p>
+              @if (room.phase === 'finished') {
+                <app-button block (click)="leaveRoom()">Return to lobby</app-button>
+              }
+            </div>
+          </app-card>
+        }
+
+        @if (room.winners.length > 0) {
+          <app-card tone="muted">
+            <div class="page-stack">
+              <div class="page-heading">
+                <span class="page-heading__eyebrow">Leaderboard</span>
+                <h3>Match winners</h3>
+              </div>
+              @for (winner of room.winners; track winner.userId) {
+                <div class="utility-row">
+                  <strong>{{ winner.playerLabel }}</strong>
+                  <span class="pill">{{ winner.roundWins }} wins · {{ winner.payout | credits }}</span>
+                </div>
+              }
+            </div>
+          </app-card>
+        }
+
+        <app-card tone="muted">
+          <div class="page-stack">
+            <div class="utility-row">
+              <div class="page-heading">
+                <span class="page-heading__eyebrow">Table log</span>
+                <h3>Recent events</h3>
+              </div>
+              <span class="pill">{{ room.currentPlayerLabel || 'Resolving' }}</span>
+            </div>
+
+            <div class="ochko-log-list">
+              @if (room.recentEvents.length === 0) {
+                <div class="ochko-board__empty-spells">No events yet.</div>
+              } @else {
+                @for (entry of room.recentEvents; track $index) {
+                  <span class="pill">{{ entry }}</span>
+                }
+              }
+            </div>
+          </div>
+        </app-card>
+      </div>
+    </app-card>
+  }
+</app-game-shell>

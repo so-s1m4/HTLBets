@@ -85,6 +85,12 @@ export const routes: Routes = [
           import('./features/games/pages/slots.page').then((module) => module.SlotsPageComponent)
       },
       {
+        path: 'games/ochko',
+        data: { title: 'Ochko' },
+        loadComponent: () =>
+          import('./features/games/pages/ochko.page').then((module) => module.OchkoPageComponent)
+      },
+      {
         path: 'games/leaderboard',
         data: { title: 'Leaderboard' },
         loadComponent: () =>

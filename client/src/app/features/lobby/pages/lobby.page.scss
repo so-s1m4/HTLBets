@@ -148,6 +148,17 @@
       color: var(--text-soft);
     }
 
+    .modi {
+      display: grid;
+      grid-template-columns: repeat(1, 1fr);
+      grid-auto-rows: max-content;
+      gap: 1.5rem;
+      * {
+        width: 100%;
+        height: 100%;
+      }
+    }
+
     @keyframes lobby-orb-float {
       0% {
         transform: translateY(0);
@@ -208,4 +219,17 @@
       .leaderboard-grid {
         grid-template-columns: repeat(3, minmax(0, 1fr));
       }
+      .modi { grid-template-columns: repeat(2, 1fr); }
+    }
+    @media (min-width: 1200px) {
+      .leaderboard-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+      .modi { grid-template-columns: repeat(3, 1fr); }
+    }
+    @media (min-width: 1500px) {
+      .leaderboard-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+      .modi { grid-template-columns: repeat(4, 1fr); }
     }

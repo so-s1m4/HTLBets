@@ -1,57 +1,23 @@
     <div class="page-stack">
-      <app-card tone="accent">
-        <div class="lobby-hero">
-          <div class="lobby-hero__grid" aria-hidden="true"></div>
-          <div class="lobby-hero__orbs">
-            <span></span>
-            <span></span>
-            <span></span>
-          </div>
-
-          <div class="page-heading">
-            <span class="page-heading__eyebrow">First Premium Online Casino </span>
-            <h1>Try your luck or skill in our</h1>
-            <p class="status-copy">
-              Online multiplayer gambling games like roulette, blackjack, and poker.
-            </p>
-          </div>
-
-          <div class="lobby-hero__ticker">
-            <span>Realtime tables</span>
-            <span>•</span>
-            <span>HTL-only access</span>
-            <span>•</span>
-            <span>No Looses</span>
-          </div>
-
-          <div class="glass-stat-grid">
-            <div class="glass-stat">
-              <span class="glass-stat__label">Live games</span>
-              <strong class="glass-stat__value">03 active</strong>
-            </div>
-            <div class="glass-stat">
-              <span class="glass-stat__label">Access</span>
-              <strong class="glass-stat__value">HTL email</strong>
-            </div>
-          </div>
-        </div>
-      </app-card>
-
       <div class="page-heading section-shell">
         <span class="page-heading__eyebrow">Game Lounge</span>
         <h2>Open a table</h2>
       </div>
 
-      @for (game of games; track game.route) {
-        <app-game-card
-          [title]="game.title"
-          [description]="game.description"
-          [route]="game.route"
-          [badge]="game.badge"
-          [availability]="game.availability"
-          [theme]="game.theme"
-        />
-      }
+
+        <div class="modi">
+              @for (game of games; track game.route) {
+                <app-game-card
+                  [title]="game.title"
+                  [description]="game.description"
+                  [route]="game.route"
+                  [badge]="game.badge"
+                  [availability]="game.availability"
+                  [theme]="game.theme"
+                />
+              }
+        </div>
+
 
       <div class="page-heading section-shell">
         <span class="page-heading__eyebrow">Leaderboard</span>

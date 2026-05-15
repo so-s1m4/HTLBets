@@ -12,7 +12,7 @@ const ngBin = resolve(rootDir, 'node_modules', '.bin', process.platform === 'win
 
 const child = spawn(
   ngBin,
-  ['serve', '--proxy-config', 'proxy.conf.json', '--port', `${clientPort}`, '--host', 'localhost'],
+  ['serve', '--proxy-config', 'proxy.conf.json', '--port', `${clientPort}`, '--host', '0.0.0.0'],
   {
     cwd: clientDir,
     stdio: 'inherit',

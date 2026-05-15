@@ -58,7 +58,8 @@
     .game-card__poker,
     .game-card__miner,
     .game-card__crash,
-    .game-card__slots {
+    .game-card__slots,
+    .game-card__ochko {
       position: absolute;
       inset: 0;
     }
@@ -238,6 +239,48 @@
     .game-card__crash-line,
     .game-card__crash-multiplier {
       position: absolute;
+    }
+
+    .game-card__ochko-card {
+      position: absolute;
+      inset: 50% auto auto 50%;
+      width: 3.45rem;
+      height: 4.95rem;
+      border-radius: 1rem;
+      border: 1px solid rgba(149, 171, 211, 0.18);
+      display: grid;
+      align-content: space-between;
+      padding: 0.65rem;
+      box-shadow: 0 16px 24px rgba(4, 8, 20, 0.2);
+    }
+
+    .game-card__ochko-card--open {
+      background: linear-gradient(180deg, rgba(252, 249, 240, 0.98), rgba(234, 223, 196, 0.92));
+      color: #172332;
+      transform: translate(calc(-50% - 1.2rem), calc(-50% + 0.15rem)) rotate(-8deg);
+    }
+
+    .game-card__ochko-card--hidden {
+      background:
+        linear-gradient(180deg, rgba(255, 181, 79, 0.18), rgba(255, 181, 79, 0.02)),
+        linear-gradient(180deg, rgba(27, 38, 56, 0.98), rgba(10, 17, 29, 0.98));
+      transform: translate(calc(-50% + 1.35rem), calc(-50% - 0.05rem)) rotate(9deg);
+    }
+
+    .game-card__ochko-rune {
+      position: absolute;
+      right: 1.15rem;
+      bottom: 1rem;
+      min-width: 3.1rem;
+      padding: 0.42rem 0.72rem;
+      border-radius: 999px;
+      border: 1px solid rgba(255, 181, 79, 0.24);
+      background: rgba(18, 26, 42, 0.92);
+      color: #ffd37a;
+      font-size: 0.92rem;
+      letter-spacing: 0.18em;
+      text-align: center;
+      box-shadow: 0 12px 20px rgba(4, 8, 20, 0.2);
     }
 
     .game-card__crash::before {

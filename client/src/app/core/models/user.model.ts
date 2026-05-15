@@ -71,7 +71,7 @@ export interface DailyTaskClaimResponse {
 
 export interface GameHistoryRecord {
   id: string;
-  gameType: 'ROULETTE' | 'BLACKJACK' | 'POKER' | 'MINER' | 'CRASH' | 'SLOTS' | 'ADMIN';
+  gameType: 'ROULETTE' | 'BLACKJACK' | 'POKER' | 'MINER' | 'CRASH' | 'SLOTS' | 'OCHKO' | 'ADMIN';
   betAmount: number;
   result: string;
   balanceChange: number;

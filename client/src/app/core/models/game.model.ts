@@ -1,5 +1,5 @@
-export type GameSlug = 'roulette' | 'blackjack' | 'poker' | 'miner' | 'crash' | 'slots';
-export type GameType = 'ROULETTE' | 'BLACKJACK' | 'POKER' | 'MINER' | 'CRASH' | 'SLOTS' | 'ADMIN';
+export type GameSlug = 'roulette' | 'blackjack' | 'poker' | 'miner' | 'crash' | 'slots' | 'ochko';
+export type GameType = 'ROULETTE' | 'BLACKJACK' | 'POKER' | 'MINER' | 'CRASH' | 'SLOTS' | 'OCHKO' | 'ADMIN';
 export type GameStatus = 'IDLE' | 'WAITING_ACTION' | 'COMPLETED';
 
 export interface GameOutcome {
@@ -87,6 +87,98 @@ export interface PokerTableState {
 
 export type PokerRealtimeState = PokerLobbyState | PokerTableState;
 
+export interface OchkoDisplayCard {
+  hidden?: boolean;
+  rank?: string;
+  suit?: string;
+}
+
+export type OchkoActionCardType =
+  | 'FORCE_DRAW_OPPONENT'
+  | 'SWAP_LAST_DRAWN'
+  | 'IMMUNITY'
+  | 'SECRET_DRAW'
+  | 'SET_TARGET_27'
+  | 'SET_TARGET_17'
+  | 'ALL_DRAW_ONE'
+  | 'CANCEL_LAST_BONUS';
+
+export interface OchkoActionCardView {
+  type: OchkoActionCardType;
+  label: string;
+  description: string;
+  requiresTarget: boolean;
+  targetMode: 'self' | 'opponent' | 'any' | 'none';
+}
+
+export interface OchkoPlayerView {
+  userId: string;
+  playerLabel: string;
+  avatarUrl?: string | null;
+  seatIndex: number;
+  isSelf: boolean;
+  isReady: boolean;
+  status: 'waiting' | 'active' | 'busted';
+  roundWins: number;
+  targetTotal: number;
+  visibleTotal: number;
+  total: number | null;
+  publicCards: OchkoDisplayCard[];
+  privateCards: OchkoDisplayCard[];
+  actionCards: OchkoActionCardView[];
+  immunityArmed: boolean;
+}
+
+export interface OchkoWinnerView {
+  userId: string;
+  playerLabel: string;
+  roundWins: number;
+  payout: number;
+}
+
+export interface OchkoTableSummary {
+  sessionId: string;
+  roomName: string;
+  visibility: 'public' | 'private';
+  maxPlayers: number;
+  playerCount: number;
+  buyIn: number;
+  roundNumber: number;
+  phase: 'waiting' | 'round' | 'round-end' | 'finished';
+  requiresPassword: boolean;
+}
+
+export interface OchkoLobbyState {
+  kind: 'lobby';
+  rooms: OchkoTableSummary[];
+  notes: string;
+}
+
+export interface OchkoRoomState {
+  kind: 'room';
+  roomId: string;
+  roomName: string;
+  visibility: 'public' | 'private';
+  requiresPassword: boolean;
+  maxPlayers: number;
+  buyIn: number;
+  totalRounds: number;
+  roundNumber: number;
+  phase: 'waiting' | 'round' | 'round-end' | 'finished';
+  pot: number;
+  currentPlayerId?: string;
+  currentPlayerLabel?: string;
+  players: OchkoPlayerView[];
+  winners: OchkoWinnerView[];
+  recentEvents: string[];
+  notes: string;
+  phaseEndsAt?: string;
+  isSeated: boolean;
+  canJoin: boolean;
+}
+
+export type OchkoRealtimeState = OchkoLobbyState | OchkoRoomState;
+
 export interface RealtimeGameState {
   sessionId: string;
   gameType: GameType;
@@ -173,7 +265,8 @@ export const gameSlugToType: Record<GameSlug, GameType> = {
   poker: 'POKER',
   miner: 'MINER',
   crash: 'CRASH',
-  slots: 'SLOTS'
+  slots: 'SLOTS',
+  ochko: 'OCHKO'
 };
 
 export const gameTypeLabels: Record<GameType, string> = {
@@ -183,5 +276,6 @@ export const gameTypeLabels: Record<GameType, string> = {
   MINER: 'Miner',
   CRASH: 'Crash',
   SLOTS: 'Slots',
+  OCHKO: 'Ochko',
   ADMIN: 'Admin'
 };

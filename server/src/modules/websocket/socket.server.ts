@@ -11,6 +11,7 @@ import {
   type BetOperationInput
 } from '../games/core/game-room.manager';
 import { crashRoundManager } from '../games/crash/crash-round.manager';
+import { ochkoTableManager } from '../games/ochko/ochko-table.manager';
 import { pokerTableManager } from '../games/poker/poker-table.manager';
 import { rouletteTableManager } from '../games/roulette/roulette-table.manager';
 import { HttpError } from '../../utils/http-error';
@@ -19,6 +20,7 @@ import { socketEvents } from './socket.events';
 
 const getRoomName = (gameType: string, sessionId: string): string => `game:${gameType}:${sessionId}`;
 const pokerRoomPrefix = 'game:POKER:';
+const ochkoRoomPrefix = 'game:OCHKO:';
 
 export const createSocketServer = (httpServer: HttpServer): Server => {
   const io = new Server(httpServer, {
@@ -40,6 +42,10 @@ export const createSocketServer = (httpServer: HttpServer): Server => {
 
   crashRoundManager.onStateChange(() => {
     void emitCrashTableState(io);
+  });
+
+  ochkoTableManager.onStateChange(() => {
+    void emitOchkoTableState(io);
   });
 
   io.on('connection', (socket) => {
@@ -67,6 +73,14 @@ export const createSocketServer = (httpServer: HttpServer): Server => {
         if (gameType === 'CRASH') {
           const state = await crashRoundManager.getStateForUser(socket.data.user.userId);
           socket.join(getRoomName(state.gameType, crashRoundManager.getSessionId()));
+          socket.emit(socketEvents.state, state);
+          return;
+        }
+
+        if (gameType === 'OCHKO') {
+          const requestedSessionId = payload.sessionId || ochkoTableManager.getLobbySessionId();
+          const state = await ochkoTableManager.getStateForUser(socket.data.user.userId, requestedSessionId);
+          syncOchkoSocketSession(socket, state.sessionId);
           socket.emit(socketEvents.state, state);
           return;
         }
@@ -105,6 +119,12 @@ export const createSocketServer = (httpServer: HttpServer): Server => {
           return;
         }
 
+        if (gameType === 'OCHKO') {
+          const state = await ochkoTableManager.getStateForUser(socket.data.user.userId, ochkoTableManager.getLobbySessionId());
+          syncOchkoSocketSession(socket, state.sessionId);
+          return;
+        }
+
         socket.leave(getRoomName(gameType, payload.sessionId));
       } catch (error) {
         emitGameError(socket, error);
@@ -139,6 +159,10 @@ export const createSocketServer = (httpServer: HttpServer): Server => {
           return;
         }
 
+        if (request.gameType === 'OCHKO') {
+          throw new HttpError(400, 'Ochko room buy-ins are handled through room actions.');
+        }
+
         const state = await gameRoomManager.placeBet(request);
         const room = getRoomName(state.gameType, state.sessionId);
         socket.join(room);
@@ -164,6 +188,39 @@ export const createSocketServer = (httpServer: HttpServer): Server => {
           if (request.gameType === 'CRASH') {
             socket.join(getRoomName('CRASH', crashRoundManager.getSessionId()));
             await crashRoundManager.cashOut(request.userId);
+            return;
+          }
+
+          if (request.gameType === 'OCHKO') {
+            if (request.action === 'create-room') {
+              const sessionId = await ochkoTableManager.createRoom(request.userId, request.payload);
+              syncOchkoSocketSession(socket, sessionId);
+              await emitOchkoTableState(io);
+              return;
+            }
+
+            if (request.action === 'join-room') {
+              const sessionId = await ochkoTableManager.joinRoom(request.userId, request.payload);
+              syncOchkoSocketSession(socket, sessionId);
+              await emitOchkoTableState(io);
+              return;
+            }
+
+            if (request.action === 'ready-room') {
+              await ochkoTableManager.readyRoom(request.userId, request.sessionId);
+              await emitOchkoTableState(io);
+              return;
+            }
+
+            if (request.action === 'leave-room' || request.action === 'return-lobby') {
+              await ochkoTableManager.leaveRoom(request.userId);
+              syncOchkoSocketSession(socket, ochkoTableManager.getLobbySessionId());
+              await emitOchkoTableState(io);
+              return;
+            }
+
+            await ochkoTableManager.performAction(request.userId, request.sessionId, request.action, request.payload);
+            await emitOchkoTableState(io);
             return;
           }
 
@@ -278,6 +335,17 @@ const syncPokerSocketSession = (socket: Socket, sessionId: string) => {
   socket.join(getRoomName('POKER', sessionId));
 };
 
+const syncOchkoSocketSession = (socket: Socket, sessionId: string) => {
+  for (const room of socket.rooms) {
+    if (room.startsWith(ochkoRoomPrefix)) {
+      socket.leave(room);
+    }
+  }
+
+  socket.data.ochkoSessionId = sessionId;
+  socket.join(getRoomName('OCHKO', sessionId));
+};
+
 const emitCrashTableState = async (io: Server) => {
   const room = getRoomName('CRASH', crashRoundManager.getSessionId());
   const sockets = await io.in(room).fetchSockets();
@@ -285,6 +353,19 @@ const emitCrashTableState = async (io: Server) => {
   await Promise.all(
     sockets.map(async (socket) => {
       const state = await crashRoundManager.getStateForUser(socket.data.user.userId);
+      socket.emit(socketEvents.state, state);
+    })
+  );
+};
+
+const emitOchkoTableState = async (io: Server) => {
+  const sockets = Array.from(io.sockets.sockets.values()).filter((socket) => typeof socket.data.ochkoSessionId === 'string');
+
+  await Promise.all(
+    sockets.map(async (socket) => {
+      const requestedSessionId = socket.data.ochkoSessionId || ochkoTableManager.getLobbySessionId();
+      const state = await ochkoTableManager.getStateForUser(socket.data.user.userId, requestedSessionId);
+      syncOchkoSocketSession(socket, state.sessionId);
       socket.emit(socketEvents.state, state);
     })
   );

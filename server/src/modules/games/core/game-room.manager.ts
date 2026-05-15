@@ -20,7 +20,7 @@ import { SlotsEngine } from '../slots/slots.engine';
 const toJsonValue = (value: unknown): Prisma.InputJsonValue =>
   JSON.parse(JSON.stringify(value)) as Prisma.InputJsonValue;
 
-type RealtimeGameType = 'ROULETTE' | 'BLACKJACK' | 'POKER' | 'MINER' | 'CRASH' | 'SLOTS';
+type RealtimeGameType = 'ROULETTE' | 'BLACKJACK' | 'POKER' | 'MINER' | 'CRASH' | 'SLOTS' | 'OCHKO';
 
 export interface JoinGameInput {
   userId: string;
@@ -66,7 +66,8 @@ export const parseGameType = (value: string): RealtimeGameType => {
     normalized === GameType.POKER ||
     normalized === GameType.MINER ||
     normalized === GameType.CRASH ||
-    normalized === GameType.SLOTS
+    normalized === GameType.SLOTS ||
+    normalized === GameType.OCHKO
   ) {
     return normalized as RealtimeGameType;
   }
@@ -81,7 +82,19 @@ class GameRoomManager {
     [GameType.POKER]: new PokerEngine(),
     [GameType.MINER]: new MinerEngine(),
     [GameType.CRASH]: new CrashEngine(),
-    [GameType.SLOTS]: new SlotsEngine()
+    [GameType.SLOTS]: new SlotsEngine(),
+    [GameType.OCHKO]: {
+      gameType: GameType.OCHKO,
+      createInitialState: () => ({}),
+      handleBet: () => {
+        throw new HttpError(400, 'Ochko uses room actions instead of the generic realtime engine.');
+      },
+      handleAction: () => {
+        throw new HttpError(400, 'Ochko uses room actions instead of the generic realtime engine.');
+      },
+      calculateResult: () => null,
+      serializeState: () => ({})
+    }
   };
 
   async joinGame(input: JoinGameInput): Promise<GameStateEnvelope> {

@@ -30,7 +30,7 @@ export class LobbyPageComponent {
   readonly games = [
     {
       title: 'Roulette',
-      description: 'Choose a color or a specific number and watch the wheel spin to see if luck is on your side.',
+      description: 'Make a choice watch the wheel spin to see if luck is on your side.',
       route: '/games/roulette',
       badge: 'Live',
       availability: 'Rounds every 40s',
@@ -38,7 +38,7 @@ export class LobbyPageComponent {
     },
     {
       title: 'Blackjack',
-      description: 'Classic hit, stand, and double actions. Compete against the dealer to reach 21 without going bust.',
+      description: 'Compete against the dealer to reach 21 without going bust.',
       route: '/games/blackjack',
       badge: 'Live',
       availability: 'Table ready',
@@ -46,7 +46,7 @@ export class LobbyPageComponent {
     },
     {
       title: 'Poker',
-      description: 'Texas Hold\'em style poker where you can bet, raise, or fold against other players. May the best hand win!',
+      description: 'Texas Hold\'em. May the best hand win!',
       route: '/games/poker',
       badge: 'Live',
       availability: 'Join the Table',
@@ -70,11 +70,19 @@ export class LobbyPageComponent {
     },
     {
       title: 'Slots',
-      description: 'Eight different slot automats with distinct volatility, symbol sets, and top-end payouts.',
+      description: 'Eight different slot automats.',
       route: '/games/slots',
       badge: 'Live',
       availability: '8 automats',
       theme: 'slots' as const
+    },
+    {
+      title: 'Ochko',
+      description: 'Five-round hidden-card room battles for 2-5 players with spell cards, shifting score caps, and last-card mind games.',
+      route: '/games/ochko',
+      badge: 'New',
+      availability: '2-5 room match',
+      theme: 'ochko' as const
     }
   ];
 
