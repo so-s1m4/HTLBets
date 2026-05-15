@@ -1,6 +1,8 @@
 import { ChangeDetectionStrategy, Component, Input } from '@angular/core';
 
 import type { PokerDisplayCard, PokerSeatView, PokerWinnerView } from '../../../core/models/game.model';
+import { MediaStreamDirective } from '../../../shared/directives/media-stream.directive';
+import type { PokerSeatMediaView } from './poker-media.service';
 
 interface PositionedSeat {
   seat: PokerSeatView;
@@ -70,6 +72,7 @@ const orbitLayouts: Record<number, Array<{ left: number; top: number }>> = {
 @Component({
   selector: 'app-poker-table',
   standalone: true,
+  imports: [MediaStreamDirective],
   templateUrl: './poker-table.component.html',
   styleUrl: './poker-table.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush
@@ -90,6 +93,7 @@ export class PokerTableComponent {
   @Input() currentBet = 0;
   @Input() tableCardBackAsset = '/cards/back_dark.png';
   @Input() tableCardFaceTemplate = '/cards/{suit}_{rank}.png';
+  @Input() seatMedia: Record<string, PokerSeatMediaView> = {};
 
   @Input()
   set actingUserId(value: string | null) {
@@ -188,6 +192,18 @@ export class PokerTableComponent {
 
   avatarInitial(name: string): string {
     return name.trim().charAt(0).toUpperCase() || 'P';
+  }
+
+  mediaFor(userId: string): PokerSeatMediaView | null {
+    return this.seatMedia[userId] || null;
+  }
+
+  hasLiveCamera(userId: string): boolean {
+    return Boolean(this.mediaFor(userId)?.cameraEnabled);
+  }
+
+  hasLiveAudio(userId: string): boolean {
+    return Boolean(this.mediaFor(userId)?.audioEnabled);
   }
 
   turnProgressFor(userId: string): number {

@@ -47,10 +47,11 @@
         class="poker-seat poker-seat--orbit"
         [class.active]="entry.seat.status === 'active'"
         [class.acting]="actingUserId === entry.seat.userId"
+        [class.poker-seat--live]="hasLiveCamera(entry.seat.userId)"
         [style.left.%]="entry.left"
         [style.top.%]="entry.top"
       >
-        <div class="poker-seat__identity">
+        <div class="poker-seat__identity" [class.poker-seat__identity--live]="hasLiveCamera(entry.seat.userId)">
           <div class="poker-seat__avatar-shell">
             @if (entry.seat.emoteText) {
               <span class="poker-seat__bubble">{{ entry.seat.emoteText }}</span>
@@ -61,12 +62,48 @@
             }
 
             <div class="poker-seat__avatar">
-              @if (entry.seat.avatarUrl) {
+              @if (mediaFor(entry.seat.userId); as liveMedia) {
+                @if (liveMedia.cameraEnabled && liveMedia.stream) {
+                  <video
+                    appMediaStream
+                    class="poker-seat__live-video"
+                    [mediaStream]="liveMedia.stream"
+                    autoplay
+                    playsinline
+                    muted
+                  ></video>
+                } @else if (entry.seat.avatarUrl) {
+                  <img [src]="entry.seat.avatarUrl" [alt]="entry.seat.playerLabel + ' profile picture'" loading="lazy" decoding="async" referrerpolicy="no-referrer" />
+                } @else {
+                  <span>{{ entry.avatarInitial }}</span>
+                }
+              } @else if (entry.seat.avatarUrl) {
                 <img [src]="entry.seat.avatarUrl" [alt]="entry.seat.playerLabel + ' profile picture'" loading="lazy" decoding="async" referrerpolicy="no-referrer" />
               } @else {
                 <span>{{ entry.avatarInitial }}</span>
               }
             </div>
+
+            @if (mediaFor(entry.seat.userId)?.stream; as liveMedia) {
+              <audio
+                appMediaStream
+                class="poker-seat__live-audio"
+                [mediaStream]="liveMedia"
+                autoplay
+                playsinline
+              ></audio>
+            }
+
+            @if (hasLiveCamera(entry.seat.userId) || hasLiveAudio(entry.seat.userId)) {
+              <div class="poker-seat__media-badges">
+                @if (hasLiveCamera(entry.seat.userId)) {
+                  <span class="poker-seat__media-badge">CAM</span>
+                }
+                @if (hasLiveAudio(entry.seat.userId)) {
+                  <span class="poker-seat__media-badge">MIC</span>
+                }
+              </div>
+            }
           </div>
 
           <div class="poker-seat__meta">
@@ -98,8 +135,13 @@
     }
 
     @if (selfSeatView; as self) {
-      <section class="poker-seat poker-seat--self" [class.active]="self.seat.status === 'active'" [class.acting]="actingUserId === self.seat.userId">
-        <div class="poker-seat__identity">
+      <section
+        class="poker-seat poker-seat--self"
+        [class.active]="self.seat.status === 'active'"
+        [class.acting]="actingUserId === self.seat.userId"
+        [class.poker-seat--live]="hasLiveCamera(self.seat.userId)"
+      >
+        <div class="poker-seat__identity" [class.poker-seat__identity--live]="hasLiveCamera(self.seat.userId)">
           <div class="poker-seat__avatar-shell">
             @if (self.seat.emoteText) {
               <span class="poker-seat__bubble">{{ self.seat.emoteText }}</span>
@@ -110,12 +152,38 @@
             }
 
             <div class="poker-seat__avatar">
-              @if (self.seat.avatarUrl) {
+              @if (mediaFor(self.seat.userId); as liveMedia) {
+                @if (liveMedia.cameraEnabled && liveMedia.stream) {
+                  <video
+                    appMediaStream
+                    class="poker-seat__live-video"
+                    [mediaStream]="liveMedia.stream"
+                    autoplay
+                    playsinline
+                    muted
+                  ></video>
+                } @else if (self.seat.avatarUrl) {
+                  <img [src]="self.seat.avatarUrl" [alt]="self.seat.playerLabel + ' profile picture'" loading="lazy" decoding="async" referrerpolicy="no-referrer" />
+                } @else {
+                  <span>{{ self.avatarInitial }}</span>
+                }
+              } @else if (self.seat.avatarUrl) {
                 <img [src]="self.seat.avatarUrl" [alt]="self.seat.playerLabel + ' profile picture'" loading="lazy" decoding="async" referrerpolicy="no-referrer" />
               } @else {
                 <span>{{ self.avatarInitial }}</span>
               }
             </div>
+
+            @if (hasLiveCamera(self.seat.userId) || hasLiveAudio(self.seat.userId)) {
+              <div class="poker-seat__media-badges">
+                @if (hasLiveCamera(self.seat.userId)) {
+                  <span class="poker-seat__media-badge">CAM</span>
+                }
+                @if (hasLiveAudio(self.seat.userId)) {
+                  <span class="poker-seat__media-badge">MIC</span>
+                }
+              </div>
+            }
           </div>
 
           <div class="poker-seat__meta">

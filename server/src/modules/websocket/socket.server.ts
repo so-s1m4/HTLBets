@@ -21,6 +21,7 @@ import { socketEvents } from './socket.events';
 const getRoomName = (gameType: string, sessionId: string): string => `game:${gameType}:${sessionId}`;
 const pokerRoomPrefix = 'game:POKER:';
 const ochkoRoomPrefix = 'game:OCHKO:';
+const pokerMediaBySession = new Map<string, Map<string, { cameraEnabled: boolean; audioEnabled: boolean }>>();
 
 export const createSocketServer = (httpServer: HttpServer): Server => {
   const io = new Server(httpServer, {
@@ -65,7 +66,7 @@ export const createSocketServer = (httpServer: HttpServer): Server => {
         if (gameType === 'POKER') {
           const requestedSessionId = payload.sessionId || pokerTableManager.getLobbySessionId();
           const state = await pokerTableManager.getStateForUser(socket.data.user.userId, requestedSessionId);
-          syncPokerSocketSession(socket, state.sessionId);
+          syncPokerSocketSession(io, socket, state.sessionId);
           socket.emit(socketEvents.state, state);
           return;
         }
@@ -110,7 +111,7 @@ export const createSocketServer = (httpServer: HttpServer): Server => {
 
         if (gameType === 'POKER') {
           const state = await pokerTableManager.getStateForUser(socket.data.user.userId, pokerTableManager.getLobbySessionId());
-          syncPokerSocketSession(socket, state.sessionId);
+          syncPokerSocketSession(io, socket, state.sessionId);
           return;
         }
 
@@ -227,21 +228,21 @@ export const createSocketServer = (httpServer: HttpServer): Server => {
           if (request.gameType === 'POKER') {
             if (request.action === 'create-table') {
               const sessionId = await pokerTableManager.createTable(request.userId, request.payload);
-              syncPokerSocketSession(socket, sessionId);
+              syncPokerSocketSession(io, socket, sessionId);
               await emitPokerTableState(io);
               return;
             }
 
             if (request.action === 'spectate-table') {
               const sessionId = await pokerTableManager.spectateTable(request.userId, request.payload);
-              syncPokerSocketSession(socket, sessionId);
+              syncPokerSocketSession(io, socket, sessionId);
               await emitPokerTableState(io);
               return;
             }
 
             if (request.action === 'join-table') {
               const sessionId = await pokerTableManager.joinTable(request.userId, request.payload);
-              syncPokerSocketSession(socket, sessionId);
+              syncPokerSocketSession(io, socket, sessionId);
               await emitPokerTableState(io);
               return;
             }
@@ -260,7 +261,7 @@ export const createSocketServer = (httpServer: HttpServer): Server => {
 
             if (request.action === 'leave-table' || request.action === 'return-lobby') {
               await pokerTableManager.leaveTable(request.userId);
-              syncPokerSocketSession(socket, pokerTableManager.getLobbySessionId());
+              syncPokerSocketSession(io, socket, pokerTableManager.getLobbySessionId());
               await emitPokerTableState(io);
               return;
             }
@@ -279,6 +280,62 @@ export const createSocketServer = (httpServer: HttpServer): Server => {
         }
       }
     );
+
+    socket.on(
+      socketEvents.pokerMediaStatus,
+      async (payload: { sessionId: string; cameraEnabled: boolean; audioEnabled: boolean }) => {
+        try {
+          await assertSocketUserActive(socket);
+          await assertPokerMediaPublisher(socket, payload.sessionId);
+          setPokerMediaStatus(io, payload.sessionId, socket.data.user.userId, payload.cameraEnabled, payload.audioEnabled);
+        } catch (error) {
+          emitGameError(socket, error);
+        }
+      }
+    );
+
+    socket.on(
+      socketEvents.pokerMediaSignal,
+      async (payload: {
+        sessionId: string;
+        targetUserId: string;
+        description?: Record<string, unknown>;
+        candidate?: Record<string, unknown>;
+      }) => {
+        try {
+          await assertSocketUserActive(socket);
+          await assertPokerMediaTableParticipant(socket, payload.sessionId);
+
+          if (!payload.targetUserId) {
+            throw new HttpError(400, 'Missing poker media target.');
+          }
+
+          const room = getRoomName('POKER', payload.sessionId);
+          const sockets = await io.in(room).fetchSockets();
+          const targetSockets = sockets.filter((targetSocket) => targetSocket.data.user.userId === payload.targetUserId);
+
+          await Promise.all(
+            targetSockets.map(async (targetSocket) => {
+              targetSocket.emit(socketEvents.pokerMediaSignal, {
+                sessionId: payload.sessionId,
+                sourceUserId: socket.data.user.userId,
+                description: payload.description,
+                candidate: payload.candidate
+              });
+            })
+          );
+        } catch (error) {
+          emitGameError(socket, error);
+        }
+      }
+    );
+
+    socket.on('disconnect', () => {
+      const sessionId = typeof socket.data.pokerSessionId === 'string' ? socket.data.pokerSessionId : null;
+      if (sessionId) {
+        clearPokerMediaStatus(io, sessionId, socket.data.user.userId);
+      }
+    });
   });
 
   return io;
@@ -318,13 +375,22 @@ const emitPokerTableState = async (io: Server): Promise<void> => {
     sockets.map(async (socket) => {
       const requestedSessionId = socket.data.pokerSessionId || pokerTableManager.getLobbySessionId();
       const state = await pokerTableManager.getStateForUser(socket.data.user.userId, requestedSessionId);
-      syncPokerSocketSession(socket, state.sessionId);
+      if (state.state.kind === 'table' && !state.state.isSeated) {
+        clearPokerMediaStatus(io, state.state.tableId, socket.data.user.userId);
+      }
+      syncPokerSocketSession(io, socket, state.sessionId);
       socket.emit(socketEvents.state, state);
     })
   );
 };
 
-const syncPokerSocketSession = (socket: Socket, sessionId: string) => {
+const syncPokerSocketSession = (io: Server, socket: Socket, sessionId: string) => {
+  const previousSessionId = typeof socket.data.pokerSessionId === 'string' ? socket.data.pokerSessionId : null;
+
+  if (previousSessionId && previousSessionId !== sessionId) {
+    clearPokerMediaStatus(io, previousSessionId, socket.data.user.userId);
+  }
+
   for (const room of socket.rooms) {
     if (room.startsWith(pokerRoomPrefix)) {
       socket.leave(room);
@@ -333,6 +399,7 @@ const syncPokerSocketSession = (socket: Socket, sessionId: string) => {
 
   socket.data.pokerSessionId = sessionId;
   socket.join(getRoomName('POKER', sessionId));
+  emitPokerMediaSnapshot(socket, sessionId);
 };
 
 const syncOchkoSocketSession = (socket: Socket, sessionId: string) => {
@@ -383,4 +450,87 @@ const emitGameError = (socket: Socket, error: unknown) => {
   }
 
   socket.emit(socketEvents.error, { message: 'Unexpected game error.' });
+};
+
+const assertPokerMediaPublisher = async (socket: Socket, sessionId: string) => {
+  const tableState = await assertPokerMediaTableParticipant(socket, sessionId);
+  if (!tableState.isSeated) {
+    throw new HttpError(403, 'Take a seat to turn on camera or microphone.');
+  }
+};
+
+const assertPokerMediaTableParticipant = async (socket: Socket, sessionId: string) => {
+  if (!sessionId || socket.data.pokerSessionId !== sessionId) {
+    throw new HttpError(400, 'Reconnect to the active poker table and try again.');
+  }
+
+  const state = await pokerTableManager.getStateForUser(socket.data.user.userId, sessionId);
+  if (state.state.kind !== 'table') {
+    throw new HttpError(403, 'Join the active poker table to watch live players.');
+  }
+
+  return state.state;
+};
+
+const setPokerMediaStatus = (
+  io: Server,
+  sessionId: string,
+  userId: string,
+  cameraEnabled: boolean,
+  audioEnabled: boolean
+) => {
+  const sessionState = pokerMediaBySession.get(sessionId) || new Map<string, { cameraEnabled: boolean; audioEnabled: boolean }>();
+
+  if (cameraEnabled || audioEnabled) {
+    sessionState.set(userId, { cameraEnabled, audioEnabled });
+    pokerMediaBySession.set(sessionId, sessionState);
+  } else {
+    sessionState.delete(userId);
+    if (sessionState.size === 0) {
+      pokerMediaBySession.delete(sessionId);
+    }
+  }
+
+  io.to(getRoomName('POKER', sessionId)).emit(socketEvents.pokerMediaStatus, {
+    sessionId,
+    sourceUserId: userId,
+    cameraEnabled,
+    audioEnabled
+  });
+};
+
+const clearPokerMediaStatus = (io: Server, sessionId: string, userId: string) => {
+  const sessionState = pokerMediaBySession.get(sessionId);
+  if (!sessionState?.has(userId)) {
+    return;
+  }
+
+  sessionState.delete(userId);
+  if (sessionState.size === 0) {
+    pokerMediaBySession.delete(sessionId);
+  }
+
+  io.to(getRoomName('POKER', sessionId)).emit(socketEvents.pokerMediaStatus, {
+    sessionId,
+    sourceUserId: userId,
+    cameraEnabled: false,
+    audioEnabled: false
+  });
+};
+
+const emitPokerMediaSnapshot = (socket: Socket, sessionId: string) => {
+  const sessionState = pokerMediaBySession.get(sessionId);
+  if (!sessionState?.size) {
+    return;
+  }
+
+  socket.emit(socketEvents.pokerMediaSnapshot, {
+    sessionId,
+    participants: Array.from(sessionState.entries()).map(([sourceUserId, status]) => ({
+      sessionId,
+      sourceUserId,
+      cameraEnabled: status.cameraEnabled,
+      audioEnabled: status.audioEnabled
+    }))
+  });
 };
