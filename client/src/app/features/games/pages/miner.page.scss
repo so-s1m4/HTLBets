@@ -30,7 +30,7 @@
 
 .miner-grid {
   display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
+  grid-template-columns: repeat(5, minmax(0, 10%));
   gap: 0.7rem;
 }
 
@@ -122,9 +122,9 @@
 
 .miner-sidebar {
   position: absolute;
-  right: 0;
+  right: 10%;
   top: 50%;
-  transform: translate(50%, -50%);
+  transform: translate(0, -50%);
 }
 
 .miner-grid__cell.opened {

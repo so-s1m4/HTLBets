@@ -7,7 +7,7 @@
   [splitSidebar]="hasRoomState()"
 >
   @if (lobbyState(); as lobby) {
-    <app-card table>
+    <div table>
       <div class="page-stack ochko-lobby">
         <div class="auth-split-shell">
           <app-card tone="muted">
@@ -34,7 +34,7 @@
               }
 
               <app-input
-                label="Buy-in"
+                label="Bet"
                 inputMode="numeric"
                 [value]="roomBuyIn()"
                 (valueChange)="roomBuyIn.set($event.replace(/\D/g, ''))"
@@ -47,7 +47,7 @@
                 (valueChange)="roomMaxPlayers.set($event.replace(/\D/g, '').slice(0, 1))"
               />
 
-              <app-button block (click)="createRoom()">Create Ochko room</app-button>
+              <app-button block (click)="createRoom()">Create room</app-button>
             </div>
           </app-card>
 
@@ -81,24 +81,7 @@
           </app-card>
         </div>
       </div>
-    </app-card>
-  }
-
-  @if (lobbyState()) {
-    <app-card sidebar>
-      <div class="page-stack">
-        <div class="glass-stat-grid">
-          <div class="glass-stat">
-            <span class="glass-stat__label">Wallet</span>
-            <strong class="glass-stat__value">{{ auth.currentUser()?.balance || 0 | credits }}</strong>
-          </div>
-          <div class="glass-stat">
-            <span class="glass-stat__label">Rooms</span>
-            <strong class="glass-stat__value">{{ roomList().length }}</strong>
-          </div>
-        </div>
-      </div>
-    </app-card>
+    </div>
   }
 
   @if (roomState(); as room) {

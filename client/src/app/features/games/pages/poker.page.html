@@ -7,18 +7,17 @@
   [splitSidebar]="tableState()?.kind === 'table'"
 >
   @if (lobbyState(); as lobby) {
-    <app-card table>
+    <div table>
       <div class="page-stack">
         <div class="auth-split-shell">
           <app-card tone="muted">
             <div class="page-stack">
               <div class="page-heading">
                 <span class="page-heading__eyebrow">Public lobby</span>
-                <h2>Join open tables</h2>
-                <p class="status-copy">One tap throws you into a random open public table. Set your stack first, then jump in.</p>
+                <h2>Join random table</h2>
               </div>
 
-              <app-card tone="muted">
+              <app-card tone="muted" style="margin-top: 10%">
                 <div class="page-stack">
                   <div class="utility-row">
                     <div class="page-heading">
@@ -55,11 +54,6 @@
                 </div>
               </div>
 
-              <div class="section-meta">
-                <span class="pill">Random public seat</span>
-                <span class="pill">Recommended floor {{ recommendedPublicTable()?.minBuyIn || 100 }} cr</span>
-              </div>
-
               <app-button block [disabled]="publicTables().length === 0" (click)="joinSelectedPublicTable()">Join random public table</app-button>
 
             </div>
@@ -74,8 +68,7 @@
             <div class="page-stack">
               <div class="page-heading">
                 <span class="page-heading__eyebrow">Private access</span>
-                <h2>Password rooms</h2>
-                <p class="status-copy">Type the 5-digit code, choose your buy-in, or open the private room builder in a separate modal.</p>
+                <h2>Private rooms</h2>
               </div>
 
               <app-input
@@ -110,11 +103,6 @@
                 </div>
               </div>
 
-              <div class="section-meta">
-                <span class="pill">Wallet {{ auth.currentUser()?.balance || 0 }} cr</span>
-                <span class="pill">Hidden room</span>
-              </div>
-
               <app-button variant="secondary" block (click)="joinPrivateTable()">Join private table</app-button>
             <app-button block (click)="openCreateRoomModal()">Create room</app-button>
             </div>
@@ -122,24 +110,7 @@
 
         </div>
       </div>
-    </app-card>
-  }
-
-  @if (lobbyState(); as lobby) {
-    <app-card sidebar>
-      <div class="page-stack">
-        <div class="glass-stat-grid">
-          <div class="glass-stat">
-            <span class="glass-stat__label">Public tables</span>
-            <strong class="glass-stat__value">{{ publicTables().length }}</strong>
-          </div>
-          <div class="glass-stat">
-            <span class="glass-stat__label">Recommended entry</span>
-            <strong class="glass-stat__value">{{ recommendedPublicTable()?.minBuyIn || 100 }} cr</strong>
-          </div>
-        </div>
-      </div>
-    </app-card>
+    </div>
   }
 
   @if (tableState(); as table) {
@@ -303,9 +274,7 @@
               <div class="page-heading">
                 <span class="page-heading__eyebrow">Room setup</span>
                 <h2>Create room</h2>
-                <p class="status-copy">Choose whether the table should be public or private, then set seats and buy-in floor.</p>
               </div>
-              <app-button variant="ghost" (click)="closeCreateRoomModal()">Close</app-button>
             </div>
 
             <div class="toggle-row">
@@ -346,7 +315,7 @@
             <div class="buyin-slider-card">
               <div class="utility-row">
                 <div class="page-heading">
-                  <span class="page-heading__eyebrow">Start buy-in</span>
+                  <span class="page-heading__eyebrow">Your BUY-IN</span>
                   <h3>{{ createBuyInNumber() }} cr</h3>
                 </div>
                 <span class="pill">Min {{ createMinBuyInNumber() }} cr</span>
@@ -366,12 +335,6 @@
                 <span>{{ createBuyInSliderMin() }} cr</span>
                 <span>{{ createBuyInSliderMax() }} cr</span>
               </div>
-            </div>
-
-            <div class="section-meta">
-              <span class="pill">{{ createVisibility() === 'public' ? 'Visible in lobby' : 'Password protected' }}</span>
-              <span class="pill">You bring {{ createBuyInNumber() }} cr</span>
-              <span class="pill">Seats {{ createMaxPlayers() || '6' }}</span>
             </div>
 
             <app-button block (click)="createRoom()">

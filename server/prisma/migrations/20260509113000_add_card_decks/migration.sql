@@ -6,7 +6,7 @@ CREATE TABLE "CardDeck" (
   "name" TEXT NOT NULL,
   "price" INTEGER NOT NULL,
   "backImageUrl" TEXT NOT NULL,
-  "faceImageTemplate" TEXT NOT NULL DEFAULT '/cards/{suit}_{rank}.png',
+  "faceImageTemplate" TEXT NOT NULL DEFAULT '/cards/default/{suit}_{rank}.png',
   "enabled" BOOLEAN NOT NULL DEFAULT true,
   "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
   "updatedAt" TIMESTAMP(3) NOT NULL,
@@ -44,8 +44,8 @@ ON DELETE CASCADE ON UPDATE CASCADE;
 
 INSERT INTO "CardDeck" ("id", "name", "price", "backImageUrl", "faceImageTemplate", "enabled", "createdAt", "updatedAt")
 VALUES
-  ('classic-dark', 'Classic Dark', 0, '/cards/back_dark.png', '/cards/{suit}_{rank}.png', true, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-  ('classic-light', 'Classic Light', 1200, '/cards/back_light.png', '/cards/{suit}_{rank}.png', true, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+  ('classic-dark', 'Classic Dark', 0, '/cards/default/back_dark.png', '/cards/default/{suit}_{rank}.png', true, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+  ('classic-light', 'Classic Light', 1200, '/cards/default/back_light.png', '/cards/default/{suit}_{rank}.png', true, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
 
 INSERT INTO "UserCardDeck" ("id", "userId", "deckId", "createdAt")
 SELECT
