@@ -1,5 +1,5 @@
-export type GameSlug = 'roulette' | 'blackjack' | 'poker' | 'miner' | 'crash' | 'slots' | 'ochko';
-export type GameType = 'ROULETTE' | 'BLACKJACK' | 'POKER' | 'MINER' | 'CRASH' | 'SLOTS' | 'OCHKO' | 'ADMIN';
+export type GameSlug = 'roulette' | 'blackjack' | 'poker' | 'miner' | 'crash' | 'slots' | 'ochko' | 'mafia';
+export type GameType = 'ROULETTE' | 'BLACKJACK' | 'POKER' | 'MINER' | 'CRASH' | 'SLOTS' | 'OCHKO' | 'MAFIA' | 'ADMIN';
 export type GameStatus = 'IDLE' | 'WAITING_ACTION' | 'COMPLETED';
 
 export interface GameOutcome {
@@ -179,6 +179,85 @@ export interface OchkoRoomState {
 
 export type OchkoRealtimeState = OchkoLobbyState | OchkoRoomState;
 
+export type MafiaRoleKey = 'mafia' | 'detective' | 'doctor' | 'jester' | 'civilian';
+
+export interface MafiaRoleConfigView {
+  key: MafiaRoleKey;
+  label: string;
+  count: number;
+}
+
+export interface MafiaPlayerView {
+  userId: string;
+  playerLabel: string;
+  avatarUrl?: string | null;
+  seatIndex: number;
+  isSelf: boolean;
+  isOwner: boolean;
+  alive: boolean;
+  roleHint?: string | null;
+  revealedRole?: MafiaRoleKey | null;
+  isKnownAlly?: boolean;
+}
+
+export interface MafiaChatMessageView {
+  id: string;
+  userId: string;
+  playerLabel: string;
+  text: string;
+  createdAt: string;
+  isSystem?: boolean;
+}
+
+export interface MafiaRoomSummary {
+  sessionId: string;
+  roomName: string;
+  visibility: 'public' | 'private';
+  maxPlayers: number;
+  playerCount: number;
+  requiresPassword: boolean;
+  videoEnabled: boolean;
+  textChatEnabled: boolean;
+  roles: MafiaRoleConfigView[];
+}
+
+export interface MafiaLobbyState {
+  kind: 'lobby';
+  rooms: MafiaRoomSummary[];
+  notes: string;
+}
+
+export interface MafiaRoomState {
+  kind: 'room';
+  roomId: string;
+  roomName: string;
+  visibility: 'public' | 'private';
+  requiresPassword: boolean;
+  maxPlayers: number;
+  ownerUserId: string;
+  phase: 'waiting' | 'mafia-intro' | 'night' | 'day' | 'voting' | 'resolved';
+  roundNumber: number;
+  videoEnabled: boolean;
+  textChatEnabled: boolean;
+  roles: MafiaRoleConfigView[];
+  players: MafiaPlayerView[];
+  messages: MafiaChatMessageView[];
+  notes: string;
+  isSeated: boolean;
+  canJoin: boolean;
+  selfRole?: MafiaRoleKey | null;
+  selfTeamHint?: string | null;
+  lastInvestigation?: string | null;
+  actionOptions?: Array<{ userId: string; playerLabel: string }>;
+  hasSubmittedAction?: boolean;
+  canStartGame?: boolean;
+  canAdvanceIntro?: boolean;
+  canAdvancePhase?: boolean;
+  winners?: Array<{ side: 'town' | 'mafia' | 'jester'; label: string }>;
+}
+
+export type MafiaRealtimeState = MafiaLobbyState | MafiaRoomState;
+
 export interface RealtimeGameState {
   sessionId: string;
   gameType: GameType;
@@ -266,7 +345,8 @@ export const gameSlugToType: Record<GameSlug, GameType> = {
   miner: 'MINER',
   crash: 'CRASH',
   slots: 'SLOTS',
-  ochko: 'OCHKO'
+  ochko: 'OCHKO',
+  mafia: 'MAFIA'
 };
 
 export const gameTypeLabels: Record<GameType, string> = {
@@ -277,5 +357,6 @@ export const gameTypeLabels: Record<GameType, string> = {
   CRASH: 'Crash',
   SLOTS: 'Slots',
   OCHKO: 'Ochko',
+  MAFIA: 'Mafia',
   ADMIN: 'Admin'
 };

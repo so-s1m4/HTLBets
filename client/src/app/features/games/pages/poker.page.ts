@@ -7,6 +7,7 @@ import { AppButtonComponent } from '../../../shared/ui/app-button.component';
 import { AppCardComponent } from '../../../shared/ui/app-card.component';
 import { AppInputComponent } from '../../../shared/ui/app-input.component';
 import { GameShellComponent } from '../components/game-shell.component';
+import { PokerMediaService } from '../poker/poker-media.service';
 import { PokerTableComponent } from '../poker/poker-table.component';
 
 @Component({
@@ -29,6 +30,7 @@ export class PokerPageComponent {
   readonly waitingTurnDurationMs = 30_000;
   readonly emoteCooldownMs = 5_000;
   readonly auth = inject(AuthService);
+  readonly media = inject(PokerMediaService);
 
   private readonly destroyRef = inject(DestroyRef);
   private readonly isLocalLayoutDebug = false; // typeof window !== 'undefined' &&
@@ -59,6 +61,7 @@ export class PokerPageComponent {
   private nextEmoteAt = 0;
 
   readonly state = computed(() => this.socket.currentState());
+  readonly currentUserId = computed(() => this.auth.currentUser()?.id || null);
   readonly pokerState = computed(() => (this.state()?.state as unknown as PokerRealtimeState | null) || null);
   readonly lobbyState = computed(() => (this.pokerState()?.kind === 'lobby' ? (this.pokerState() as PokerLobbyState) : null));
   readonly tableState = computed(() => (this.pokerState()?.kind === 'table' ? (this.pokerState() as PokerTableState) : null));
@@ -172,9 +175,11 @@ export class PokerPageComponent {
   });
 
   constructor() {
+    this.media.attach();
     this.socket.reset();
     this.socket.joinGame('poker', 'poker-lobby');
     this.destroyRef.onDestroy(() => {
+      this.media.detach();
       this.socket.leaveGame('poker', this.socket.currentState()?.sessionId);
       this.socket.reset();
     });
@@ -206,6 +211,29 @@ export class PokerPageComponent {
       const publicTable = this.recommendedPublicTable();
       if (publicTable) {
         this.publicJoinBuyIn.set(String(Math.max(publicTable.minBuyIn, Number(this.publicJoinBuyIn()) || 0)));
+      }
+    });
+
+    effect(() => {
+      const table = this.tableState();
+      this.media.syncTableState(table, this.currentUserId());
+
+      if (!table) {
+        return;
+      }
+
+      if (!table.isSeated && this.emotePanelOpen()) {
+        this.emotePanelOpen.set(false);
+      }
+
+      if (!table.isSeated) {
+        return;
+      }
+
+      this.publicJoinBuyIn.set(String(Math.max(table.minBuyIn, Number(this.publicJoinBuyIn()) || 0)));
+      this.privateJoinBuyIn.set(String(Math.max(table.minBuyIn, Number(this.privateJoinBuyIn()) || 0)));
+      if (table.minRaiseTo) {
+        this.raiseAmount.set(String(table.minRaiseTo));
       }
     });
 
@@ -334,6 +362,14 @@ export class PokerPageComponent {
     }
 
     this.emotePanelOpen.update((open) => !open);
+  }
+
+  toggleCamera(): void {
+    void this.media.toggleCamera();
+  }
+
+  toggleMicrophone(): void {
+    void this.media.toggleMicrophone();
   }
 
   setCreateBuyInFromSlider(value: string): void {

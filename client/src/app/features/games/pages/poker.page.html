@@ -159,6 +159,7 @@
           [actingCountdownMs]="countdownMs()"
           [actingTurnDurationMs]="actingTurnDurationMs()"
           [seats]="preview.players"
+          [seatMedia]="media.seatMedia()"
           [communityCards]="preview.communityCards"
           [winners]="preview.winners || null"
         />
@@ -181,6 +182,47 @@
 
   @if (tableState(); as table) {
     <app-card sidebar [class]="'sidebar'">
+        @if (table.isSeated) {
+          <app-card tone="muted">
+            <div class="page-stack">
+              <div class="utility-row">
+                <span class="pill">Table media</span>
+                <span class="pill">
+                  @if (media.cameraEnabled() || media.microphoneEnabled()) {
+                    Live
+                  } @else {
+                    Off
+                  }
+                </span>
+              </div>
+              <p class="status-copy">Camera and microphone are optional. Only seated players can go live, and everyone at the table sees the round video badge in the seat ring.</p>
+              <div class="media-toggle-row">
+                <button
+                  type="button"
+                  class="media-toggle"
+                  [class.media-toggle--active]="media.cameraEnabled()"
+                  (click)="toggleCamera()"
+                >
+                  <span class="media-toggle__label">Camera</span>
+                  <strong>{{ media.cameraEnabled() ? 'On' : 'Off' }}</strong>
+                </button>
+                <button
+                  type="button"
+                  class="media-toggle"
+                  [class.media-toggle--active]="media.microphoneEnabled()"
+                  (click)="toggleMicrophone()"
+                >
+                  <span class="media-toggle__label">Mic</span>
+                  <strong>{{ media.microphoneEnabled() ? 'On' : 'Off' }}</strong>
+                </button>
+              </div>
+              @if (media.mediaError()) {
+                <p class="status-copy status-copy--warning">{{ media.mediaError() }}</p>
+              }
+            </div>
+          </app-card>
+        }
+
         @if (table.phase === 'waiting') {
           <div class="page-stack poker-sidebar">
             <div class="glass-stat-grid">

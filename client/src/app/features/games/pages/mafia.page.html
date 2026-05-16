@@ -1,0 +1,423 @@
+<app-game-shell
+  title="Mafia"
+  subtitle="Spin up public or private rooms, tune the role mix before anyone joins, and brief the cast in a live text lobby."
+  [connectionState]="socket.connectionState()"
+  [currentBet]="0"
+  [error]="socket.lastError() || ''"
+  [splitSidebar]="!!roomState()"
+>
+  @if (lobbyState(); as lobby) {
+    <div table>
+      <div class="page-stack">
+        <div class="auth-split-shell">
+          <app-card tone="muted">
+            <div class="page-stack">
+              <div class="page-heading">
+                <span class="page-heading__eyebrow">Public rooms</span>
+                <h2>Join open lobby</h2>
+              </div>
+
+              @if (publicRooms().length) {
+                <div class="mafia-room-list">
+                  @for (room of publicRooms(); track room.sessionId) {
+                    <button type="button" class="mafia-room-item" (click)="joinPublicRoom(room.sessionId)">
+                      <div>
+                        <strong>{{ room.roomName }}</strong>
+                        <span>{{ room.playerCount }}/{{ room.maxPlayers }} players</span>
+                      </div>
+                      <div class="mafia-room-item__meta">
+                        <span class="pill">{{ room.roles.length }} role groups</span>
+                        @if (room.textChatEnabled) {
+                          <span class="pill">Text</span>
+                        }
+                        @if (room.videoEnabled) {
+                          <span class="pill">Video</span>
+                        }
+                      </div>
+                    </button>
+                  }
+                </div>
+              } @else {
+                <app-card tone="muted">
+                  <p class="status-copy">No public Mafia rooms yet. Open one and set the cast yourself.</p>
+                </app-card>
+              }
+
+              <app-button block (click)="openCreateRoomModal()">Create room</app-button>
+            </div>
+          </app-card>
+
+          <app-card tone="muted">
+            <div class="page-stack">
+              <div class="page-heading">
+                <span class="page-heading__eyebrow">Private access</span>
+                <h2>Enter private room</h2>
+              </div>
+
+              <app-input
+                label="5-digit room password"
+                inputMode="numeric"
+                [value]="privatePassword()"
+                (valueChange)="privatePassword.set($event.replace(/\D/g, '').slice(0, 5))"
+              />
+
+              <p class="status-copy">{{ lobby.notes }}</p>
+              <app-button variant="secondary" block (click)="joinPrivateRoom()">Join private room</app-button>
+            </div>
+          </app-card>
+        </div>
+      </div>
+    </div>
+  }
+
+  @if (roomState(); as room) {
+    <div table class="page-stack">
+      <app-card tone="muted">
+        <div class="mafia-stage">
+          <div class="page-heading">
+            <span class="page-heading__eyebrow">{{ room.visibility }} room</span>
+            <h2>{{ room.roomName }}</h2>
+            <p class="status-copy">{{ room.notes }}</p>
+          </div>
+
+          <div class="mafia-pill-row">
+            <span class="pill">{{ room.players.length }}/{{ room.maxPlayers }} players</span>
+            <span class="pill">{{ phaseLabel() }}</span>
+            @if (room.roundNumber) {
+              <span class="pill">Round {{ room.roundNumber }}</span>
+            }
+            @if (room.textChatEnabled) {
+              <span class="pill">Text chat on</span>
+            }
+            @if (room.videoEnabled) {
+              <span class="pill">Video room on</span>
+            }
+            @if (room.requiresPassword) {
+              <span class="pill">Private</span>
+            }
+          </div>
+
+          @if (room.phase === 'mafia-intro') {
+            <p class="status-copy">
+              First night is in private mafia intro mode. Mafia members can see and hear only each other, then the owner opens the full night and room-wide media comes back.
+            </p>
+          }
+
+          @if (room.winners?.length) {
+            <div class="mafia-pill-row">
+              @for (winner of room.winners; track winner.label) {
+                <span class="pill">{{ winner.side }} · {{ winner.label }}</span>
+              }
+            </div>
+          }
+
+          <div class="mafia-role-grid">
+            @for (role of room.roles; track role.key) {
+              <div class="mafia-role-card">
+                <span>{{ role.label }}</span>
+                <strong>{{ role.count }}</strong>
+              </div>
+            }
+          </div>
+        </div>
+      </app-card>
+
+      <div class="mafia-room-grid">
+        <app-card tone="muted">
+          <div class="page-stack">
+            <div class="utility-row">
+              <span class="page-heading__eyebrow">Cast</span>
+              <span class="pill">Owner sets the tone</span>
+            </div>
+
+            <div class="mafia-player-list">
+              @for (player of room.players; track player.userId) {
+                <div class="mafia-player-row">
+                  <div class="mafia-player-row__identity">
+                    <div class="mafia-player-row__avatar-shell">
+                      <div class="mafia-player-row__avatar" [class.mafia-player-row__avatar--live]="hasLiveCamera(player.userId)">
+                        @if (mediaFor(player.userId); as liveMedia) {
+                          @if (liveMedia.cameraEnabled && liveMedia.stream) {
+                            <video
+                              appMediaStream
+                              class="mafia-player-row__live-video"
+                              [mediaStream]="liveMedia.stream"
+                              autoplay
+                              playsinline
+                              [muted]="liveMedia.isSelf"
+                            ></video>
+                          } @else if (player.avatarUrl) {
+                            <img [src]="player.avatarUrl" [alt]="player.playerLabel + ' avatar'" loading="lazy" decoding="async" referrerpolicy="no-referrer" />
+                          } @else {
+                            <span>{{ player.playerLabel.charAt(0).toUpperCase() }}</span>
+                          }
+                        } @else if (player.avatarUrl) {
+                          <img [src]="player.avatarUrl" [alt]="player.playerLabel + ' avatar'" loading="lazy" decoding="async" referrerpolicy="no-referrer" />
+                        } @else {
+                          <span>{{ player.playerLabel.charAt(0).toUpperCase() }}</span>
+                        }
+                      </div>
+
+                      @if (mediaFor(player.userId)?.stream; as liveMedia) {
+                        <audio
+                          appMediaStream
+                          class="mafia-player-row__live-audio"
+                          [mediaStream]="liveMedia"
+                          autoplay
+                          playsinline
+                          [muted]="mediaFor(player.userId)?.isSelf"
+                        ></audio>
+                      }
+
+                      @if (hasLiveCamera(player.userId) || hasLiveAudio(player.userId)) {
+                        <div class="mafia-player-row__media-badges">
+                          @if (hasLiveCamera(player.userId)) {
+                            <span class="pill">CAM</span>
+                          }
+                          @if (hasLiveAudio(player.userId)) {
+                            <span class="pill">MIC</span>
+                          }
+                        </div>
+                      }
+                    </div>
+                    <div>
+                      <strong>{{ player.isSelf ? 'You' : player.playerLabel }}</strong>
+                      <span>
+                        {{ player.isOwner ? 'Room owner' : 'Player' }}
+                        ·
+                        {{ player.alive ? 'Alive' : 'Out' }}
+                        @if (player.roleHint) {
+                          · {{ player.roleHint }}
+                        }
+                        @if (player.revealedRole) {
+                          · {{ player.revealedRole }}
+                        }
+                      </span>
+                    </div>
+                  </div>
+                  <span class="pill">Seat {{ player.seatIndex + 1 }}</span>
+                </div>
+              }
+            </div>
+          </div>
+        </app-card>
+
+        <app-card tone="muted">
+          <div class="page-stack">
+            <div class="utility-row">
+              <span class="page-heading__eyebrow">Room chat</span>
+              <span class="pill">{{ room.textChatEnabled ? 'Live' : 'Disabled' }}</span>
+            </div>
+
+            <div class="mafia-chat-log">
+              @for (message of room.messages; track message.id) {
+                <div class="mafia-chat-line" [class.mafia-chat-line--system]="message.isSystem">
+                  <strong>{{ message.playerLabel }}</strong>
+                  <span>{{ message.text }}</span>
+                </div>
+              }
+            </div>
+
+            @if (room.textChatEnabled) {
+              <app-input
+                label="Send message"
+                [value]="chatMessage()"
+                (valueChange)="chatMessage.set($event)"
+              />
+              <app-button block (click)="sendMessage()">Send to room</app-button>
+            }
+          </div>
+        </app-card>
+      </div>
+    </div>
+  }
+
+  @if (roomState(); as room) {
+    <app-card sidebar [class]="'mafia-sidebar'">
+      <div class="page-stack">
+        <div class="page-heading">
+          <span class="page-heading__eyebrow">Control panel</span>
+          <h2>Game state</h2>
+        </div>
+
+        <span class="pill">{{ phaseLabel() }}</span>
+
+        @if (room.selfRole) {
+          <div class="page-stack">
+            <span class="page-heading__eyebrow">Your role</span>
+            <strong>{{ room.selfRole }}</strong>
+            @if (room.selfTeamHint) {
+              <p class="status-copy">{{ room.selfTeamHint }}</p>
+            }
+            @if (room.lastInvestigation) {
+              <p class="status-copy">{{ room.lastInvestigation }}</p>
+            }
+          </div>
+        }
+
+        @if (room.canStartGame) {
+          <app-button block (click)="startGame()">Start game</app-button>
+        }
+
+        @if (room.canAdvanceIntro) {
+          <app-button block (click)="beginNight()">Open full night</app-button>
+        }
+
+        @if (room.canAdvancePhase) {
+          <app-button block (click)="beginVote()">Open voting</app-button>
+        }
+
+        @if (room.videoEnabled && room.isSeated) {
+          <div class="page-stack">
+            <span class="page-heading__eyebrow">Live media</span>
+            <div class="mafia-target-list">
+              <button
+                type="button"
+                class="mafia-target-button"
+                [class.mafia-target-button--active]="media.cameraEnabled()"
+                [disabled]="!canUseMediaControls() && !media.cameraEnabled()"
+                (click)="toggleCamera()"
+              >
+                {{ media.cameraEnabled() ? 'Camera on' : 'Camera off' }}
+              </button>
+              <button
+                type="button"
+                class="mafia-target-button"
+                [class.mafia-target-button--active]="media.microphoneEnabled()"
+                [disabled]="!canUseMediaControls() && !media.microphoneEnabled()"
+                (click)="toggleMicrophone()"
+              >
+                {{ media.microphoneEnabled() ? 'Mic on' : 'Mic off' }}
+              </button>
+            </div>
+            @if (media.mediaError()) {
+              <p class="status-copy text-danger">{{ media.mediaError() }}</p>
+            } @else if (room.phase === 'mafia-intro' && room.selfRole !== 'mafia') {
+              <p class="status-copy">Your camera and mic stay blocked during the mafia-only intro, then they open back up for the full room at night.</p>
+            } @else if (room.phase === 'mafia-intro' && room.selfRole === 'mafia') {
+              <p class="status-copy">Right now only mafia members can see and hear each other.</p>
+            }
+          </div>
+        }
+
+        @if (actionOptions().length) {
+          <div class="page-stack">
+            <span class="page-heading__eyebrow">Action</span>
+            <p class="status-copy">{{ actionPrompt() }}</p>
+            <div class="mafia-target-list">
+              @for (option of actionOptions(); track option.userId) {
+                <button
+                  type="button"
+                  class="mafia-target-button"
+                  [class.mafia-target-button--active]="selectedActionTargetId() === option.userId"
+                  (click)="selectedActionTargetId.set(option.userId)"
+                >
+                  {{ option.playerLabel }}
+                </button>
+              }
+            </div>
+            <app-button block [disabled]="room.hasSubmittedAction || !selectedActionTargetId()" (click)="submitAction()">
+              {{ room.hasSubmittedAction ? 'Submitted' : room.phase === 'night' ? 'Submit night action' : 'Submit vote' }}
+            </app-button>
+          </div>
+        } @else if (room.phase === 'night' || room.phase === 'voting') {
+          <p class="status-copy">{{ room.hasSubmittedAction ? 'Your action is locked in.' : actionPrompt() }}</p>
+        }
+
+        <p class="status-copy">
+          The owner starts the game, runs the mafia-only intro when needed, opens each vote, and the room automatically resolves night actions and eliminations once everyone required has acted.
+        </p>
+
+        <app-button variant="ghost" block (click)="leaveRoom()">{{ room.isSeated ? 'Leave room' : 'Back to lobby' }}</app-button>
+      </div>
+    </app-card>
+  }
+
+  @if (showCreateRoomModal()) {
+    <div class="room-modal-backdrop" (click)="closeCreateRoomModal()">
+      <div class="room-modal" (click)="$event.stopPropagation()">
+        <app-card tone="muted">
+          <div class="page-stack">
+            <div class="page-heading">
+              <span class="page-heading__eyebrow">Room setup</span>
+              <h2>Create Mafia room</h2>
+            </div>
+
+            <div class="toggle-row">
+              <button type="button" class="toggle-pill" [class.active]="createVisibility() === 'public'" (click)="createVisibility.set('public')">
+                Public
+              </button>
+              <button type="button" class="toggle-pill" [class.active]="createVisibility() === 'private'" (click)="createVisibility.set('private')">
+                Private
+              </button>
+            </div>
+
+            <app-input label="Room name" [value]="createRoomName()" (valueChange)="createRoomName.set($event)" />
+
+            @if (createVisibility() === 'private') {
+              <app-input
+                label="5-digit room password"
+                inputMode="numeric"
+                [value]="createPassword()"
+                (valueChange)="createPassword.set($event.replace(/\D/g, '').slice(0, 5))"
+              />
+            }
+
+            <app-input
+              label="Player limit (4-12)"
+              inputMode="numeric"
+              [value]="createMaxPlayers()"
+              (valueChange)="createMaxPlayers.set($event.replace(/\D/g, '').slice(0, 2))"
+            />
+
+            <div class="form-grid">
+              <app-input label="Mafia" inputMode="numeric" [value]="createMafiaCount()" (valueChange)="createMafiaCount.set($event.replace(/\D/g, '').slice(0, 1))" />
+              <app-input label="Detective" inputMode="numeric" [value]="createDetectiveCount()" (valueChange)="createDetectiveCount.set($event.replace(/\D/g, '').slice(0, 1))" />
+              <app-input label="Doctor" inputMode="numeric" [value]="createDoctorCount()" (valueChange)="createDoctorCount.set($event.replace(/\D/g, '').slice(0, 1))" />
+              <app-input label="Jester" inputMode="numeric" [value]="createJesterCount()" (valueChange)="createJesterCount.set($event.replace(/\D/g, '').slice(0, 1))" />
+            </div>
+
+            <app-card tone="muted">
+              <div class="page-stack">
+                <div class="utility-row">
+                  <span class="page-heading__eyebrow">Role recap</span>
+                  <span class="pill">{{ civilianCount() }} civilians</span>
+                </div>
+                <div class="mafia-role-summary">
+                  @for (role of roleSummary(); track role.key) {
+                    <span class="pill">{{ roleLabel(role) }}</span>
+                  }
+                </div>
+                @if (createConfigError()) {
+                  <p class="status-copy text-danger">{{ createConfigError() }}</p>
+                }
+              </div>
+            </app-card>
+
+            <div class="feature-toggle-grid">
+              <label class="feature-toggle">
+                <input type="checkbox" [checked]="createTextChatEnabled()" (change)="createTextChatEnabled.set($any($event.target).checked)" />
+                <div>
+                  <strong>Text chat</strong>
+                  <span>Keep a live room transcript.</span>
+                </div>
+              </label>
+              <label class="feature-toggle">
+                <input type="checkbox" [checked]="createVideoEnabled()" (change)="createVideoEnabled.set($any($event.target).checked)" />
+                <div>
+                  <strong>Video room</strong>
+                  <span>Mark this room as a face-cam lobby.</span>
+                </div>
+              </label>
+            </div>
+
+            <div class="utility-row">
+              <app-button variant="ghost" (click)="closeCreateRoomModal()">Cancel</app-button>
+              <app-button [disabled]="!!createConfigError()" (click)="createRoom()">Create room</app-button>
+            </div>
+          </div>
+        </app-card>
+      </div>
+    </div>
+  }
+</app-game-shell>

@@ -73,6 +73,25 @@ export class GameSocketService {
     });
   }
 
+  emitEvent(eventName: string, payload?: unknown): void {
+    this.connect();
+    this.socket?.emit(eventName, payload);
+  }
+
+  onEvent<T>(eventName: string, handler: (payload: T) => void): () => void {
+    this.connect();
+    const socket = this.socket;
+
+    if (!socket) {
+      return () => undefined;
+    }
+
+    socket.on(eventName, handler as (payload: T) => void);
+    return () => {
+      socket.off(eventName, handler as (payload: T) => void);
+    };
+  }
+
   reset(): void {
     this.clearDelayedBalanceTimer();
     this.currentState.set(null);
