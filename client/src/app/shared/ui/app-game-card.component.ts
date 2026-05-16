@@ -17,5 +17,5 @@ export class AppGameCardComponent {
   @Input() route = '/lobby';
   @Input() badge = 'Demo';
   @Input() availability = 'Available now';
-  @Input() theme: 'roulette' | 'blackjack' | 'poker' | 'miner' | 'crash' | 'slots' | 'ochko' | 'leaderboard' = 'roulette';
+  @Input() theme: 'roulette' | 'blackjack' | 'poker' | 'miner' | 'crash' | 'slots' | 'ochko' | 'mafia' | 'leaderboard' = 'roulette';
 }

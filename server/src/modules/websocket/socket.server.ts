@@ -11,6 +11,7 @@ import {
   type BetOperationInput
 } from '../games/core/game-room.manager';
 import { crashRoundManager } from '../games/crash/crash-round.manager';
+import { mafiaRoomManager } from '../games/mafia/mafia-room.manager';
 import { ochkoTableManager } from '../games/ochko/ochko-table.manager';
 import { pokerTableManager } from '../games/poker/poker-table.manager';
 import { rouletteTableManager } from '../games/roulette/roulette-table.manager';
@@ -20,8 +21,18 @@ import { socketEvents } from './socket.events';
 
 const getRoomName = (gameType: string, sessionId: string): string => `game:${gameType}:${sessionId}`;
 const pokerRoomPrefix = 'game:POKER:';
+const mafiaRoomPrefix = 'game:MAFIA:';
 const ochkoRoomPrefix = 'game:OCHKO:';
+const mafiaDisconnectGraceMs = 30_000;
 const pokerMediaBySession = new Map<string, Map<string, { cameraEnabled: boolean; audioEnabled: boolean }>>();
+const mafiaMediaBySession = new Map<string, Map<string, { cameraEnabled: boolean; audioEnabled: boolean }>>();
+const mafiaPendingDisconnects = new Map<string, ReturnType<typeof setTimeout>>();
+type SessionBoundSocketLike = {
+  data: Record<string, any>;
+};
+type SnapshotSocketLike = SessionBoundSocketLike & {
+  emit: (event: string, payload: unknown) => unknown;
+};
 
 export const createSocketServer = (httpServer: HttpServer): Server => {
   const io = new Server(httpServer, {
@@ -41,6 +52,10 @@ export const createSocketServer = (httpServer: HttpServer): Server => {
     void emitPokerTableState(io);
   });
 
+  mafiaRoomManager.onStateChange(() => {
+    void emitMafiaRoomState(io);
+  });
+
   crashRoundManager.onStateChange(() => {
     void emitCrashTableState(io);
   });
@@ -53,6 +68,15 @@ export const createSocketServer = (httpServer: HttpServer): Server => {
     socket.on(socketEvents.join, async (payload: { gameType: string; sessionId?: string }) => {
       try {
         await assertSocketUserActive(socket);
+        if (payload.gameType.trim().toUpperCase() === 'MAFIA') {
+          cancelPendingMafiaDisconnect(socket.data.user.userId);
+          const requestedSessionId = payload.sessionId || mafiaRoomManager.getLobbySessionId();
+          const state = await mafiaRoomManager.getStateForUser(socket.data.user.userId, requestedSessionId);
+          syncMafiaSocketSession(io, socket, state.sessionId);
+          socket.emit(socketEvents.state, state);
+          return;
+        }
+
         const gameType = parseGameType(payload.gameType);
 
         if (gameType === 'ROULETTE') {
@@ -102,6 +126,14 @@ export const createSocketServer = (httpServer: HttpServer): Server => {
     socket.on(socketEvents.leave, async (payload: { gameType: string; sessionId: string }) => {
       try {
         await assertSocketUserActive(socket);
+        if (payload.gameType.trim().toUpperCase() === 'MAFIA') {
+          await mafiaRoomManager.leaveRoom(socket.data.user.userId);
+          const state = await mafiaRoomManager.getStateForUser(socket.data.user.userId, mafiaRoomManager.getLobbySessionId());
+          syncMafiaSocketSession(io, socket, state.sessionId);
+          await emitMafiaRoomState(io);
+          return;
+        }
+
         const gameType = parseGameType(payload.gameType);
 
         if (gameType === 'ROULETTE') {
@@ -160,9 +192,9 @@ export const createSocketServer = (httpServer: HttpServer): Server => {
           return;
         }
 
-        if (request.gameType === 'OCHKO') {
-          throw new HttpError(400, 'Ochko room buy-ins are handled through room actions.');
-        }
+          if (request.gameType === 'OCHKO') {
+            throw new HttpError(400, 'Ochko room buy-ins are handled through room actions.');
+          }
 
         const state = await gameRoomManager.placeBet(request);
         const room = getRoomName(state.gameType, state.sessionId);
@@ -178,6 +210,34 @@ export const createSocketServer = (httpServer: HttpServer): Server => {
       async (payload: { gameType: string; sessionId: string; action: string; payload?: Record<string, unknown> }) => {
         try {
           await assertSocketUserActive(socket);
+
+          if (payload.gameType.trim().toUpperCase() === 'MAFIA') {
+            if (payload.action === 'create-room') {
+              const sessionId = await mafiaRoomManager.createRoom(socket.data.user.userId, payload.payload);
+              syncMafiaSocketSession(io, socket, sessionId);
+              await emitMafiaRoomState(io);
+              return;
+            }
+
+            if (payload.action === 'join-room') {
+              const sessionId = await mafiaRoomManager.joinRoom(socket.data.user.userId, payload.payload);
+              syncMafiaSocketSession(io, socket, sessionId);
+              await emitMafiaRoomState(io);
+              return;
+            }
+
+            if (payload.action === 'leave-room' || payload.action === 'return-lobby') {
+              await mafiaRoomManager.leaveRoom(socket.data.user.userId);
+              syncMafiaSocketSession(io, socket, mafiaRoomManager.getLobbySessionId());
+              await emitMafiaRoomState(io);
+              return;
+            }
+
+            await mafiaRoomManager.performAction(socket.data.user.userId, payload.sessionId, payload.action, payload.payload);
+            await emitMafiaRoomState(io);
+            return;
+          }
+
           const request: ActionOperationInput = {
             userId: socket.data.user.userId,
             gameType: parseGameType(payload.gameType),
@@ -282,6 +342,69 @@ export const createSocketServer = (httpServer: HttpServer): Server => {
     );
 
     socket.on(
+      socketEvents.mafiaMediaStatus,
+      async (payload: { sessionId: string; cameraEnabled: boolean; audioEnabled: boolean }) => {
+        try {
+          await assertSocketUserActive(socket);
+          const access = assertMafiaMediaParticipant(socket, payload.sessionId);
+
+          if ((payload.cameraEnabled || payload.audioEnabled) && !access.canPublish) {
+            throw new HttpError(403, 'Live camera and audio are not available for you in this phase.');
+          }
+
+          setMafiaMediaStatus(io, payload.sessionId, socket.data.user.userId, payload.cameraEnabled, payload.audioEnabled);
+        } catch (error) {
+          emitGameError(socket, error);
+        }
+      }
+    );
+
+    socket.on(
+      socketEvents.mafiaMediaSignal,
+      async (payload: {
+        sessionId: string;
+        targetUserId: string;
+        description?: Record<string, unknown>;
+        candidate?: Record<string, unknown>;
+      }) => {
+        try {
+          await assertSocketUserActive(socket);
+          const access = assertMafiaMediaParticipant(socket, payload.sessionId);
+
+          if (!payload.targetUserId) {
+            throw new HttpError(400, 'Missing Mafia media target.');
+          }
+
+          if (!access.allowedPeerIds.includes(payload.targetUserId)) {
+            throw new HttpError(403, 'That live Mafia media route is not available right now.');
+          }
+
+          const room = getRoomName('MAFIA', payload.sessionId);
+          const sockets = await io.in(room).fetchSockets();
+          const targetSockets = sockets.filter((targetSocket) => targetSocket.data.user.userId === payload.targetUserId);
+
+          await Promise.all(
+            targetSockets.map(async (targetSocket) => {
+              const targetAccess = assertMafiaMediaParticipant(targetSocket, payload.sessionId);
+              if (!targetAccess.allowedPeerIds.includes(socket.data.user.userId)) {
+                return;
+              }
+
+              targetSocket.emit(socketEvents.mafiaMediaSignal, {
+                sessionId: payload.sessionId,
+                sourceUserId: socket.data.user.userId,
+                description: payload.description,
+                candidate: payload.candidate
+              });
+            })
+          );
+        } catch (error) {
+          emitGameError(socket, error);
+        }
+      }
+    );
+
+    socket.on(
       socketEvents.pokerMediaStatus,
       async (payload: { sessionId: string; cameraEnabled: boolean; audioEnabled: boolean }) => {
         try {
@@ -331,6 +454,14 @@ export const createSocketServer = (httpServer: HttpServer): Server => {
     );
 
     socket.on('disconnect', () => {
+      const mafiaSessionId = typeof socket.data.mafiaSessionId === 'string' ? socket.data.mafiaSessionId : null;
+      if (mafiaSessionId) {
+        clearMafiaMediaStatus(io, mafiaSessionId, socket.data.user.userId);
+        if (mafiaSessionId !== mafiaRoomManager.getLobbySessionId()) {
+          scheduleMafiaDisconnect(io, socket.data.user.userId, socket.id);
+        }
+      }
+
       const sessionId = typeof socket.data.pokerSessionId === 'string' ? socket.data.pokerSessionId : null;
       if (sessionId) {
         clearPokerMediaStatus(io, sessionId, socket.data.user.userId);
@@ -384,6 +515,22 @@ const emitPokerTableState = async (io: Server): Promise<void> => {
   );
 };
 
+const emitMafiaRoomState = async (io: Server) => {
+  const sockets = Array.from(io.sockets.sockets.values()).filter((socket) => typeof socket.data.mafiaSessionId === 'string');
+
+  await Promise.all(
+    sockets.map(async (socket) => {
+      const requestedSessionId = socket.data.mafiaSessionId || mafiaRoomManager.getLobbySessionId();
+      const state = await mafiaRoomManager.getStateForUser(socket.data.user.userId, requestedSessionId);
+      if (state.state.kind !== 'room' || !state.state.videoEnabled) {
+        clearMafiaMediaStatus(io, requestedSessionId, socket.data.user.userId);
+      }
+      syncMafiaSocketSession(io, socket, state.sessionId);
+      socket.emit(socketEvents.state, state);
+    })
+  );
+};
+
 const syncPokerSocketSession = (io: Server, socket: Socket, sessionId: string) => {
   const previousSessionId = typeof socket.data.pokerSessionId === 'string' ? socket.data.pokerSessionId : null;
 
@@ -411,6 +558,24 @@ const syncOchkoSocketSession = (socket: Socket, sessionId: string) => {
 
   socket.data.ochkoSessionId = sessionId;
   socket.join(getRoomName('OCHKO', sessionId));
+};
+
+const syncMafiaSocketSession = (io: Server, socket: Socket, sessionId: string) => {
+  const previousSessionId = typeof socket.data.mafiaSessionId === 'string' ? socket.data.mafiaSessionId : null;
+
+  if (previousSessionId && previousSessionId !== sessionId) {
+    clearMafiaMediaStatus(io, previousSessionId, socket.data.user.userId);
+  }
+
+  for (const room of socket.rooms) {
+    if (room.startsWith(mafiaRoomPrefix)) {
+      socket.leave(room);
+    }
+  }
+
+  socket.data.mafiaSessionId = sessionId;
+  socket.join(getRoomName('MAFIA', sessionId));
+  emitMafiaMediaSnapshot(socket, sessionId);
 };
 
 const emitCrashTableState = async (io: Server) => {
@@ -452,6 +617,48 @@ const emitGameError = (socket: Socket, error: unknown) => {
   socket.emit(socketEvents.error, { message: 'Unexpected game error.' });
 };
 
+const cancelPendingMafiaDisconnect = (userId: string) => {
+  const pendingTimer = mafiaPendingDisconnects.get(userId);
+  if (!pendingTimer) {
+    return;
+  }
+
+  clearTimeout(pendingTimer);
+  mafiaPendingDisconnects.delete(userId);
+};
+
+const hasActiveMafiaSocket = (io: Server, userId: string, excludeSocketId?: string): boolean =>
+  Array.from(io.sockets.sockets.values()).some(
+    (candidate) =>
+      candidate.id !== excludeSocketId &&
+      candidate.connected &&
+      candidate.data.user?.userId === userId &&
+      typeof candidate.data.mafiaSessionId === 'string' &&
+      candidate.data.mafiaSessionId !== mafiaRoomManager.getLobbySessionId()
+  );
+
+const scheduleMafiaDisconnect = (io: Server, userId: string, disconnectingSocketId: string) => {
+  cancelPendingMafiaDisconnect(userId);
+
+  if (hasActiveMafiaSocket(io, userId, disconnectingSocketId)) {
+    return;
+  }
+
+  const timeout = setTimeout(() => {
+    mafiaPendingDisconnects.delete(userId);
+
+    if (hasActiveMafiaSocket(io, userId)) {
+      return;
+    }
+
+    void mafiaRoomManager.leaveRoom(userId).then(async () => {
+      await emitMafiaRoomState(io);
+    });
+  }, mafiaDisconnectGraceMs);
+
+  mafiaPendingDisconnects.set(userId, timeout);
+};
+
 const assertPokerMediaPublisher = async (socket: Socket, sessionId: string) => {
   const tableState = await assertPokerMediaTableParticipant(socket, sessionId);
   if (!tableState.isSeated) {
@@ -470,6 +677,22 @@ const assertPokerMediaTableParticipant = async (socket: Socket, sessionId: strin
   }
 
   return state.state;
+};
+
+const assertMafiaMediaParticipant = (
+  socket: SessionBoundSocketLike,
+  sessionId: string
+): { roomId: string; videoEnabled: boolean; phase: string; canPublish: boolean; allowedPeerIds: string[] } => {
+  if (!sessionId || socket.data.mafiaSessionId !== sessionId) {
+    throw new HttpError(400, 'Reconnect to the active Mafia room and try again.');
+  }
+
+  const access = mafiaRoomManager.getMediaAccessForUser(socket.data.user.userId, sessionId);
+  if (!access.videoEnabled) {
+    throw new HttpError(403, 'Video and audio are disabled in this Mafia room.');
+  }
+
+  return access;
 };
 
 const setPokerMediaStatus = (
@@ -497,6 +720,42 @@ const setPokerMediaStatus = (
     cameraEnabled,
     audioEnabled
   });
+};
+
+const setMafiaMediaStatus = (
+  io: Server,
+  sessionId: string,
+  userId: string,
+  cameraEnabled: boolean,
+  audioEnabled: boolean
+) => {
+  const sessionState = mafiaMediaBySession.get(sessionId) || new Map<string, { cameraEnabled: boolean; audioEnabled: boolean }>();
+
+  if (cameraEnabled || audioEnabled) {
+    sessionState.set(userId, { cameraEnabled, audioEnabled });
+    mafiaMediaBySession.set(sessionId, sessionState);
+  } else {
+    sessionState.delete(userId);
+    if (sessionState.size === 0) {
+      mafiaMediaBySession.delete(sessionId);
+    }
+  }
+
+  void emitMafiaMediaSnapshots(io, sessionId);
+};
+
+const clearMafiaMediaStatus = (io: Server, sessionId: string, userId: string) => {
+  const sessionState = mafiaMediaBySession.get(sessionId);
+  if (!sessionState?.has(userId)) {
+    return;
+  }
+
+  sessionState.delete(userId);
+  if (sessionState.size === 0) {
+    mafiaMediaBySession.delete(sessionId);
+  }
+
+  void emitMafiaMediaSnapshots(io, sessionId);
 };
 
 const clearPokerMediaStatus = (io: Server, sessionId: string, userId: string) => {
@@ -532,5 +791,40 @@ const emitPokerMediaSnapshot = (socket: Socket, sessionId: string) => {
       cameraEnabled: status.cameraEnabled,
       audioEnabled: status.audioEnabled
     }))
+  });
+};
+
+const emitMafiaMediaSnapshots = async (io: Server, sessionId: string) => {
+  const sockets = await io.in(getRoomName('MAFIA', sessionId)).fetchSockets();
+  await Promise.all(sockets.map(async (socket) => emitMafiaMediaSnapshot(socket, sessionId)));
+};
+
+const emitMafiaMediaSnapshot = async (socket: SnapshotSocketLike, sessionId: string) => {
+  if (socket.data.mafiaSessionId !== sessionId) {
+    return;
+  }
+
+  let access: ReturnType<typeof mafiaRoomManager.getMediaAccessForUser>;
+
+  try {
+    access = mafiaRoomManager.getMediaAccessForUser(socket.data.user.userId, sessionId);
+  } catch {
+    return;
+  }
+
+  const sessionState = mafiaMediaBySession.get(sessionId);
+  const visibleParticipantIds = new Set(access.allowedPeerIds);
+  const participants = Array.from(sessionState?.entries() || [])
+    .filter(([sourceUserId]) => visibleParticipantIds.has(sourceUserId))
+    .map(([sourceUserId, status]) => ({
+      sessionId,
+      sourceUserId,
+      cameraEnabled: status.cameraEnabled,
+      audioEnabled: status.audioEnabled
+    }));
+
+  socket.emit(socketEvents.mafiaMediaSnapshot, {
+    sessionId,
+    participants
   });
 };

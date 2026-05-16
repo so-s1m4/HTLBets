@@ -83,6 +83,14 @@ export class LobbyPageComponent {
       badge: 'New',
       availability: '2-5 room match',
       theme: 'ochko' as const
+    },
+    {
+      title: 'Mafia',
+      description: 'Create public or private social-deduction rooms, configure the exact role mix, and gather the cast before the first accusation.',
+      route: '/games/mafia',
+      badge: 'New',
+      availability: 'Custom room roles',
+      theme: 'mafia' as const
     }
   ];
 

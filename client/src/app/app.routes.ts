@@ -91,6 +91,12 @@ export const routes: Routes = [
           import('./features/games/pages/ochko.page').then((module) => module.OchkoPageComponent)
       },
       {
+        path: 'games/mafia',
+        data: { title: 'Mafia' },
+        loadComponent: () =>
+          import('./features/games/pages/mafia.page').then((module) => module.MafiaPageComponent)
+      },
+      {
         path: 'games/leaderboard',
         data: { title: 'Leaderboard' },
         loadComponent: () =>
