@@ -120,3 +120,14 @@ model DailyTaskClaim {
   @@unique([userId, taskKey, claimDate])
   @@index([userId, claimDate])
 }
+
+model GameCatalogEntry {
+  id        String   @id
+  name      String
+  enabled   Boolean  @default(true)
+  sortOrder Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([enabled, sortOrder])
+}

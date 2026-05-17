@@ -10,6 +10,7 @@ import {
   type ActionOperationInput,
   type BetOperationInput
 } from '../games/core/game-room.manager';
+import { gameCatalogService, toRealtimeGameCatalogId } from '../games/core/game-catalog.service';
 import { crashRoundManager } from '../games/crash/crash-round.manager';
 import { mafiaRoomManager } from '../games/mafia/mafia-room.manager';
 import { ochkoTableManager } from '../games/ochko/ochko-table.manager';
@@ -69,6 +70,7 @@ export const createSocketServer = (httpServer: HttpServer): Server => {
       try {
         await assertSocketUserActive(socket);
         if (payload.gameType.trim().toUpperCase() === 'MAFIA') {
+          await gameCatalogService.assertEnabled('mafia');
           cancelPendingMafiaDisconnect(socket.data.user.userId);
           const requestedSessionId = payload.sessionId || mafiaRoomManager.getLobbySessionId();
           const state = await mafiaRoomManager.getStateForUser(socket.data.user.userId, requestedSessionId);
@@ -78,6 +80,7 @@ export const createSocketServer = (httpServer: HttpServer): Server => {
         }
 
         const gameType = parseGameType(payload.gameType);
+        await gameCatalogService.assertEnabled(toRealtimeGameCatalogId(gameType));
 
         if (gameType === 'ROULETTE') {
           const state = await rouletteTableManager.getStateForUser(socket.data.user.userId);
@@ -174,6 +177,7 @@ export const createSocketServer = (httpServer: HttpServer): Server => {
           amount: payload.amount,
           payload: payload.payload
         };
+        await gameCatalogService.assertEnabled(toRealtimeGameCatalogId(request.gameType));
 
         if (request.gameType === 'ROULETTE') {
           await rouletteTableManager.placeBet(request.userId, request.amount, request.payload);
@@ -212,6 +216,7 @@ export const createSocketServer = (httpServer: HttpServer): Server => {
           await assertSocketUserActive(socket);
 
           if (payload.gameType.trim().toUpperCase() === 'MAFIA') {
+            await gameCatalogService.assertEnabled('mafia');
             if (payload.action === 'create-room') {
               const sessionId = await mafiaRoomManager.createRoom(socket.data.user.userId, payload.payload);
               syncMafiaSocketSession(io, socket, sessionId);
@@ -245,6 +250,7 @@ export const createSocketServer = (httpServer: HttpServer): Server => {
             action: payload.action,
             payload: payload.payload
           };
+          await gameCatalogService.assertEnabled(toRealtimeGameCatalogId(request.gameType));
 
           if (request.gameType === 'CRASH') {
             socket.join(getRoomName('CRASH', crashRoundManager.getSessionId()));

@@ -1,121 +1,136 @@
-    <div class="page-stack">
-      <div class="page-heading section-shell">
-        <span class="page-heading__eyebrow">Game Lounge</span>
-        <h2>Open a table</h2>
-      </div>
+<div class="lobby-shell">
+  <section class="lobby-welcome">
+
+    <div style="display: flex; align-items: center; justify-content: space-between">
+        <h2 class="lobby-welcome__section-title">Open a table</h2>
 
 
-        <div class="modi">
-              @for (game of games; track game.route) {
-                <app-game-card
-                  [title]="game.title"
-                  [description]="game.description"
-                  [route]="game.route"
-                  [badge]="game.badge"
-                  [availability]="game.availability"
-                  [theme]="game.theme"
+        <div class="lobby-toolbar">
+            <label class="lobby-search" aria-label="Search games">
+                <span class="lobby-search__icon">⌕</span>
+                <input
+                        type="search"
+                        placeholder="Search games..."
+                        [value]="searchValue()"
+                        (input)="searchValue.set($any($event.target).value)"
                 />
-              }
+            </label>
+            <button type="button" class="lobby-filter-button">
+                <span>☰</span>
+                <span>Filters</span>
+            </button>
         </div>
-
-
-      <div class="page-heading section-shell">
-        <span class="page-heading__eyebrow">Leaderboard</span>
-        <h2>Top players right now</h2>
-      </div>
-
-      @if (leaderboardError()) {
-        <app-card tone="muted">
-          <p class="status-copy text-danger">{{ leaderboardError() }}</p>
-        </app-card>
-      } @else if (loadingLeaderboard() && !leaderboard()) {
-        <app-card tone="muted">
-          <p class="status-copy">Loading leaderboard...</p>
-        </app-card>
-      } @else if (leaderboard()) {
-        <div class="leaderboard-grid">
-          <app-card tone="muted">
-            <div class="leaderboard-card">
-              <div class="leaderboard-card__header">
-                <span class="page-heading__eyebrow">Most Money</span>
-                <span class="pill">Top 1</span>
-              </div>
-
-              <div class="leaderboard-entry">
-                <div class="leaderboard-entry__avatar">
-                  @if (topEntry('richest')?.avatarUrl) {
-                    <img [src]="topEntry('richest')!.avatarUrl!" [alt]="leaderboardName(topEntry('richest')) + ' avatar'" loading="lazy" decoding="async" referrerpolicy="no-referrer" />
-                  } @else {
-                    <span>{{ leaderboardInitials(topEntry('richest')) }}</span>
-                  }
-                </div>
-
-                <div class="leaderboard-entry__copy">
-                  <strong>{{ leaderboardName(topEntry('richest')) }}</strong>
-                  <span>{{ topEntry('richest') ? (topEntry('richest')!.metricValue | credits) : 'No score yet' }}</span>
-                </div>
-              </div>
-            </div>
-          </app-card>
-
-          <app-card tone="muted">
-            <div class="leaderboard-card">
-              <div class="leaderboard-card__header">
-                <span class="page-heading__eyebrow">Most Losses</span>
-                <span class="pill">Top 1</span>
-              </div>
-
-              <div class="leaderboard-entry">
-                <div class="leaderboard-entry__avatar">
-                  @if (topEntry('mostLosses')?.avatarUrl) {
-                    <img [src]="topEntry('mostLosses')!.avatarUrl!" [alt]="leaderboardName(topEntry('mostLosses')) + ' avatar'" loading="lazy" decoding="async" referrerpolicy="no-referrer" />
-                  } @else {
-                    <span>{{ leaderboardInitials(topEntry('mostLosses')) }}</span>
-                  }
-                </div>
-
-                <div class="leaderboard-entry__copy">
-                  <strong>{{ leaderboardName(topEntry('mostLosses')) }}</strong>
-                  <span>{{ topEntry('mostLosses') ? (topEntry('mostLosses')!.metricValue | credits) : 'No losses yet' }}</span>
-                </div>
-              </div>
-            </div>
-          </app-card>
-
-          <app-card tone="muted">
-            <div class="leaderboard-card">
-              <div class="leaderboard-card__header">
-                <span class="page-heading__eyebrow">Biggest Win</span>
-                <span class="pill">Top 1</span>
-              </div>
-
-              <div class="leaderboard-entry">
-                <div class="leaderboard-entry__avatar">
-                  @if (topEntry('biggestWin')?.avatarUrl) {
-                    <img [src]="topEntry('biggestWin')!.avatarUrl!" [alt]="leaderboardName(topEntry('biggestWin')) + ' avatar'" loading="lazy" decoding="async" referrerpolicy="no-referrer" />
-                  } @else {
-                    <span>{{ leaderboardInitials(topEntry('biggestWin')) }}</span>
-                  }
-                </div>
-
-                <div class="leaderboard-entry__copy">
-                  <strong>{{ leaderboardName(topEntry('biggestWin')) }}</strong>
-                  <span>{{ topEntry('biggestWin') ? (topEntry('biggestWin')!.metricValue | credits) : 'No win yet' }}</span>
-                </div>
-              </div>
-            </div>
-          </app-card>
-        </div>
-
-        <app-game-card
-          title="Leaderboard"
-          description="Open the full ranking browser and switch between most money, most losses, and biggest wins for the top 100 players."
-          route="/games/leaderboard"
-          badge="Live"
-          availability="Top 100 players"
-          theme="leaderboard"
-        />
-      }
-
-      <app-coming-soon />
     </div>
+  </section>
+
+  <section class="lobby-section">
+
+    <div class="lobby-games-grid">
+      @for (game of visibleGames(); track game.route) {
+        <article class="lobby-game-card" [attr.data-theme]="game.theme">
+          <div class="lobby-game-card__copy">
+            <div class="lobby-game-card__heading">
+              <div class="lobby-game-card__title-row">
+                <h3>{{ game.title }}</h3>
+                <span class="lobby-game-card__badge" [class.is-new]="game.badge === 'new'">{{ badgeLabel(game) }}</span>
+              </div>
+              <span>{{ game.strapline }}</span>
+            </div>
+            <p>{{ game.description }}</p>
+
+            <div class="lobby-game-card__footer">
+              <div class="lobby-game-card__players">
+
+              </div>
+
+              <a [routerLink]="game.route" class="lobby-play-button">Play</a>
+            </div>
+          </div>
+
+          <div class="lobby-preview" [attr.data-theme]="game.theme" aria-hidden="true">
+            @if (game.previewImage) {
+              <img class="lobby-preview__asset" [attr.data-theme]="game.theme" [src]="game.previewImage" alt="" />
+            } @else {
+              @switch (game.theme) {
+                @case ('ochko') {
+                  <div class="lobby-preview__ochko">
+                    <img class="lobby-preview__card lobby-preview__card--front" src="/cards/default/clubs_8.png" alt="" />
+                    <img class="lobby-preview__card lobby-preview__card--back" src="/cards/default/back_dark.png" alt="" />
+                  </div>
+                }
+                @default {
+                  <div></div>
+                }
+              }
+            }
+          </div>
+        </article>
+      }
+    </div>
+  </section>
+
+  <section class="lobby-section">
+    <div class="lobby-section__header lobby-section__header--action">
+      <h2>Top players right now</h2>
+      <a routerLink="/games/leaderboard" class="lobby-section__link">View all</a>
+    </div>
+
+    @if (leaderboardError()) {
+      <div class="lobby-feedback">{{ leaderboardError() }}</div>
+    } @else if (loadingLeaderboard() && !topHighlights().length) {
+      <div class="lobby-feedback">Loading leaderboard...</div>
+    } @else {
+      <div class="lobby-highlights-grid">
+        @for (highlight of topHighlights(); track highlight.key) {
+          <article class="lobby-highlight-card">
+            <div class="lobby-highlight-card__icon">{{ highlight.icon }}</div>
+            <div class="lobby-highlight-card__copy">
+              <span>{{ highlight.eyebrow }}</span>
+              <strong>{{ highlight.amount | credits }}</strong>
+            </div>
+          </article>
+        }
+      </div>
+    }
+
+    <a routerLink="/games/leaderboard" class="lobby-banner">
+      <div class="lobby-banner__copy">
+        <strong>Leaderboard</strong>
+        <span>Open the full ranking browser and switch between the top money, losses, and wins.</span>
+      </div>
+      <div class="lobby-banner__meta">
+        <span class="lobby-banner__label">Top 100 players</span>
+        <img class="lobby-banner__trophy" src="/lobby-icons/trophy.png" alt="" />
+      </div>
+    </a>
+  </section>
+
+  <section class="lobby-section">
+    <div class="lobby-section__header lobby-section__header--action">
+      <h2>Next tables in queue</h2>
+      <a routerLink="/games/poker" class="lobby-section__link">View all</a>
+    </div>
+
+    <div class="lobby-queue-grid">
+      @for (game of queueGames(); track game.route) {
+        <a [routerLink]="game.route" class="lobby-queue-card" [attr.data-theme]="game.theme">
+          <div class="lobby-queue-card__preview" [attr.data-theme]="game.theme">
+            @if (game.previewImage) {
+              <img class="lobby-preview__asset" [attr.data-theme]="game.theme" [src]="game.previewImage" alt="" />
+            }
+          </div>
+
+          <div class="lobby-queue-card__copy">
+            <strong>{{ game.title }}</strong>
+            <span>{{ game.strapline }}</span>
+          </div>
+
+          <div class="lobby-queue-card__meta">
+            <strong>{{ game.queueCopy }}</strong>
+            <span>{{ game.players }} in queue</span>
+          </div>
+        </a>
+      }
+    </div>
+  </section>
+</div>

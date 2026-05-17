@@ -1,17 +1,38 @@
+import { CommonModule } from '@angular/common';
 import { Component, DestroyRef, computed, inject, signal } from '@angular/core';
+import { RouterLink } from '@angular/router';
 
-import { AuthService } from '../../../core/services/auth.service';
 import type { LeaderboardEntry, LeaderboardSnapshot } from '../../../core/models/user.model';
+import { AuthService } from '../../../core/services/auth.service';
+import { GameCatalogService } from '../../../core/services/game-catalog.service';
 import { LeaderboardService } from '../../../core/services/leaderboard.service';
 import { CreditsPipe } from '../../../shared/pipes/credits.pipe';
-import { AppGameCardComponent } from '../../../shared/ui/app-game-card.component';
-import { AppCardComponent } from '../../../shared/ui/app-card.component';
-import { ComingSoonComponent } from '../components/coming-soon.component';
+
+type LobbyTheme = 'roulette' | 'blackjack' | 'poker' | 'miner' | 'crash' | 'slots' | 'ochko' | 'mafia';
+
+interface LobbyGameCard {
+  title: string;
+  strapline: string;
+  description: string;
+  route: string;
+  theme: LobbyTheme;
+  players: number;
+  queueCopy: string;
+  badge: 'live' | 'new';
+  previewImage?: string;
+}
+
+interface LobbyHighlightCard {
+  key: 'richest' | 'mostLosses' | 'biggestWin';
+  eyebrow: string;
+  amount: number;
+  icon: string;
+}
 
 @Component({
   selector: 'app-lobby-page',
   standalone: true,
-  imports: [AppGameCardComponent, AppCardComponent, ComingSoonComponent, CreditsPipe],
+  imports: [CommonModule, RouterLink, CreditsPipe],
   templateUrl: './lobby.page.html',
   styleUrl: './lobby.page.scss'
 })
@@ -19,82 +40,141 @@ export class LobbyPageComponent {
   private readonly auth = inject(AuthService);
   private readonly destroyRef = inject(DestroyRef);
   private readonly leaderboardService = inject(LeaderboardService);
+  private readonly gameCatalog = inject(GameCatalogService);
   private readonly refreshIntervalMs = 5 * 60 * 1000;
 
   readonly balance = computed(() => this.auth.currentUser()?.balance || 0);
-  readonly email = computed(() => this.auth.currentUser()?.email || 'guest');
+  readonly currentUser = computed(() => this.auth.currentUser());
+  readonly displayName = computed(() => this.currentUser()?.username || this.currentUser()?.email?.split('@')[0] || 'player');
+  readonly userInitials = computed(() => this.initialsFor(this.displayName()));
   readonly leaderboard = signal<LeaderboardSnapshot | null>(null);
   readonly loadingLeaderboard = signal(true);
   readonly leaderboardError = signal('');
+  readonly searchValue = signal('');
 
-  readonly games = [
+  readonly topNav = [
+    { label: 'Lobby', route: '/lobby', exact: true },
+    { label: 'Roulette', route: '/games/roulette', exact: false },
+    { label: 'Blackjack', route: '/games/blackjack', exact: false },
+    { label: 'Poker', route: '/games/poker', exact: false },
+    { label: 'Mafia', route: '/games/mafia', exact: false }
+  ] as const;
+
+  readonly games: LobbyGameCard[] = [
     {
       title: 'Roulette',
-      description: 'Make a choice watch the wheel spin to see if luck is on your side.',
+      strapline: 'Round table · 408',
+      description: 'Make a choice, watch the wheel spin, and see if luck lands on your side.',
       route: '/games/roulette',
-      badge: 'Live',
-      availability: 'Rounds every 40s',
-      theme: 'roulette' as const
+      theme: 'roulette',
+      players: 128,
+      queueCopy: 'Starts in 00:15',
+      badge: 'live',
+      previewImage: '/lobby-icons/roulette.png'
     },
     {
       title: 'Blackjack',
-      description: 'Compete against the dealer to reach 21 without going bust.',
+      strapline: 'Table ready',
+      description: 'Compete against the dealer to reach 21 without going over.',
       route: '/games/blackjack',
-      badge: 'Live',
-      availability: 'Table ready',
-      theme: 'blackjack' as const
+      theme: 'blackjack',
+      players: 96,
+      queueCopy: '96 in queue',
+      badge: 'live',
+      previewImage: '/lobby-icons/blackjack_cards.png'
     },
     {
       title: 'Poker',
-      description: 'Texas Hold\'em. May the best hand win!',
+      strapline: 'Join the table',
+      description: "Texas Hold'em. May the best hand win.",
       route: '/games/poker',
-      badge: 'Live',
-      availability: 'Join the Table',
-      theme: 'poker' as const
+      theme: 'poker',
+      players: 256,
+      queueCopy: '256 in queue',
+      badge: 'live',
+      previewImage: '/lobby-icons/poker_chip.png'
     },
     {
       title: 'Miner',
-      description: 'Uncover safe tiles, dodge the hidden mines, and cash out before greed blows up the round.',
+      strapline: '25-tile game',
+      description: 'Uncover safe tiles, dodge the hidden mines, and cash out before the danger spikes.',
       route: '/games/miner',
-      badge: 'Live',
-      availability: '25-tile board',
-      theme: 'miner' as const
+      theme: 'miner',
+      players: 75,
+      queueCopy: 'Starts in 01:30',
+      badge: 'live',
+      previewImage: '/lobby-icons/miner.png'
     },
     {
       title: 'Crash',
-      description: 'Watch the multiplier climb in real time and bail out before the line snaps and wipes the round.',
+      strapline: 'Fast game',
+      description: 'Watch the multiplier climb in real time and bail out before it breaks.',
       route: '/games/crash',
-      badge: 'Live',
-      availability: 'Time-based cashout',
-      theme: 'crash' as const
+      theme: 'crash',
+      players: 200,
+      queueCopy: 'Fast queue',
+      badge: 'live',
+      previewImage: '/lobby-icons/crash_chart.png'
     },
     {
       title: 'Slots',
-      description: 'Eight different slot automats.',
+      strapline: '3 reels',
+      description: 'Spin and win in this neon slot room.',
       route: '/games/slots',
-      badge: 'Live',
-      availability: '8 automats',
-      theme: 'slots' as const
+      theme: 'slots',
+      players: 120,
+      queueCopy: '3 reels live',
+      badge: 'live',
+      previewImage: '/lobby-icons/slots.png'
     },
     {
       title: 'Ochko',
-      description: 'Five-round hidden-card room battles for 2-5 players with spell cards, shifting score caps, and last-card mind games.',
+      strapline: 'Card game',
+      description: 'Five-card hidden-hand poker battle for 2-5 players with special wilds.',
       route: '/games/ochko',
-      badge: 'New',
-      availability: '2-5 room match',
-      theme: 'ochko' as const
+      theme: 'ochko',
+      players: 64,
+      queueCopy: '2-5 seats'
+      ,
+      badge: 'new'
     },
     {
       title: 'Mafia',
-      description: 'Create public or private social-deduction rooms, configure the exact role mix, and gather the cast before the first accusation.',
+      strapline: 'Social game',
+      description: 'Deduction, deception, and persuasion. Find your allies and expose the mafia.',
       route: '/games/mafia',
-      badge: 'New',
-      availability: 'Custom room roles',
-      theme: 'mafia' as const
+      theme: 'mafia',
+      players: 90,
+      queueCopy: 'Private rooms',
+      badge: 'new',
+      previewImage: '/lobby-icons/mafia_hat.png'
     }
   ];
 
+  readonly visibleGames = computed(() => {
+    const filtered = this.gameCatalog.visibleItems(this.games.map((game) => ({ ...game, gameId: game.theme })));
+    const query = this.searchValue().trim().toLowerCase();
+
+    if (!query) {
+      return filtered;
+    }
+
+    return filtered.filter((game) =>
+      [game.title, game.strapline, game.description].some((value) => value.toLowerCase().includes(query))
+    );
+  });
+  readonly queueGames = computed(() => this.visibleGames().slice(0, 4));
+  readonly topHighlights = computed<LobbyHighlightCard[]>(() => {
+    const board = this.leaderboard();
+    return [
+      { key: 'richest', eyebrow: 'Most money', amount: board?.richest[0]?.metricValue || 0, icon: '◫' },
+      { key: 'mostLosses', eyebrow: 'Most losses', amount: board?.mostLosses[0]?.metricValue || 0, icon: '⌁' },
+      { key: 'biggestWin', eyebrow: 'Biggest win', amount: board?.biggestWin[0]?.metricValue || 0, icon: '◈' }
+    ];
+  });
+
   constructor() {
+    void this.gameCatalog.ensureLoaded();
     void this.refreshLeaderboard();
 
     const refreshTimer = window.setInterval(() => {
@@ -122,18 +202,8 @@ export class LobbyPageComponent {
     }
   }
 
-  leaderboardName(entry: LeaderboardEntry | null): string {
-    if (!entry) {
-      return 'No player yet';
-    }
-
-    return entry.username || entry.email;
-  }
-
-  leaderboardInitials(entry: LeaderboardEntry | null): string {
-    const source = this.leaderboardName(entry);
-
-    return source
+  initialsFor(value: string): string {
+    return value
       .split(/[\s@._-]+/)
       .filter(Boolean)
       .slice(0, 2)
@@ -141,8 +211,14 @@ export class LobbyPageComponent {
       .join('') || 'HB';
   }
 
-  topEntry(kind: 'richest' | 'mostLosses' | 'biggestWin'): LeaderboardEntry | null {
-    const leaderboard = this.leaderboard();
-    return leaderboard?.[kind]?.[0] || null;
+  compactNumber(value: number): string {
+    return Intl.NumberFormat('en-US', {
+      notation: 'compact',
+      maximumFractionDigits: 1
+    }).format(value || 0);
+  }
+
+  badgeLabel(game: LobbyGameCard): string {
+    return game.badge === 'new' ? 'NEW' : 'LIVE';
   }
 }

@@ -3,8 +3,9 @@
         <a
           [routerLink]="item.route"
           routerLinkActive="active"
-          [routerLinkActiveOptions]="{ exact: item.route === '/lobby' || item.route === '/profile' || item.route === '/admin' }"
+          [routerLinkActiveOptions]="{ exact: item.exact }"
           class="bottom-nav__item"
+          [class.bottom-nav__item--featured]="item.featured"
         >
           <span class="bottom-nav__icon">{{ item.icon }}</span>
           <span class="bottom-nav__label">{{ item.label }}</span>

@@ -7,6 +7,13 @@ const transport = nodemailer.createTransport({
   host: env.MAIL_HOST,
   port: env.MAIL_PORT,
   secure: env.MAIL_SECURE,
+  ignoreTLS: env.MAIL_IGNORE_TLS,
+  tls:
+    env.MAIL_TLS_REJECT_UNAUTHORIZED === undefined
+      ? undefined
+      : {
+          rejectUnauthorized: env.MAIL_TLS_REJECT_UNAUTHORIZED
+        },
   auth: env.MAIL_USER
     ? {
         user: env.MAIL_USER,

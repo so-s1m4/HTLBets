@@ -1,17 +1,45 @@
-    <header class="top-bar">
-      <div class="top-bar__inner">
-        <div class="top-bar__brand">
-          <span class="top-bar__mark">HB</span>
-          <div class="top-bar__copy">
-            <span class="top-bar__eyebrow">HTL Gambling Floor</span>
-            <strong>Dashboard</strong>
-            <p>Become a millionaire!</p>
-          </div>
-        </div>
-
-        <div class="top-bar__meta">
-          <span class="top-bar__user">{{ auth.currentUser()?.email || 'guest' }}</span>
-          <app-balance-badge [balance]="auth.currentUser()?.balance || 0" />
-        </div>
+<header class="top-bar">
+  <div class="top-bar__inner">
+    <a routerLink="/lobby" class="top-bar__brand">
+      <span class="top-bar__mark">HB</span>
+      <div class="top-bar__copy">
+        <strong>HTL Bets</strong>
+        <span>Next Gen Casino</span>
       </div>
-    </header>
+    </a>
+
+    <nav class="top-bar__nav">
+      @for (item of navItems(); track item.route) {
+        <a
+          [routerLink]="item.route"
+          routerLinkActive="active"
+          [routerLinkActiveOptions]="{ exact: item.exact }"
+          class="top-bar__nav-item"
+        >
+          {{ item.label }}
+        </a>
+      }
+    </nav>
+
+    <div class="top-bar__meta">
+      <div class="top-bar__balance">
+        <span>$</span>
+        <strong>{{ auth.currentUser()?.balance || 0 | credits }}</strong>
+      </div>
+
+      <button type="button" class="top-bar__wallet">
+        <img src="/lobby-icons/wallet.png" alt=""  style="height: 2rem"/>
+      </button>
+
+      <a routerLink="/profile" class="top-bar__profile">
+        <div class="top-bar__avatar">
+          @if (auth.currentUser()?.avatarUrl) {
+            <img [src]="auth.currentUser()!.avatarUrl!" [alt]="displayName() + ' avatar'" loading="lazy" decoding="async" referrerpolicy="no-referrer" />
+          } @else {
+            <span>{{ initials() }}</span>
+          }
+        </div>
+      </a>
+    </div>
+  </div>
+</header>

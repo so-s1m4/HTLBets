@@ -1,37 +1,109 @@
 :root {
   color-scheme: dark;
-  --bg: #06080d;
-  --bg-deep: #0b1019;
-  --bg-elevated: #0f1724;
-  --bg-panel: #121b2a;
-  --bg-panel-strong: #0d141f;
-  --bg-panel-soft: #182234;
-  --border: rgba(149, 171, 211, 0.14);
-  --border-strong: rgba(93, 168, 255, 0.34);
-  --border-soft: rgba(149, 171, 211, 0.08);
-  --text: #f4f7ff;
-  --text-muted: rgba(228, 235, 249, 0.72);
-  --text-soft: rgba(228, 235, 249, 0.46);
-  --accent: #5da8ff;
-  --accent-cyan: #7de3ff;
-  --accent-purple: #887bff;
-  --accent-glow: rgba(93, 168, 255, 0.24);
-  --danger: #ff758f;
-  --success: #75f3bf;
+
+  /* Background */
+  --bg-main: #050814;
+  --bg-secondary: #070d1d;
+  --bg-deep: #02040d;
+  --bg-card: rgba(8, 16, 34, 0.84);
+  --bg-card-hover: rgba(14, 27, 56, 0.92);
+  --bg-navbar: rgba(4, 8, 20, 0.9);
+
+  /* Dark navy / blue */
+  --navy-900: #050814;
+  --navy-800: #070d1d;
+  --navy-700: #101c37;
+  --navy-600: #192a50;
+  --navy-500: #233778;
+
+  /* Main accents */
+  --accent-blue: #5ccbff;
+  --accent-cyan: #22d3ee;
+  --accent-purple: #7b4dff;
+  --accent-violet: #a855f7;
+  --accent-pink: #ec4899;
+
+  /* Neon glow colors */
+  --glow-blue: rgba(92, 203, 255, 0.28);
+  --glow-blue-strong: rgba(92, 203, 255, 0.62);
+  --glow-purple: rgba(123, 77, 255, 0.54);
+  --glow-purple-soft: rgba(123, 77, 255, 0.22);
+  --glow-cyan: rgba(34, 211, 238, 0.2);
+
+  /* Text */
+  --text-primary: #f4f7ff;
+  --text-secondary: #aab6d3;
+  --text-muted: #6f7b99;
+  --text-disabled: #3e4a66;
+
+  /* Borders */
+  --border-soft: rgba(120, 160, 255, 0.18);
+  --border-active: rgba(120, 160, 255, 0.45);
+  --border-glow: rgba(92, 203, 255, 0.55);
+
+  /* Status */
+  --success: #22c55e;
+  --warning: #facc15;
+  --danger: #ef4444;
+  --info: #38bdf8;
+
+  /* Medals / casino */
+  --gold: #facc15;
+  --gold-deep: #d97706;
+  --silver: #cbd5e1;
+  --silver-deep: #64748b;
+  --bronze: #f97316;
+  --bronze-deep: #9a3412;
+
+  /* Gems */
+  --gem-blue: #38bdf8;
+  --gem-green: #22c55e;
+  --gem-purple: #a855f7;
+  --gem-red: #ef4444;
+  --gem-cyan: #22d3ee;
+
+  /* Gradients */
+  --gradient-bg:
+    radial-gradient(circle at 18% 8%, rgba(82, 64, 255, 0.18), transparent 28%),
+    radial-gradient(circle at 84% 18%, rgba(34, 211, 238, 0.08), transparent 24%),
+    radial-gradient(circle at 52% 100%, rgba(123, 77, 255, 0.12), transparent 30%),
+    linear-gradient(180deg, #040713 0%, #030510 34%, #02040d 100%);
+  --gradient-card:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0)),
+    linear-gradient(145deg, rgba(12, 22, 44, 0.94), rgba(4, 8, 20, 0.98));
+  --gradient-button: linear-gradient(135deg, #5ccbff, #7b4dff);
+  --gradient-purple-panel: linear-gradient(90deg, rgba(35, 55, 120, 0.8), rgba(80, 35, 140, 0.75));
+
+  /* Existing app aliases */
+  --bg: var(--bg-main);
+  --bg-elevated: var(--bg-secondary);
+  --bg-panel: var(--bg-card);
+  --bg-panel-strong: rgba(8, 13, 28, 0.94);
+  --bg-panel-soft: rgba(25, 42, 80, 0.68);
+  --border: var(--border-soft);
+  --border-strong: var(--border-active);
+  --text: var(--text-primary);
+  --text-soft: var(--text-secondary);
+  --accent: var(--accent-blue);
+  --accent-glow: var(--glow-blue);
   --shadow: 0 32px 80px rgba(0, 0, 0, 0.46);
   --shadow-float:
     0 18px 40px rgba(3, 6, 13, 0.36),
     0 36px 90px rgba(0, 0, 0, 0.34);
   --shadow-panel:
     inset 0 1px 0 rgba(255, 255, 255, 0.05),
-    inset 0 -18px 30px rgba(0, 0, 0, 0.12),
-    0 18px 38px rgba(2, 6, 12, 0.34),
-    0 36px 72px rgba(0, 0, 0, 0.28);
+    inset 0 -20px 36px rgba(0, 0, 0, 0.22),
+    0 0 0 1px rgba(92, 203, 255, 0.04),
+    0 18px 38px rgba(1, 4, 12, 0.48),
+    0 36px 72px rgba(0, 0, 0, 0.4),
+    0 0 36px rgba(92, 203, 255, 0.08);
   --shadow-panel-strong:
     inset 0 1px 0 rgba(255, 255, 255, 0.06),
-    inset 0 -20px 34px rgba(0, 0, 0, 0.18),
-    0 22px 44px rgba(2, 6, 12, 0.42),
-    0 42px 84px rgba(0, 0, 0, 0.34);
+    inset 0 -20px 34px rgba(0, 0, 0, 0.24),
+    0 0 0 1px rgba(92, 203, 255, 0.06),
+    0 22px 44px rgba(2, 6, 12, 0.5),
+    0 42px 84px rgba(0, 0, 0, 0.42),
+    0 0 48px rgba(123, 77, 255, 0.12);
   --shadow-accent:
     0 16px 34px rgba(93, 168, 255, 0.18),
     0 34px 60px rgba(5, 9, 20, 0.24);
@@ -45,7 +117,7 @@
   --radius-md: 22px;
   --radius-sm: 18px;
   --radius-pill: 999px;
-  --content-width: 580px;
+  --content-width: 1440px;
   --page-padding: 1rem;
   --glass-blur: none;
 }
@@ -63,11 +135,7 @@ body {
 body {
   margin: 0;
   font-family: 'SF Pro Display', 'SF Pro Text', 'Inter', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  background:
-    radial-gradient(circle at 14% 10%, rgba(93, 168, 255, 0.12), transparent 22%),
-    radial-gradient(circle at 85% 6%, rgba(125, 227, 255, 0.08), transparent 18%),
-    radial-gradient(circle at 86% 74%, rgba(136, 123, 255, 0.1), transparent 20%),
-    linear-gradient(180deg, #06080d 0%, #0a1018 24%, #080d15 58%, #05070b 100%);
+  background: var(--gradient-bg);
   color: var(--text);
 }
 
@@ -94,7 +162,7 @@ body::after {
     radial-gradient(circle at 78% 22%, rgba(125, 227, 255, 0.12), transparent 18%),
     radial-gradient(circle at 58% 82%, rgba(136, 123, 255, 0.14), transparent 22%);
   filter: blur(28px);
-  opacity: 0.42;
+  opacity: 0.58;
 }
 
 body > app-root {
@@ -144,7 +212,7 @@ main {
   font-size: 0.72rem;
   letter-spacing: 0.22em;
   text-transform: uppercase;
-  color: rgba(125, 227, 255, 0.92);
+  color: var(--accent-cyan);
   font-family: 'SF Mono', 'IBM Plex Mono', ui-monospace, monospace;
 }
 
@@ -192,11 +260,11 @@ main {
   gap: 0.4rem;
   padding: 0.58rem 0.9rem;
   border-radius: var(--radius-pill);
-  border: 1px solid rgba(149, 171, 211, 0.14);
+  border: 1px solid var(--border-soft);
   background:
     linear-gradient(180deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0)),
-    linear-gradient(180deg, rgba(22, 31, 46, 0.98), rgba(13, 20, 31, 0.98));
-  color: rgba(244, 247, 255, 0.92);
+    linear-gradient(180deg, rgba(16, 28, 55, 0.9), rgba(7, 13, 29, 0.92));
+  color: var(--text-primary);
   font-size: 0.82rem;
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
 }
@@ -204,7 +272,7 @@ main {
 .glass-divider {
   width: 100%;
   height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(149, 171, 211, 0.2), transparent);
+  background: linear-gradient(90deg, transparent, var(--border-active), transparent);
 }
 
 .glass-stat-grid {
