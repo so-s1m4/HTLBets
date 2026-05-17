@@ -81,6 +81,7 @@
             <app-button (click)="setActiveTab('users')">Open player desk</app-button>
             <app-button variant="secondary" (click)="setActiveTab('history')">Open audit history</app-button>
             <app-button variant="secondary" (click)="setActiveTab('decks')">Open deck studio</app-button>
+            <app-button variant="secondary" (click)="setActiveTab('games')">Open game switches</app-button>
             <app-button variant="ghost" (click)="refresh()" [disabled]="loading() || deckLoading()">Refresh all data</app-button>
           </div>
         </div>
@@ -125,6 +126,39 @@
           } @else {
             <p class="status-copy">No player is selected yet. The first player will be pinned automatically once the list loads.</p>
           }
+        </div>
+      </app-card>
+
+      <app-card tone="muted">
+        <div class="page-stack">
+          <div class="utility-row">
+            <div class="page-heading">
+              <span class="page-heading__eyebrow">Game catalog</span>
+              <h2>{{ enabledGameCount() }} games live</h2>
+            </div>
+            <span class="pill">{{ gameCount() }} total</span>
+          </div>
+
+          <div class="admin-overview-meta">
+            <div>
+              <span class="admin-meta-label">Available now</span>
+              <strong>{{ enabledGameCount() }}</strong>
+            </div>
+            <div>
+              <span class="admin-meta-label">Hidden</span>
+              <strong>{{ gameCount() - enabledGameCount() }}</strong>
+            </div>
+            <div>
+              <span class="admin-meta-label">Catalog status</span>
+              <strong>{{ gameLoading() ? 'Syncing' : 'Ready' }}</strong>
+            </div>
+            <div>
+              <span class="admin-meta-label">Switch desk</span>
+              <strong>{{ savingGameId() ? 'Updating' : 'Idle' }}</strong>
+            </div>
+          </div>
+
+          <app-button variant="secondary" (click)="setActiveTab('games')">Open game switches</app-button>
         </div>
       </app-card>
 
@@ -690,6 +724,65 @@
                       </app-button>
                     </div>
                   </div>
+                </div>
+              </div>
+            }
+          </div>
+        }
+      </div>
+    </app-card>
+  }
+
+  @if (activeTab() === 'games') {
+    <app-card tone="muted">
+      <div class="page-stack">
+        <div class="utility-row">
+          <div class="page-heading">
+            <span class="page-heading__eyebrow">Game switches</span>
+            <h2>Turn games on or off for players</h2>
+            <p class="status-copy">Disabled games disappear from the lobby and cannot be opened by regular players.</p>
+          </div>
+          <span class="pill">{{ enabledGameCount() }} enabled</span>
+        </div>
+
+        @if (gameError()) {
+          <p class="status-copy text-danger">{{ gameError() }}</p>
+        } @else if (gameNotice()) {
+          <p class="status-copy text-success">{{ gameNotice() }}</p>
+        }
+
+        @if (gameLoading()) {
+          <p class="status-copy">Loading game catalog...</p>
+        } @else {
+          <div class="admin-deck-list">
+            @for (game of gameCatalog(); track game.id) {
+              <div class="admin-deck-card">
+                <div class="admin-deck-card__fields">
+                  <div class="admin-deck-card__meta">
+                    <strong>{{ game.name }}</strong>
+                    <div class="section-actions">
+                      <span class="pill">{{ game.id }}</span>
+                      <span class="pill">{{ game.updatedAt | date: 'mediumDate' }}</span>
+                    </div>
+                  </div>
+
+                  <p class="status-copy">
+                    @if (game.enabled) {
+                      Players can currently see and open this game.
+                    } @else {
+                      This game is hidden from the lobby and blocked for regular players.
+                    }
+                  </p>
+
+                  <label class="admin-toggle">
+                    <input
+                      type="checkbox"
+                      [checked]="game.enabled"
+                      [disabled]="savingGameId() === game.id"
+                      (change)="setGameEnabled(game, $any($event.target).checked)"
+                    />
+                    <span>{{ savingGameId() === game.id ? 'Updating...' : 'Enabled for players' }}</span>
+                  </label>
                 </div>
               </div>
             }

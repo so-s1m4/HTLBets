@@ -69,6 +69,22 @@
     }
 
     .leaderboard-row__rank {
+      width: 3rem;
+      height: 3rem;
+      display: grid;
+      place-items: center;
+      flex: 0 0 auto;
+    }
+
+    .leaderboard-row__rank img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      display: block;
+      filter: drop-shadow(0 10px 16px rgba(0, 0, 0, 0.25));
+    }
+
+    .leaderboard-row__rank span {
       width: 2.2rem;
       height: 2.2rem;
       display: grid;

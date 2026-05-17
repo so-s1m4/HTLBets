@@ -80,6 +80,15 @@ userRouter.get('/leaderboard', async (_req, res, next) => {
   }
 });
 
+userRouter.get('/game-catalog', async (_req, res, next) => {
+  try {
+    const catalog = await userService.listGameCatalog();
+    res.status(200).json(catalog);
+  } catch (error) {
+    next(error);
+  }
+});
+
 userRouter.patch('/me/profile', async (req, res, next) => {
   try {
     const input: { username?: string; avatarUrl?: string | null } = {};
@@ -195,6 +204,24 @@ userRouter.post('/admin/card-decks/:deckId/default', adminMiddleware, async (req
   try {
     const deck = await userService.setAdminDefaultCardDeck(String(req.params.deckId));
     res.status(200).json(deck);
+  } catch (error) {
+    next(error);
+  }
+});
+
+userRouter.get('/admin/games', adminMiddleware, async (_req, res, next) => {
+  try {
+    const catalog = await userService.listAdminGameCatalog();
+    res.status(200).json(catalog);
+  } catch (error) {
+    next(error);
+  }
+});
+
+userRouter.patch('/admin/games/:gameId', adminMiddleware, async (req, res, next) => {
+  try {
+    const game = await userService.setAdminGameEnabled(String(req.params.gameId), Boolean(req.body?.enabled));
+    res.status(200).json(game);
   } catch (error) {
     next(error);
   }

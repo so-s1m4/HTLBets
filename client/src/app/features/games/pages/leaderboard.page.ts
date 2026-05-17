@@ -87,4 +87,9 @@ export class LeaderboardPageComponent {
       .map((part) => part[0]?.toUpperCase() || '')
       .join('') || 'HB';
   }
+
+  medalImage(rank: number): string {
+    const normalized = Math.min(10, Math.max(1, rank));
+    return `/lobby-icons/medals/medal_${String(normalized).padStart(2, '0')}_transparent.png`;
+  }
 }

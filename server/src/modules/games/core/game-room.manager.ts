@@ -3,6 +3,7 @@ import { GameSessionStatus, GameType, Prisma, type GameSession, type User } from
 import { prisma } from '../../../prisma/client';
 import { HttpError } from '../../../utils/http-error';
 import { fromDbAmount, toDbAmount } from '../../../utils/money';
+import { gameCatalogService } from './game-catalog.service';
 import type {
   ActionRequest,
   BetRequest,
@@ -98,6 +99,7 @@ class GameRoomManager {
   };
 
   async joinGame(input: JoinGameInput): Promise<GameStateEnvelope> {
+    await gameCatalogService.assertEnabled(input.gameType);
     let user = await this.getUser(input.userId);
     let session = await this.getOrCreateSession(input);
     const engine = this.engines[input.gameType];
@@ -114,6 +116,7 @@ class GameRoomManager {
   }
 
   async placeBet(input: BetOperationInput): Promise<GameStateEnvelope> {
+    await gameCatalogService.assertEnabled(input.gameType);
     if (input.amount <= 0) {
       throw new HttpError(400, 'Bet amount must be greater than zero.');
     }
@@ -146,6 +149,7 @@ class GameRoomManager {
   }
 
   async performAction(input: ActionOperationInput): Promise<GameStateEnvelope> {
+    await gameCatalogService.assertEnabled(input.gameType);
     let user = await this.getUser(input.userId);
     let session = await this.requireSession(input.userId, input.gameType, input.sessionId);
     const engine = this.engines[input.gameType];
@@ -175,6 +179,7 @@ class GameRoomManager {
   }
 
   async getAutoResolveAt(input: JoinGameInput): Promise<number | null> {
+    await gameCatalogService.assertEnabled(input.gameType);
     const session = input.sessionId
       ? await this.requireSession(input.userId, input.gameType, input.sessionId)
       : await this.getOrCreateSession(input);

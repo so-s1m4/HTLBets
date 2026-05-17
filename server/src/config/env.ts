@@ -34,6 +34,14 @@ const envSchema = z.object({
     .string()
     .optional()
     .transform((value) => value === 'true'),
+  MAIL_TLS_REJECT_UNAUTHORIZED: z
+    .string()
+    .optional()
+    .transform((value) => (value == null ? undefined : value === 'true')),
+  MAIL_IGNORE_TLS: z
+    .string()
+    .optional()
+    .transform((value) => (value == null ? undefined : value === 'true')),
   MAIL_USER: z.string().optional(),
   MAIL_PASS: z.string().optional(),
   MAIL_FROM: z.string().default('no-reply@minigames.local'),

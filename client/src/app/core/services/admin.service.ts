@@ -2,7 +2,14 @@ import { inject, Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
 
-import type { AdminCardDeck, AdminUserCardDeck, AdminUserDeckMutationResponse, GameHistoryRecord, User } from '../models/user.model';
+import type {
+  AdminCardDeck,
+  AdminGameCatalogEntry,
+  AdminUserCardDeck,
+  AdminUserDeckMutationResponse,
+  GameHistoryRecord,
+  User
+} from '../models/user.model';
 import { AppConfigService } from './app-config.service';
 
 @Injectable({
@@ -50,6 +57,14 @@ export class AdminService {
 
   listCardDecks(): Promise<AdminCardDeck[]> {
     return firstValueFrom(this.http.get<AdminCardDeck[]>(`${this.config.apiUrl}/admin/card-decks`));
+  }
+
+  listGames(): Promise<AdminGameCatalogEntry[]> {
+    return firstValueFrom(this.http.get<AdminGameCatalogEntry[]>(`${this.config.apiUrl}/admin/games`));
+  }
+
+  setGameEnabled(gameId: string, enabled: boolean): Promise<AdminGameCatalogEntry> {
+    return firstValueFrom(this.http.patch<AdminGameCatalogEntry>(`${this.config.apiUrl}/admin/games/${gameId}`, { enabled }));
   }
 
   importCardDeck(input: {

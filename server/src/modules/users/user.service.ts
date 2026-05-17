@@ -16,6 +16,7 @@ import {
 } from './user.model';
 import { cardDeckService, DEFAULT_CARD_DECK_ID, type AdminCardDeck, type AdminUserCardDeck, type PublicCardDeck } from './card-deck.service';
 import { pokerTableManager } from '../games/poker/poker-table.manager';
+import { gameCatalogService, type AdminGameCatalogEntry, type PublicGameCatalogEntry } from '../games/core/game-catalog.service';
 
 const DEFAULT_USER_BALANCE = 1000;
 
@@ -83,6 +84,18 @@ class UserService {
 
   async listAdminUserCardDecks(userId: string): Promise<AdminUserCardDeck[]> {
     return cardDeckService.listForAdminUser(userId);
+  }
+
+  async listGameCatalog(): Promise<PublicGameCatalogEntry[]> {
+    return gameCatalogService.listPublic();
+  }
+
+  async listAdminGameCatalog(): Promise<AdminGameCatalogEntry[]> {
+    return gameCatalogService.listForAdmin();
+  }
+
+  async setAdminGameEnabled(gameId: string, enabled: boolean): Promise<AdminGameCatalogEntry> {
+    return gameCatalogService.setEnabled(gameId, enabled);
   }
 
   async importAdminCardDeck(payload?: Record<string, unknown>): Promise<AdminCardDeck> {

@@ -2,7 +2,7 @@ import { DatePipe } from '@angular/common';
 import { Component, computed, inject, signal } from '@angular/core';
 
 import { AdminService } from '../../../core/services/admin.service';
-import type { AdminCardDeck, AdminUserCardDeck, GameHistoryRecord, User } from '../../../core/models/user.model';
+import type { AdminCardDeck, AdminGameCatalogEntry, AdminUserCardDeck, GameHistoryRecord, User } from '../../../core/models/user.model';
 import { AuthService } from '../../../core/services/auth.service';
 import { AppButtonComponent } from '../../../shared/ui/app-button.component';
 import { AppCardComponent } from '../../../shared/ui/app-card.component';
@@ -10,7 +10,7 @@ import { AppInputComponent } from '../../../shared/ui/app-input.component';
 import { CreditsPipe } from '../../../shared/pipes/credits.pipe';
 import { GameLabelPipe } from '../../../shared/pipes/game-label.pipe';
 
-type AdminTabId = 'overview' | 'users' | 'history' | 'decks';
+type AdminTabId = 'overview' | 'users' | 'history' | 'decks' | 'games';
 const MAX_BALANCE = 10_000_000_000_000;
 
 @Component({
@@ -26,17 +26,21 @@ export class AdminPageComponent {
 
   readonly users = signal<User[]>([]);
   readonly cardDecks = signal<AdminCardDeck[]>([]);
+  readonly gameCatalog = signal<AdminGameCatalogEntry[]>([]);
   readonly selectedUserDecks = signal<AdminUserCardDeck[]>([]);
   readonly selectedHistory = signal<GameHistoryRecord[]>([]);
 
   readonly loading = signal(true);
   readonly deckLoading = signal(true);
+  readonly gameLoading = signal(true);
   readonly historyLoading = signal(false);
   readonly userDeckLoading = signal(false);
 
   readonly error = signal('');
   readonly deckError = signal('');
   readonly deckNotice = signal('');
+  readonly gameError = signal('');
+  readonly gameNotice = signal('');
   readonly userDeckError = signal('');
   readonly userDeckNotice = signal('');
   readonly userNotice = signal('');
@@ -46,6 +50,7 @@ export class AdminPageComponent {
 
   readonly savingUserId = signal<string | null>(null);
   readonly savingDeckId = signal<string | null>(null);
+  readonly savingGameId = signal<string | null>(null);
   readonly grantingDeckActionId = signal<string | null>(null);
   readonly moderationActionId = signal<string | null>(null);
 
@@ -82,6 +87,8 @@ export class AdminPageComponent {
   readonly playerCount = computed(() => this.users().filter((user) => !user.isAdmin).length);
   readonly deckCount = computed(() => this.cardDecks().length);
   readonly enabledDeckCount = computed(() => this.cardDecks().filter((deck) => deck.enabled).length);
+  readonly enabledGameCount = computed(() => this.gameCatalog().filter((game) => game.enabled).length);
+  readonly gameCount = computed(() => this.gameCatalog().length);
   readonly defaultDeck = computed(() => this.cardDecks().find((deck) => deck.isDefault) || null);
   readonly selectedDeck = computed(() => this.selectedUserDecks().find((deck) => deck.selected) || null);
   readonly selectedOwnedDeckCount = computed(() => this.selectedUserDecks().filter((deck) => deck.owned).length);
@@ -91,7 +98,8 @@ export class AdminPageComponent {
     { id: 'overview' as const, label: 'Overview', badge: `${this.users().length}` },
     { id: 'users' as const, label: 'Players', badge: `${this.playerCount()}` },
     { id: 'history' as const, label: 'History', badge: `${this.selectedHistory().length}` },
-    { id: 'decks' as const, label: 'Deck Studio', badge: `${this.enabledDeckCount()}/${this.deckCount()}` }
+    { id: 'decks' as const, label: 'Deck Studio', badge: `${this.enabledDeckCount()}/${this.deckCount()}` },
+    { id: 'games' as const, label: 'Games', badge: `${this.enabledGameCount()}/${this.gameCount()}` }
   ]);
 
   constructor() {
@@ -101,15 +109,22 @@ export class AdminPageComponent {
   async refresh(): Promise<void> {
     this.loading.set(true);
     this.deckLoading.set(true);
+    this.gameLoading.set(true);
     this.error.set('');
     this.deckError.set('');
     this.deckNotice.set('');
+    this.gameError.set('');
+    this.gameNotice.set('');
     this.userDeckError.set('');
     this.userDeckNotice.set('');
     this.userNotice.set('');
 
     try {
-      const [users, cardDecks] = await Promise.all([this.adminService.listUsers(), this.adminService.listCardDecks()]);
+      const [users, cardDecks, gameCatalog] = await Promise.all([
+        this.adminService.listUsers(),
+        this.adminService.listCardDecks(),
+        this.adminService.listGames()
+      ]);
       const currentSelectedUserId = this.selectedUser()?.id;
       const nextSelectedUser =
         users.find((user) => user.id === currentSelectedUserId) ||
@@ -119,6 +134,7 @@ export class AdminPageComponent {
 
       this.users.set(users);
       this.cardDecks.set(cardDecks);
+      this.gameCatalog.set(gameCatalog);
       this.selectedUser.set(nextSelectedUser);
       this.balanceDrafts.set(Object.fromEntries(users.map((user) => [user.id, String(user.balance)])));
       this.deckNameDrafts.set(Object.fromEntries(cardDecks.map((deck) => [deck.id, deck.name])));
@@ -141,6 +157,7 @@ export class AdminPageComponent {
     } finally {
       this.loading.set(false);
       this.deckLoading.set(false);
+      this.gameLoading.set(false);
     }
   }
 
@@ -513,6 +530,24 @@ export class AdminPageComponent {
       this.deckError.set(error instanceof Error ? error.message : 'Failed to change the standard deck.');
     } finally {
       this.savingDeckId.set(null);
+    }
+  }
+
+  async setGameEnabled(game: AdminGameCatalogEntry, enabled: boolean): Promise<void> {
+    this.savingGameId.set(game.id);
+    this.gameError.set('');
+    this.gameNotice.set('');
+
+    try {
+      const updated = await this.adminService.setGameEnabled(game.id, enabled);
+      this.gameCatalog.update((entries) =>
+        entries.map((entry) => (entry.id === updated.id ? updated : entry))
+      );
+      this.gameNotice.set(`${updated.name} is now ${updated.enabled ? 'enabled' : 'disabled'}.`);
+    } catch (error) {
+      this.gameError.set(error instanceof Error ? error.message : 'Failed to update game availability.');
+    } finally {
+      this.savingGameId.set(null);
     }
   }
 

@@ -1,6 +1,7 @@
 import { Routes } from '@angular/router';
 
 import { adminGuard, authGuard, guestOnlyGuard } from './core/guards/auth.guard';
+import { gameAvailabilityGuard } from './core/guards/game-availability.guard';
 import { MobileShellComponent } from './layout/mobile-shell/mobile-shell.component';
 
 export const routes: Routes = [
@@ -50,49 +51,57 @@ export const routes: Routes = [
       },
       {
         path: 'games/roulette',
-        data: { title: 'Roulette' },
+        data: { title: 'Roulette', gameId: 'roulette' },
+        canActivate: [gameAvailabilityGuard],
         loadComponent: () =>
           import('./features/games/pages/roulette.page').then((module) => module.RoulettePageComponent)
       },
       {
         path: 'games/blackjack',
-        data: { title: 'Blackjack' },
+        data: { title: 'Blackjack', gameId: 'blackjack' },
+        canActivate: [gameAvailabilityGuard],
         loadComponent: () =>
           import('./features/games/pages/blackjack.page').then((module) => module.BlackjackPageComponent)
       },
       {
         path: 'games/poker',
-        data: { title: 'Poker' },
+        data: { title: 'Poker', gameId: 'poker' },
+        canActivate: [gameAvailabilityGuard],
         loadComponent: () =>
           import('./features/games/pages/poker.page').then((module) => module.PokerPageComponent)
       },
       {
         path: 'games/miner',
-        data: { title: 'Miner' },
+        data: { title: 'Miner', gameId: 'miner' },
+        canActivate: [gameAvailabilityGuard],
         loadComponent: () =>
           import('./features/games/pages/miner.page').then((module) => module.MinerPageComponent)
       },
       {
         path: 'games/crash',
-        data: { title: 'Crash' },
+        data: { title: 'Crash', gameId: 'crash' },
+        canActivate: [gameAvailabilityGuard],
         loadComponent: () =>
           import('./features/games/pages/crash.page').then((module) => module.CrashPageComponent)
       },
       {
         path: 'games/slots',
-        data: { title: 'Slots' },
+        data: { title: 'Slots', gameId: 'slots' },
+        canActivate: [gameAvailabilityGuard],
         loadComponent: () =>
           import('./features/games/pages/slots.page').then((module) => module.SlotsPageComponent)
       },
       {
         path: 'games/ochko',
-        data: { title: 'Ochko' },
+        data: { title: 'Ochko', gameId: 'ochko' },
+        canActivate: [gameAvailabilityGuard],
         loadComponent: () =>
           import('./features/games/pages/ochko.page').then((module) => module.OchkoPageComponent)
       },
       {
         path: 'games/mafia',
-        data: { title: 'Mafia' },
+        data: { title: 'Mafia', gameId: 'mafia' },
+        canActivate: [gameAvailabilityGuard],
         loadComponent: () =>
           import('./features/games/pages/mafia.page').then((module) => module.MafiaPageComponent)
       },

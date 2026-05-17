@@ -84,7 +84,7 @@
               }
             </div>
 
-            @if (mediaFor(entry.seat.userId)?.stream; as liveMedia) {
+            @if (shouldPlayAudio(entry.seat.userId) && mediaFor(entry.seat.userId)?.stream; as liveMedia) {
               <audio
                 appMediaStream
                 class="poker-seat__live-audio"

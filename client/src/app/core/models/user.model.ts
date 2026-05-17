@@ -53,6 +53,18 @@ export interface AdminUserDeckMutationResponse {
   decks: AdminUserCardDeck[];
 }
 
+export interface GameCatalogEntry {
+  id: 'roulette' | 'blackjack' | 'poker' | 'miner' | 'crash' | 'slots' | 'ochko' | 'mafia';
+  name: string;
+  enabled: boolean;
+}
+
+export interface AdminGameCatalogEntry extends GameCatalogEntry {
+  sortOrder: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface DailyTask {
   key: string;
   title: string;

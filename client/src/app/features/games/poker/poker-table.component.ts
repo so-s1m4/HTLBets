@@ -206,6 +206,11 @@ export class PokerTableComponent {
     return Boolean(this.mediaFor(userId)?.audioEnabled);
   }
 
+  shouldPlayAudio(userId: string): boolean {
+    const media = this.mediaFor(userId);
+    return Boolean(media?.stream && media.audioEnabled && !media.isSelf);
+  }
+
   turnProgressFor(userId: string): number {
     if (this.actingUserIdValue !== userId || this.actingTurnDurationMsValue <= 0) {
       return 0;

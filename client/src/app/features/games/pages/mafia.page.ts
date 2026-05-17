@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, DestroyRef, computed, effect, inject, signal } from '@angular/core';
 
-import type { MafiaLobbyState, MafiaRealtimeState, MafiaRoleConfigView, MafiaRoomState } from '../../../core/models/game.model';
+import type { MafiaLobbyState, MafiaPlayerView, MafiaRealtimeState, MafiaRoleConfigView, MafiaRoomState } from '../../../core/models/game.model';
 import { AuthService } from '../../../core/services/auth.service';
 import { GameSocketService } from '../../../core/services/game-socket.service';
 import { MediaStreamDirective } from '../../../shared/directives/media-stream.directive';
@@ -248,6 +248,36 @@ export class MafiaPageComponent {
       case 'resolved':
         return 'Game over';
     }
+  }
+
+  playerStatus(player: MafiaPlayerView): string {
+    if (player.revealedRole) {
+      return player.revealedRole;
+    }
+
+    if (player.roleHint) {
+      return player.roleHint;
+    }
+
+    return player.alive ? 'Alive' : 'Out';
+  }
+
+  playerTags(player: MafiaPlayerView): string[] {
+    const tags: string[] = [];
+
+    if (player.isSelf) {
+      tags.push('You');
+    }
+
+    if (player.isOwner) {
+      tags.push('Owner');
+    }
+
+    if (!player.alive) {
+      tags.push('Out');
+    }
+
+    return tags;
   }
 
   mediaFor(userId: string): MafiaSeatMediaView | null {

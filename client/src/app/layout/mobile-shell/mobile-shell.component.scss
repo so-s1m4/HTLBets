@@ -39,12 +39,12 @@
     .mobile-shell__content {
       width: min(100%, var(--content-width));
       margin: 0 auto;
-      padding: 4.9rem var(--page-padding) calc(7.4rem + env(safe-area-inset-bottom, 0px));
+      padding: 5.4rem var(--page-padding) calc(7.4rem + env(safe-area-inset-bottom, 0px));
     }
 
     @media (min-width: 768px) {
       .mobile-shell__content {
-        padding-top: 5.2rem;
+        padding-top: 5.6rem;
       }
     }
 

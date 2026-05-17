@@ -50,7 +50,13 @@
         <div class="leaderboard-list">
           @for (entry of selectedEntries(); track entry.userId; let index = $index) {
             <div class="leaderboard-row">
-              <div class="leaderboard-row__rank">{{ index + 1 }}</div>
+              <div class="leaderboard-row__rank">
+                @if (index < 10) {
+                  <img [src]="medalImage(index + 1)" [alt]="'Rank ' + (index + 1) + ' medal'" loading="lazy" decoding="async" />
+                } @else {
+                  <span>{{ index + 1 }}</span>
+                }
+              </div>
 
               <div class="leaderboard-entry">
                 <div class="leaderboard-entry__avatar">
