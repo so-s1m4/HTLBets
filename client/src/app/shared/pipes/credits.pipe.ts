@@ -6,6 +6,6 @@ import { Pipe, type PipeTransform } from '@angular/core';
 })
 export class CreditsPipe implements PipeTransform {
   transform(value: number | null | undefined): string {
-    return `${Intl.NumberFormat('en-US').format(value || 0)}`;
+    return `${Intl.NumberFormat('en-US').format(value || 0)} cr`;
   }
 }
