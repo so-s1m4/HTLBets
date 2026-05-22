@@ -1,15 +1,15 @@
 # Projektstatus: HTLBets
 
-**Stand:** 11.05.2026  
-**Status:** in Umsetzung, lauffähige Demo-Version vorhanden
+**Stand:** 22.05.2026  
+**Status:** funktionsfähige Demo-Version vorhanden, Schwerpunkt auf QA, Dokumentation und Abgabe
 
 ---
 
 ## 1. Kurzüberblick
 
-HTLBets ist aktuell als funktionsfähige Demo-Plattform mit mehreren Spielmodi, Authentifizierung, Profilbereich, Daily Rewards, Karten-Deck-System und Admin-Dashboard vorhanden.
+HTLBets ist aktuell als funktionsfähige Demo-Plattform mit mehreren Spielmodi, Authentifizierung, Profilbereich, Daily Rewards, Karten-Deck-System, Realtime-Mehrspielerfunktionen und Admin-Dashboard vorhanden.
 
-Die Anwendung kann lokal gestartet werden und die vorhandenen Builds laufen erfolgreich durch.
+Die Anwendung kann lokal gestartet werden. Build und vorhandene Tests laufen aktuell erfolgreich durch.
 
 ---
 
@@ -33,6 +33,8 @@ Die Anwendung kann lokal gestartet werden und die vorhandenen Builds laufen erfo
 - Miner
 - Crash
 - Slots
+- Ochko
+- Mafia mit Raumlogik, Rollenphasen sowie optionalem Text-/Video-Modus
 
 ### Karten-Deck-System
 
@@ -52,6 +54,7 @@ Die Anwendung kann lokal gestartet werden und die vorhandenen Builds laufen erfo
 - Nutzer:innen sperren / entsperren
 - Nutzerdaten zurücksetzen
 - Accounts löschen
+- Spiele aktivieren / deaktivieren
 
 ---
 
@@ -64,7 +67,7 @@ Die Anwendung kann lokal gestartet werden und die vorhandenen Builds laufen erfo
 | Datenbank | PostgreSQL |
 | Realtime | Socket.io für gemeinsame Spielzustände |
 | Lokale Entwicklung | `npm run dev` mit gemeinsamem Bootstrap |
-| Dokumentation | README und Projektmanagement-Unterlagen aktualisiert |
+| Dokumentation | README sowie Projektmanagement-Unterlagen vorhanden und erweitert |
 
 ---
 
@@ -72,19 +75,19 @@ Die Anwendung kann lokal gestartet werden und die vorhandenen Builds laufen erfo
 
 Zum Stand dieses Dokuments wurden erfolgreich ausgeführt:
 
-- `npm run build --workspace server`
-- `npm run build --workspace client`
+- `npm run build`
+- `npm run test`
 
-Zusätzlich existieren automatisierte Tests im Projekt, insbesondere für Backend-Logik und ausgewählte Spielflüsse.
+Zusätzlich existieren automatisierte Tests im Projekt, insbesondere für Backend-Logik, Services und ausgewählte Frontend-Bausteine.
 
 ---
 
 ## 5. Offene bzw. nächste sinnvolle Schritte
 
-- manuelle UI-QA der finalen Admin-Seite nach Login
+- manuelle End-QA der wichtigsten Benutzerflüsse
 - Review der Projektunterlagen mit Lehrperson
-- gegebenenfalls Gantt-, Stunden- oder Präsentationsunterlagen ergänzen
-- Endabnahme vorbereiten
+- Feinschliff der Abgabeunterlagen und Präsentation
+- finale Endabnahme vorbereiten
 
 ---
 
@@ -92,13 +95,14 @@ Zusätzlich existieren automatisierte Tests im Projekt, insbesondere für Backen
 
 | Risiko | Einschätzung |
 |---|---|
-| Dokumentation läuft Features hinterher | wurde durch die aktuelle Überarbeitung reduziert |
+| Dokumentation läuft Features hinterher | wurde reduziert, bleibt aber beobachtbar |
 | Viele Spielmodi erhöhen Testaufwand | weiterhin relevant |
 | Realtime- und Admin-Funktionen brauchen saubere Endkontrolle | weiterhin relevant |
+| Video-/Audio-Funktionen in Mehrspieler-Modi sind technisch empfindlicher | weiterhin relevant |
 
 ---
 
 ## 7. Fazit
 
-HTLBets ist nicht mehr nur ein Grundgerüst, sondern bereits eine breit ausgebaute Demo-Plattform.  
-Der aktuelle Schwerpunkt liegt weniger auf fehlenden Kernfeatures als auf Dokumentation, Feinabstimmung, QA und sauberer Abgabe.
+HTLBets ist nicht mehr nur ein Grundgerüst, sondern bereits eine breit ausgebaute Demo-Plattform mit vollständigem Kernumfang für die Vorführung.  
+Der aktuelle Schwerpunkt liegt weniger auf fehlenden Kernfeatures als auf Konsistenz der Dokumentation, End-QA, Feinschliff und sauberer Abgabe.

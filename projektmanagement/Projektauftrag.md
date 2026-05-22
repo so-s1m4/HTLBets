@@ -2,9 +2,9 @@
 
 **Dokumenttyp:** Projektauftrag  
 **Projekt:** HTLBets  
-**Version:** 1.2  
+**Version:** 1.3  
 **Status:** aktualisiert  
-**Datum:** 11.05.2026
+**Datum:** 22.05.2026
 
 ---
 
@@ -50,10 +50,11 @@ Am Projektende liegt eine vorführbare Webanwendung mit folgender Dokumentation 
 | Blackjack | Einzelspiel ist spielbar |
 | Poker | Multiplayer-Poker mit öffentlichen und privaten Tischen ist verfügbar |
 | Weitere Spiele | Miner, Crash und Slots sind spielbar |
+| Zusätzliche Mehrspieler-Spiele | Ochko und Mafia sind verfügbar |
 | Profilfunktionen | Profil, Avatar, Benutzername, Historie und Daily Rewards sind vorhanden |
 | Card Decks | Kauf, Auswahl und Admin-Verwaltung von Karten-Decks sind vorhanden |
 | Leaderboard | Ranglistenansichten für Demo-Kennzahlen sind verfügbar |
-| Administrationsbereich | Admins können Nutzer:innen suchen, Guthaben ändern, Decks vergeben und Moderationsaktionen ausführen |
+| Administrationsbereich | Admins können Nutzer:innen suchen, Guthaben ändern, Decks vergeben, Moderationsaktionen ausführen und Spiele aktivieren oder deaktivieren |
 | Sicherheitsabgrenzung | Keine Echtgeldfunktion, keine Auszahlungs- oder Zahlungsfunktion |
 | Qualitätssicherung | Builds und vorhandene Tests laufen lokal ohne bekannte kritische Fehler |
 | Projektdokumentation | README und Projektmanagement-Unterlagen liegen im Repository |
@@ -80,7 +81,8 @@ Ziel des Projekts ist die Entwicklung einer funktionsfähigen und vorführbaren 
 | Z8 | Profil, Avatar, Daily Rewards und Leaderboard sind vorhanden. | Module sind im Frontend erreichbar und backendseitig angebunden. |
 | Z9 | Deck-System für Spielkarten ist vorhanden. | Decks können verwaltet, gekauft, gewählt und vergeben werden. |
 | Z10 | Eine Admin-Oberfläche für Moderation und Verwaltung ist vorhanden. | Suche, Balance, Deck-Zuweisung, Ban, Wipe und Delete sind möglich. |
-| Z11 | Das Projekt ist lokal vorführbar. | `npm run dev`, Build und Dokumentation funktionieren. |
+| Z11 | Weitere Mehrspieler-Spiele ergänzen die Plattform. | Ochko und Mafia sind erreichbar und technisch eingebunden. |
+| Z12 | Das Projekt ist lokal vorführbar. | `npm run dev`, Build, Tests und Dokumentation funktionieren. |
 
 ### 5.3 Nicht-Projektziele / Abgrenzung
 
@@ -107,8 +109,10 @@ Die Plattform enthält mehrere Spiele mit unterschiedlichen Anforderungen:
 4. Miner
 5. Crash
 6. Slots
+7. Ochko als Multiplayer-Kartenspiel
+8. Mafia als Rollen- und Raumspiel mit optionalem Text-/Video-Modus
 
-Zusätzlich gibt es Profilfunktionen, Daily Rewards, Leaderboards, ein Card-Deck-System sowie einen Admin-Bereich. Im Admin-Bereich können Nutzerkonten gesucht, Guthaben angepasst, Karten-Decks vergeben und Moderationsmaßnahmen wie Ban, Wipe oder Delete ausgelöst werden.
+Zusätzlich gibt es Profilfunktionen, Daily Rewards, Leaderboards, ein Card-Deck-System sowie einen Admin-Bereich. Im Admin-Bereich können Nutzerkonten gesucht, Guthaben angepasst, Karten-Decks vergeben und Moderationsmaßnahmen wie Ban, Wipe oder Delete ausgelöst werden. Außerdem kann die Verfügbarkeit einzelner Spiele zentral gesteuert werden.
 
 Technische Detailentscheidungen werden nicht im Projektauftrag festgelegt, sondern im Quellcode, im README und in den ergänzenden Projektunterlagen beschrieben.
 
@@ -244,3 +248,4 @@ Mit der Unterzeichnung bestätigen Auftraggeber und Projektteam den beschriebene
 | 1.0 | 28.04.2026 | Erstfassung des Projektauftrags | Projektteam HTLBets |
 | 1.1 | 09.05.2026 | Aktualisierung auf Projektstand mit Poker, Profil, Rewards und Admin | Projektteam HTLBets |
 | 1.2 | 11.05.2026 | Erweiterung auf Miner, Crash, Slots, Deck-System, Leaderboard und Moderation | Projektteam HTLBets |
+| 1.3 | 22.05.2026 | Ergänzung um Ochko, Mafia sowie Admin-Steuerung der Spiel-Verfügbarkeit | Projektteam HTLBets |
