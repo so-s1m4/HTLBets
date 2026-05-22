@@ -3,7 +3,7 @@
 **Stand:** 11.05.2026  
 **Projekt:** HTLBets
 
-> Hinweis: Diese Stundenaufzeichnung enthält die dokumentierten bzw. nachgemeldeten Stundenstände und ist nicht als vollständige Gesamterfassung des gesamten Projektaufwands zu verstehen. Für die geplante Gesamtsicht siehe [Aufwandsschaetzung.md](/Users/s1m4/Documents/HTLBets/projektmanagement/Aufwandsschaetzung.md).
+> Hinweis: Diese Stundenaufzeichnung enthält die dokumentierten bzw. nachgemeldeten Stundenstände und ist nicht als vollständige Gesamterfassung des gesamten Projektaufwands zu verstehen. Für die geplante Gesamtsicht siehe [Aufwandsschaetzung.md](./Aufwandsschaetzung.md).
 
 ## KW14
 

@@ -69,7 +69,7 @@ Speichert Stammdaten, Login-Daten, Profilinformationen und Guthaben eines Benutz
 - `1:n` zu `UserCardDeck`
 
 **Hinweis:**  
-`selectedCardDeckId` wirkt fachlich wie eine Referenz auf `CardDeck.id`, ist aber aktuell **keine echte Prisma-Relation**.
+`selectedCardDeckId` wirkt fachlich wie eine Referenz auf `CardDeck.id`, ist im aktuellen Schema aber **keine echte Prisma-Relation**.
 
 ---
 
@@ -134,7 +134,7 @@ Speichert E-Mail-Verifikationscodes für Registrierung oder Verifikation.
 | `createdAt` | `DateTime` | Default: `now()` | Erstellungszeitpunkt |
 
 **Besonderheit:**  
-Diese Tabelle ist derzeit **nicht relational** mit `User` verbunden, sondern arbeitet direkt über die E-Mail-Adresse.
+Diese Tabelle ist derzeit **nicht relational** mit `User` verbunden, sondern läuft direkt über die E-Mail-Adresse.
 
 ---
 
@@ -256,7 +256,7 @@ Die zentrale Entität ist `User`. Fast alle spielbezogenen und reward-bezogenen 
 
 ### 3. Karten-Deck-Auswahl
 
-Der Besitz eines Decks ist sauber über `UserCardDeck` modelliert.  
+Der Besitz eines Decks ist über `UserCardDeck` modelliert.  
 Die aktive Auswahl (`selectedCardDeckId`) ist derzeit allerdings nur als String im `User` gespeichert.
 
 ### 4. Spielkatalog
@@ -269,4 +269,4 @@ Die aktive Auswahl (`selectedCardDeckId`) ist derzeit allerdings nur als String 
 
 Basierend auf:
 
-- [schema.prisma](/Users/s1m4/Documents/HTLBets/server/prisma/schema.prisma)
+- [schema.prisma](../server/prisma/schema.prisma)

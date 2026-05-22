@@ -10,8 +10,8 @@
 
 ## 1. Ziel
 
-Dieses Dokument beschreibt die zentralen Arbeitspakete des Projekts **HTLBets**.  
-Es ergänzt die [Aufwandsschaetzung.md](/Users/s1m4/Documents/HTLBets/projektmanagement/Aufwandsschaetzung.md) um eine inhaltliche Struktur und dient als Grundlage für:
+Dieses Dokument beschreibt die wichtigsten Arbeitspakete des Projekts **HTLBets**.  
+Es ergänzt die [Aufwandsschaetzung.md](./Aufwandsschaetzung.md) um eine inhaltliche Struktur und hilft bei:
 
 - Aufgabenverteilung
 - Terminplanung
@@ -24,11 +24,11 @@ Es ergänzt die [Aufwandsschaetzung.md](/Users/s1m4/Documents/HTLBets/projektman
 
 Die Arbeitspakete orientieren sich an:
 
-- [Projektauftrag.md](/Users/s1m4/Documents/HTLBets/projektmanagement/Projektauftrag.md)
-- [Pflichtenheft.md](/Users/s1m4/Documents/HTLBets/projektmanagement/Pflichtenheft.md)
-- [Aufwandsschaetzung.md](/Users/s1m4/Documents/HTLBets/projektmanagement/Aufwandsschaetzung.md)
+- [Projektauftrag.md](./Projektauftrag.md)
+- [Pflichtenheft.md](./Pflichtenheft.md)
+- [Aufwandsschaetzung.md](./Aufwandsschaetzung.md)
 
-Die Nummerierung ist bewusst mit der Aufwandsschätzung abgestimmt.
+Die Nummerierung ist an die Aufwandsschätzung angelehnt.
 
 ---
 
@@ -37,7 +37,7 @@ Die Nummerierung ist bewusst mit der Aufwandsschätzung abgestimmt.
 ## AP1 – Planung, Scope, Projektauftrag
 
 **Ziel:**  
-Projektziel, Umfang, Abgrenzung und Rahmenbedingungen festlegen.
+Ziel, Umfang, Abgrenzung und Rahmenbedingungen des Projekts festlegen.
 
 **Inhalt:**
 
@@ -72,7 +72,7 @@ Technische Basis für Frontend, Backend und lokale Entwicklung bereitstellen.
 
 **Ergebnis:**
 
-- lauffähiges Grundsystem
+- funktionierendes Grundsystem
 - lokaler Start mit `npm run dev`
 
 **Abhängigkeiten:** AP1
@@ -417,11 +417,11 @@ flowchart TD
 
 ## 5. Bezug zur Aufwandsschätzung
 
-Die in diesem Dokument beschriebenen Arbeitspakete entsprechen direkt den Paketen aus:
+Die in diesem Dokument beschriebenen Arbeitspakete entsprechen den Paketen aus:
 
-- [Aufwandsschaetzung.md](/Users/s1m4/Documents/HTLBets/projektmanagement/Aufwandsschaetzung.md)
+- [Aufwandsschaetzung.md](./Aufwandsschaetzung.md)
 
-Damit ist sichergestellt, dass:
+Dadurch passen:
 
 - inhaltliche Struktur
 - Stundenabschätzung

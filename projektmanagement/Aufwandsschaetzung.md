@@ -11,20 +11,20 @@
 ## 1. Ziel
 
 Dieses Dokument schätzt den voraussichtlichen Gesamtaufwand für das Projekt **HTLBets**.  
-Die Schätzung dient als Planungsgrundlage für:
+Die Schätzung dient vor allem als Orientierung für:
 
 - Projektumfang
 - Zeitplanung
 - Priorisierung
 - Dokumentation gegenüber der Lehrperson
 
-Die Aufwandsschätzung bezieht sich auf den im [Projektauftrag.md](/Users/s1m4/Documents/HTLBets/projektmanagement/Projektauftrag.md) und [Pflichtenheft.md](/Users/s1m4/Documents/HTLBets/projektmanagement/Pflichtenheft.md) beschriebenen Funktionsumfang.
+Die Aufwandsschätzung bezieht sich auf den im [Projektauftrag.md](./Projektauftrag.md) und [Pflichtenheft.md](./Pflichtenheft.md) beschriebenen Funktionsumfang.
 
 ---
 
 ## 2. Schätzmethode
 
-Für dieses Projekt wurde eine **Bottom-up-Schätzung mit Drei-Punkt-Schätzwerten** verwendet.
+Für dieses Projekt wurde eine **Bottom-up-Schätzung mit Drei-Punkt-Werten** verwendet.
 
 Für jedes Arbeitspaket wurden drei Werte betrachtet:
 
@@ -38,7 +38,7 @@ Die gewichtete Schätzung wurde mit folgender Formel berechnet:
 E = (O + 4R + P) / 6
 ```
 
-Diese Methode ist für ein Schulprojekt gut geeignet, weil sie:
+Für ein Schulprojekt ist diese Methode sinnvoll, weil sie:
 
 - Unsicherheiten sichtbar macht
 - technische Risiken berücksichtigt
@@ -63,7 +63,7 @@ Die Schätzung basiert auf folgenden Annahmen:
    - Mehrspieler-Synchronisation
    - UI-Feinschliff
    - Dokumentation parallel zur Umsetzung
-5. Die Schätzung umfasst **Planung, Implementierung, Tests, UI-Arbeit und Dokumentation**.
+5. Die Schätzung umfasst **Planung, Umsetzung, Tests, UI-Arbeit und Dokumentation**.
 
 ---
 
@@ -95,7 +95,7 @@ Die Schätzung basiert auf folgenden Annahmen:
 
 ## 5. Reserve / Puffer
 
-Für ein Projekt mit mehreren Realtime-Spielen und Admin-Logik ist ein Risiko- und Nacharbeitspuffer sinnvoll.
+Bei einem Projekt mit mehreren Realtime-Spielen und Admin-Logik ist ein Risiko- und Nacharbeitspuffer sinnvoll.
 
 Empfohlener Puffer:
 
@@ -127,7 +127,7 @@ Bei zwei Teammitgliedern ergibt sich im Mittel:
 |---|---:|---:|
 | 2 Personen | 330 h | 165 h |
 
-Das ist ein realistischer Wert für ein größeres Schulprojekt mit:
+Für ein größeres Schulprojekt mit diesem Umfang ist das ein realistischer Wert:
 
 - mehreren Spielmodi
 - Realtime-Mehrspielerlogik
@@ -138,7 +138,7 @@ Das ist ein realistischer Wert für ein größeres Schulprojekt mit:
 
 ## 7. Aufwand nach Bereichen
 
-Zur besseren Einordnung wurde der Aufwand zusätzlich fachlich gruppiert.
+Zur besseren Übersicht wurde der Aufwand zusätzlich nach Bereichen zusammengefasst.
 
 | Bereich | Enthaltene Arbeitspakete | Aufwand |
 |---|---|---:|
@@ -176,7 +176,7 @@ Besonders betroffen sind:
 
 ## 9. Vergleich mit dem bisherigen Projektstand
 
-Laut [Stundenaufzeichnung.md](/Users/s1m4/Documents/HTLBets/projektmanagement/Stundenaufzeichnung.md) wurden bereits dokumentierte Stunden erfasst.
+Laut [Stundenaufzeichnung.md](./Stundenaufzeichnung.md) wurden bereits Stunden dokumentiert.
 
 Diese Stunden bilden jedoch:
 
@@ -186,7 +186,7 @@ Diese Stunden bilden jedoch:
 
 ab.
 
-Die hier vorliegende Aufwandsschätzung ist daher als **projektweite Soll-Schätzung** zu verstehen und nicht als reine Auswertung der bisher protokollierten Ist-Stunden.
+Die Aufwandsschätzung ist deshalb eher als **grobe Projektschätzung** zu verstehen und nicht als reine Auswertung der bisher protokollierten Ist-Stunden.
 
 ---
 
@@ -204,7 +204,7 @@ Die größten Aufwandstreiber sind:
 3. Admin- und Plattformfunktionen
 4. UI-Feinschliff und Abschlussphase
 
-Damit ist der Umfang für ein ambitioniertes Schulprojekt gut begründet und nachvollziehbar dokumentiert.
+Damit ist der Umfang für das Projekt nachvollziehbar abgeschätzt.
 
 ---
 

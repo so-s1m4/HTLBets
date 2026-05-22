@@ -13,7 +13,7 @@
 ### 1.1 Ziel des Dokuments
 
 Dieses Pflichtenheft beschreibt die fachlichen und technischen Anforderungen an das Projekt **HTLBets**.  
-Es konkretisiert den [Projektauftrag.md](/Users/s1m4/Documents/HTLBets/projektmanagement/Projektauftrag.md) und dient als Grundlage für:
+Es ergänzt den [Projektauftrag.md](./Projektauftrag.md) und dient als Grundlage für:
 
 - Umsetzung
 - Qualitätssicherung
@@ -257,8 +257,8 @@ Das aktuelle Datenmodell umfasst insbesondere:
 
 Weiterführende Dokumente:
 
-- [Datenkatalog.md](/Users/s1m4/Documents/HTLBets/projektmanagement/Datenkatalog.md)
-- [ER-Diagramme.md](/Users/s1m4/Documents/HTLBets/projektmanagement/ER-Diagramme.md)
+- [Datenkatalog.md](./Datenkatalog.md)
+- [ER-Diagramme.md](./ER-Diagramme.md)
 
 ### 8.1 Zentrale Beziehungen
 
@@ -274,7 +274,7 @@ erDiagram
 ### 8.2 Besondere Modellierungsentscheidung
 
 Der laufende technische Spielzustand wird in `GameSession.state` als `Json` gespeichert.  
-Dadurch können unterschiedliche Spielmodi flexibel modelliert werden, ohne für jedes Spiel ein eigenes relationales Zustandsmodell zu benötigen.
+So lassen sich unterschiedliche Spielmodi flexibel abbilden, ohne für jedes Spiel ein eigenes relationales Zustandsmodell anzulegen.
 
 ---
 
@@ -454,11 +454,11 @@ Folgende Punkte sind bewusst als Projekt- bzw. Demo-Grenzen zu verstehen:
 
 ## 15. Referenzen
 
-- [Projektauftrag.md](/Users/s1m4/Documents/HTLBets/projektmanagement/Projektauftrag.md)
-- [Projektstatus.md](/Users/s1m4/Documents/HTLBets/projektmanagement/Projektstatus.md)
-- [Datenkatalog.md](/Users/s1m4/Documents/HTLBets/projektmanagement/Datenkatalog.md)
-- [ER-Diagramme.md](/Users/s1m4/Documents/HTLBets/projektmanagement/ER-Diagramme.md)
-- [README.md](/Users/s1m4/Documents/HTLBets/README.md)
+- [Projektauftrag.md](./Projektauftrag.md)
+- [Projektstatus.md](./Projektstatus.md)
+- [Datenkatalog.md](./Datenkatalog.md)
+- [ER-Diagramme.md](./ER-Diagramme.md)
+- [README.md](../README.md)
 
 ---
 
