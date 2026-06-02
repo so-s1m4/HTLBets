@@ -11,6 +11,8 @@ import { GameShellComponent } from '../components/game-shell.component';
 import type { MafiaSeatMediaView } from '../mafia/mafia-media.service';
 import { MafiaMediaService } from '../mafia/mafia-media.service';
 
+type MafiaPhase = MafiaRoomState['phase'];
+
 @Component({
   selector: 'app-mafia-page',
   standalone: true,
@@ -39,6 +41,16 @@ export class MafiaPageComponent {
   readonly privatePassword = signal('');
   readonly chatMessage = signal('');
   readonly selectedActionTargetId = signal('');
+  readonly now = signal(Date.now());
+  readonly isFullscreen = signal(false);
+  readonly phaseSteps: Array<{ phase: MafiaPhase; label: string }> = [
+    { phase: 'waiting', label: 'Lobby' },
+    { phase: 'mafia-intro', label: 'Intro' },
+    { phase: 'night', label: 'Night' },
+    { phase: 'day', label: 'Debate' },
+    { phase: 'voting', label: 'Vote' },
+    { phase: 'resolved', label: 'Result' }
+  ];
 
   readonly state = computed(() => this.socket.currentState());
   readonly currentUserId = computed(() => this.auth.currentUser()?.id || null);
@@ -49,6 +61,49 @@ export class MafiaPageComponent {
   readonly selfPlayer = computed(() => this.roomState()?.players.find((player) => player.isSelf) || null);
   readonly actionOptions = computed(() => this.roomState()?.actionOptions || []);
   readonly seatMedia = computed(() => this.media.seatMedia());
+  readonly phaseRemainingLabel = computed(() => {
+    const endsAt = this.roomState()?.phaseEndsAt;
+    if (!endsAt) {
+      return '';
+    }
+
+    const remainingSeconds = Math.max(0, Math.ceil((new Date(endsAt).getTime() - this.now()) / 1000));
+    return `${remainingSeconds}s`;
+  });
+  readonly phaseProgressPercent = computed(() => {
+    const endsAt = this.roomState()?.phaseEndsAt;
+    if (!endsAt) {
+      return 0;
+    }
+
+    const remainingMs = Math.max(0, new Date(endsAt).getTime() - this.now());
+    return Math.max(0, Math.min(100, (remainingMs / 60_000) * 100));
+  });
+  readonly currentPhaseIndex = computed(() => {
+    const phase = this.roomState()?.phase;
+    return Math.max(0, this.phaseSteps.findIndex((step) => step.phase === phase));
+  });
+  readonly phaseStatusCopy = computed(() => {
+    const room = this.roomState();
+    if (!room) {
+      return '';
+    }
+
+    switch (room.phase) {
+      case 'waiting':
+        return room.canStartGame ? 'Players are ready. Start the table when the room feels complete.' : 'Gather the table and tune the cast before the first night.';
+      case 'mafia-intro':
+        return 'Mafia can privately coordinate. Everyone else waits for the night to open.';
+      case 'night':
+        return 'Hidden roles act now. Submit the night move before the timer closes.';
+      case 'day':
+        return 'Open debate. Read the room, compare stories, then move into voting.';
+      case 'voting':
+        return 'Choose who leaves the table. Votes lock as soon as they are submitted.';
+      case 'resolved':
+        return 'The game is over. Roles are revealed and winners are listed.';
+    }
+  });
   readonly canUseMediaControls = computed(() => {
     const room = this.roomState();
     return Boolean(room?.videoEnabled && room.isSeated && (room.phase !== 'mafia-intro' || room.selfRole === 'mafia'));
@@ -86,7 +141,10 @@ export class MafiaPageComponent {
     this.socket.reset();
     this.socket.joinGame('mafia', 'mafia-lobby');
 
+    const timer = window.setInterval(() => this.now.set(Date.now()), 1000);
+
     this.destroyRef.onDestroy(() => {
+      window.clearInterval(timer);
       this.media.detach();
       this.socket.leaveGame('mafia', this.socket.currentState()?.sessionId);
       this.socket.reset();
@@ -116,6 +174,10 @@ export class MafiaPageComponent {
 
   openCreateRoomModal(): void {
     this.showCreateRoomModal.set(true);
+  }
+
+  setFullscreen(value: boolean): void {
+    this.isFullscreen.set(value);
   }
 
   closeCreateRoomModal(): void {
@@ -248,6 +310,18 @@ export class MafiaPageComponent {
       case 'resolved':
         return 'Game over';
     }
+  }
+
+  phaseClass(): string {
+    return `mafia-phase-banner mafia-phase-banner--${this.roomState()?.phase || 'waiting'}`;
+  }
+
+  isPhaseStepDone(index: number): boolean {
+    return index < this.currentPhaseIndex();
+  }
+
+  isPhaseStepActive(index: number): boolean {
+    return index === this.currentPhaseIndex();
   }
 
   playerStatus(player: MafiaPlayerView): string {

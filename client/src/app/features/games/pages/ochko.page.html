@@ -5,9 +5,10 @@
   [currentBet]="currentBet()"
   [error]="socket.lastError() || ''"
   [splitSidebar]="hasRoomState()"
+  (fullscreenChange)="setFullscreen($event)"
 >
   @if (lobbyState(); as lobby) {
-    <div table>
+    <div table [class.fullscreen]="isFullscreen()">
       <div class="page-stack ochko-lobby">
         <div class="auth-split-shell">
           <app-card tone="muted">
@@ -85,7 +86,7 @@
   }
 
   @if (roomState(); as room) {
-    <app-card table>
+    <app-card table [class.fullscreen]="isFullscreen()">
       <div class="page-stack ochko-room-shell">
         <app-card tone="muted">
           <div class="utility-row">

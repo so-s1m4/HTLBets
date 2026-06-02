@@ -38,13 +38,16 @@ export class SlotsPageComponent {
   private readonly spinStepMs = 90;
   private spinInterval: number | null = null;
   private spinRevealTimer: number | null = null;
+  private leverResetTimer: number | null = null;
   private lastResolvedSignature = '';
   private pendingFinalGrid: string[][] | null = null;
   private pendingOutcome: ReturnType<typeof this.outcome> | null = null;
 
   readonly betAmount = signal('50');
   readonly selectedMachineId = signal('classic-fruit');
+  readonly isFullscreen = signal(false);
   readonly isSpinning = signal(false);
+  readonly isLeverPulled = signal(false);
   readonly revealedOutcome = signal<ReturnType<typeof this.outcome> | null>(null);
   readonly displayedGrid = signal<string[][]>([
     ['🍒', '🍋', '🔔'],
@@ -138,6 +141,10 @@ export class SlotsPageComponent {
     this.socket.sendAction('slots', 'select-machine', { machineId });
   }
 
+  setFullscreen(value: boolean): void {
+    this.isFullscreen.set(value);
+  }
+
   spin(): void {
     const amount = Number(this.betAmount());
     const machineId = this.selectedMachineId();
@@ -145,8 +152,21 @@ export class SlotsPageComponent {
       return;
     }
 
+    this.pullLever();
     this.startSpinAnimation();
     this.socket.placeBet('slots', amount, { machineId });
+  }
+
+  private pullLever(): void {
+    if (this.leverResetTimer !== null) {
+      window.clearTimeout(this.leverResetTimer);
+    }
+
+    this.isLeverPulled.set(true);
+    this.leverResetTimer = window.setTimeout(() => {
+      this.isLeverPulled.set(false);
+      this.leverResetTimer = null;
+    }, 1000);
   }
 
   private startSpinAnimation(): void {
@@ -193,8 +213,13 @@ export class SlotsPageComponent {
       window.clearTimeout(this.spinRevealTimer);
       this.spinRevealTimer = null;
     }
+    if (this.leverResetTimer !== null) {
+      window.clearTimeout(this.leverResetTimer);
+      this.leverResetTimer = null;
+    }
     this.pendingFinalGrid = null;
     this.pendingOutcome = null;
+    this.isLeverPulled.set(false);
     this.isSpinning.set(false);
   }
 

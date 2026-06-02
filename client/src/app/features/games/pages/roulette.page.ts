@@ -69,6 +69,7 @@ export class RoulettePageComponent {
   readonly wheelRotation = signal(0);
   readonly ballRotation = signal(0);
   readonly isSpinning = signal(false);
+  readonly isFullscreen = signal(false);
   readonly countdownMs = signal(0);
   readonly revealedRound = signal<RouletteViewState['lastRound'] | null>(null);
   readonly chipValues = [10, 25, 100, 250];
@@ -252,6 +253,10 @@ export class RoulettePageComponent {
   selectChip(chip: number): void {
     this.selectedChip.set(chip);
     this.betAmount.set(String(chip));
+  }
+
+  setFullscreen(value: boolean): void {
+    this.isFullscreen.set(value);
   }
 
   placeBet(selectionType = this.selectedType(), value = this.selectedValue()): void {

@@ -76,6 +76,7 @@ export interface MafiaRoomState {
   players: MafiaPlayerView[];
   messages: MafiaChatMessageView[];
   notes: string;
+  phaseEndsAt?: string;
   isSeated: boolean;
   canJoin: boolean;
   selfRole?: MafiaRoleKey | null;
@@ -128,6 +129,7 @@ const MAX_ROOMS = 40;
 const MAX_CHAT_MESSAGES = 80;
 const MIN_PLAYERS = 4;
 const MAX_PLAYERS = 12;
+const PHASE_DURATION_MS = 60_000;
 
 const roleLabels: Record<MafiaRoleKey, string> = {
   mafia: 'Mafia',
@@ -230,6 +232,9 @@ class MafiaRoom {
   private roundNumberValue = 0;
   private winnersValue: Array<{ side: MafiaWinnerSide; label: string }> = [];
   private winningSide: MafiaWinnerSide | null = null;
+  private phaseEndsAtValue: Date | null = null;
+  private phaseTimer: ReturnType<typeof setTimeout> | null = null;
+  private readonly onTimedPhaseChange: () => void;
 
   readonly sessionId: string;
   readonly roomName: string;
@@ -241,7 +246,7 @@ class MafiaRoom {
   ownerUserId: string;
   notes = 'Configure the cast, gather the players, and start the game when every seat is filled.';
 
-  constructor(config: MafiaRoomConfig & { sessionId: string; ownerUserId: string }) {
+  constructor(config: MafiaRoomConfig & { sessionId: string; ownerUserId: string; onTimedPhaseChange: () => void }) {
     this.sessionId = config.sessionId;
     this.roomName = config.roomName;
     this.visibility = config.visibility;
@@ -250,6 +255,7 @@ class MafiaRoom {
     this.videoEnabled = config.videoEnabled;
     this.textChatEnabled = config.textChatEnabled;
     this.ownerUserId = config.ownerUserId;
+    this.onTimedPhaseChange = config.onTimedPhaseChange;
     this.rolePlan = this.buildRoles(config);
   }
 
@@ -392,6 +398,7 @@ class MafiaRoom {
       this.phaseValue = 'resolved';
       this.winningSide = null;
       this.winnersValue = [];
+      this.clearPhaseTimer();
     } else {
       this.notes = this.waitingNote();
     }
@@ -450,12 +457,14 @@ class MafiaRoom {
       this.phaseValue = 'mafia-intro';
       this.notes = 'First night: mafia members can see and hear only each other to get acquainted before the real night starts.';
       this.appendSystemMessage('The game started. Mafia intro is live. Only mafia members can privately coordinate right now.');
+      this.schedulePhaseTimer();
       return;
     }
 
     this.phaseValue = 'night';
     this.notes = 'Night 1 started. Camera and audio are open to the full room again while mafia, doctor, and detective submit actions.';
     this.appendSystemMessage('The game started. Check your private role panel.');
+    this.schedulePhaseTimer();
   }
 
   beginNight(userId: string): void {
@@ -473,6 +482,7 @@ class MafiaRoom {
     this.phaseValue = 'night';
     this.notes = `Night ${this.roundNumberValue} started. Camera and audio are open to the full room again while hidden actions are submitted.`;
     this.appendSystemMessage('The mafia intro ended. Full-room camera and audio returned for the night phase.');
+    this.schedulePhaseTimer();
   }
 
   beginVoting(userId: string): void {
@@ -489,6 +499,7 @@ class MafiaRoom {
     this.phaseValue = 'voting';
     this.notes = 'Voting is open. Every living player must cast one elimination vote.';
     this.appendSystemMessage(`Voting opened for day ${this.roundNumberValue}.`);
+    this.schedulePhaseTimer();
   }
 
   submitNightAction(userId: string, payload?: Record<string, unknown>): void {
@@ -611,6 +622,7 @@ class MafiaRoom {
       })),
       messages: this.messages.map((message) => ({ ...message })),
       notes: this.notes,
+      phaseEndsAt: this.phaseEndsAtValue?.toISOString(),
       isSeated: Boolean(self),
       canJoin: !self && !this.isFull() && this.phaseValue === 'waiting',
       selfRole: self?.role || null,
@@ -769,6 +781,7 @@ class MafiaRoom {
 
     this.phaseValue = 'day';
     this.notes = `Day ${this.roundNumberValue} started. Discuss what happened, then the owner can open voting.`;
+    this.schedulePhaseTimer();
   }
 
   private resolveVote(): void {
@@ -797,6 +810,7 @@ class MafiaRoom {
     this.phaseValue = 'night';
     this.roundNumberValue += 1;
     this.notes = `Night ${this.roundNumberValue} started. Camera and audio stay open to the full room while hidden actions are submitted.`;
+    this.schedulePhaseTimer();
   }
 
   private computeWinner(forcedJesterWin: MafiaWinnerSide | null): MafiaWinnerSide | null {
@@ -845,6 +859,69 @@ class MafiaRoom {
           ? 'Mafia reached parity and controls the room.'
           : 'Town eliminated every mafia member.';
     this.appendSystemMessage(this.notes);
+    this.clearPhaseTimer();
+  }
+
+  destroy(): void {
+    this.clearPhaseTimer();
+  }
+
+  private schedulePhaseTimer(): void {
+    this.clearPhaseTimer();
+
+    if (!['mafia-intro', 'night', 'day', 'voting'].includes(this.phaseValue)) {
+      return;
+    }
+
+    this.phaseEndsAtValue = new Date(Date.now() + PHASE_DURATION_MS);
+    this.phaseTimer = setTimeout(() => {
+      this.phaseTimer = null;
+      this.advanceTimedPhase();
+      this.onTimedPhaseChange();
+    }, PHASE_DURATION_MS);
+  }
+
+  private clearPhaseTimer(): void {
+    if (this.phaseTimer) {
+      clearTimeout(this.phaseTimer);
+      this.phaseTimer = null;
+    }
+
+    this.phaseEndsAtValue = null;
+  }
+
+  private advanceTimedPhase(): void {
+    switch (this.phaseValue) {
+      case 'mafia-intro':
+        for (const player of this.players) {
+          player.lastNightTargetUserId = null;
+          player.lastVoteTargetUserId = null;
+        }
+        this.phaseValue = 'night';
+        this.notes = `Night ${this.roundNumberValue} started automatically. Hidden actions are open.`;
+        this.appendSystemMessage('Mafia intro timed out. Full-room camera and audio returned for the night phase.');
+        this.schedulePhaseTimer();
+        return;
+      case 'night':
+        this.appendSystemMessage('Night timed out. Resolving with submitted actions.');
+        this.resolveNight();
+        return;
+      case 'day':
+        for (const player of this.alivePlayers()) {
+          player.lastVoteTargetUserId = null;
+        }
+        this.phaseValue = 'voting';
+        this.notes = 'Day discussion timed out. Voting is open.';
+        this.appendSystemMessage(`Voting opened automatically for day ${this.roundNumberValue}.`);
+        this.schedulePhaseTimer();
+        return;
+      case 'voting':
+        this.appendSystemMessage('Voting timed out. Resolving with submitted votes.');
+        this.resolveVote();
+        return;
+      default:
+        this.clearPhaseTimer();
+    }
   }
 
   private allRequiredNightActionsSubmitted(): boolean {
@@ -1000,7 +1077,8 @@ class MafiaRoomManager {
     const room = new MafiaRoom({
       ...config,
       sessionId: buildRoomId(),
-      ownerUserId: user.id
+      ownerUserId: user.id,
+      onTimedPhaseChange: () => this.emitStateChange()
     });
 
     room.addPlayer({
@@ -1051,6 +1129,7 @@ class MafiaRoomManager {
 
     room.removePlayer(userId);
     if (room.isEmpty()) {
+      room.destroy();
       this.rooms.delete(roomId);
     }
 

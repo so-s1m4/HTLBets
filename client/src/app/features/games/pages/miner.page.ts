@@ -29,6 +29,7 @@ export class MinerPageComponent {
 
   readonly betAmount = signal('50');
   readonly mineCount = signal('3');
+  readonly isFullscreen = signal(false);
   readonly state = computed(() => this.socket.currentState());
   readonly viewState = computed(() => (this.state()?.state as unknown as MinerViewState | null) || null);
   readonly currentBet = computed(() => this.state()?.currentBet || 0);
@@ -82,6 +83,10 @@ export class MinerPageComponent {
     }
 
     this.socket.placeBet('miner', amount, { mineCount });
+  }
+
+  setFullscreen(value: boolean): void {
+    this.isFullscreen.set(value);
   }
 
   revealCell(index: number): void {

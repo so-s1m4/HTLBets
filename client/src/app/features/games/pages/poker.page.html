@@ -5,9 +5,10 @@
   [currentBet]="currentBet()"
   [error]="socket.lastError() || ''"
   [splitSidebar]="tableState()?.kind === 'table'"
+  (fullscreenChange)="setFullscreen($event)"
 >
   @if (lobbyState(); as lobby) {
-    <div table>
+    <div table [class.fullscreen]="isFullscreen()">
       <div class="page-stack">
         <div class="auth-split-shell">
           <app-card tone="muted">
@@ -114,7 +115,7 @@
   }
 
   @if (tableState(); as table) {
-    <app-card table>
+    <app-card table [class.fullscreen]="isFullscreen()">
 
         @if (table.isSeated) {
             <div class="poker-board-emote-overlay" style="position: absolute; bottom: 23%; left: 5%">

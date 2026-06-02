@@ -4,8 +4,9 @@
   [connectionState]="socket.connectionState()"
   [currentBet]="currentBet()"
   [error]="socket.lastError() || ''"
+  (fullscreenChange)="setFullscreen($event)"
 >
-  <app-card table>
+  <app-card table [class.fullscreen]="isFullscreen()">
     <div class="miner-table">
       <div class="miner-table__surface"></div>
 

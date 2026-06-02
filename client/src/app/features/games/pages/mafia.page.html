@@ -4,10 +4,12 @@
   [connectionState]="socket.connectionState()"
   [currentBet]="0"
   [error]="socket.lastError() || ''"
+  [hasSidebar]="false"
   [splitSidebar]="false"
+  (fullscreenChange)="setFullscreen($event)"
 >
   @if (lobbyState(); as lobby) {
-    <div table>
+    <div table [class.fullscreen]="isFullscreen()">
       <div class="page-stack">
         <div class="auth-split-shell">
           <app-card tone="muted">
@@ -70,111 +72,153 @@
   }
 
   @if (roomState(); as room) {
-    <div table class="mafia-room-shell">
+    <div table class="mafia-room-shell" [class.fullscreen]="isFullscreen()">
       <app-card tone="muted">
-        <div class="mafia-room-topbar">
-          <div class="page-heading">
-            <span class="page-heading__eyebrow">{{ room.visibility }}</span>
-            <h2>{{ room.roomName }}</h2>
+        <div [class]="phaseClass()">
+          <div class="mafia-room-topbar">
+            <div class="page-heading">
+              <span class="page-heading__eyebrow">{{ room.visibility }} room</span>
+              <h2>{{ room.roomName }}</h2>
+            </div>
+
+            <div class="mafia-pill-row">
+              <span class="pill">{{ room.players.length }}/{{ room.maxPlayers }} players</span>
+              @if (room.roundNumber) {
+                <span class="pill">Round {{ room.roundNumber }}</span>
+              }
+              @if (room.textChatEnabled) {
+                <span class="pill">Text</span>
+              }
+              @if (room.videoEnabled) {
+                <span class="pill">Video</span>
+              }
+              @if (room.requiresPassword) {
+                <span class="pill">Private</span>
+              }
+            </div>
           </div>
 
-          <div class="mafia-pill-row">
-            <span class="pill">{{ phaseLabel() }}</span>
-            <span class="pill">{{ room.players.length }}/{{ room.maxPlayers }}</span>
-            @if (room.roundNumber) {
-              <span class="pill">R{{ room.roundNumber }}</span>
+          <div class="mafia-phase-hero">
+            <div>
+              <span class="mafia-phase-kicker">Current phase</span>
+              <strong>{{ phaseLabel() }}</strong>
+              <p>{{ phaseStatusCopy() }}</p>
+            </div>
+
+            <div class="mafia-phase-clock">
+              @if (phaseRemainingLabel()) {
+                <span>{{ phaseRemainingLabel() }}</span>
+                <small>left</small>
+              } @else {
+                <span>--</span>
+                <small>timer</small>
+              }
+            </div>
+          </div>
+
+          @if (phaseRemainingLabel()) {
+            <div class="mafia-phase-progress" aria-hidden="true">
+              <span [style.width.%]="phaseProgressPercent()"></span>
+            </div>
+          }
+
+          <div class="mafia-phase-track">
+            @for (step of phaseSteps; track step.phase; let index = $index) {
+              <div class="mafia-phase-step" [class.done]="isPhaseStepDone(index)" [class.active]="isPhaseStepActive(index)">
+                <span></span>
+                <strong>{{ step.label }}</strong>
+              </div>
             }
-            @if (room.textChatEnabled) {
-              <span class="pill">Text</span>
-            }
-            @if (room.videoEnabled) {
-              <span class="pill">Video</span>
-            }
-            @if (room.requiresPassword) {
-              <span class="pill">Private</span>
-            }
-            @if (room.winners?.length) {
+          </div>
+
+          <p class="status-copy mafia-room-note">{{ room.notes }}</p>
+
+          @if (room.winners?.length) {
+            <div class="mafia-winner-strip">
               @for (winner of room.winners; track winner.label) {
                 <span class="pill">{{ winner.label }}</span>
               }
-            }
-          </div>
+            </div>
+          }
         </div>
       </app-card>
 
-      <div class="mafia-stage-grid">
-        <app-card tone="muted" class="mafia-stage-panel">
-          <div class="page-stack">
-            <div class="utility-row">
-              <span class="page-heading__eyebrow">Players</span>
-            </div>
+      <div class="mafia-polemica-stage">
+        <div class="mafia-stage-toolbar">
+          <strong>Polemica</strong>
+          <span>{{ room.players.length }}/{{ room.maxPlayers }} joined</span>
+        </div>
 
-            <div class="mafia-live-grid" [class.mafia-live-grid--compact]="room.players.length <= 4">
-              @for (player of room.players; track player.userId) {
-                <div class="mafia-tile" [class.mafia-tile--self]="player.isSelf" [class.mafia-tile--out]="!player.alive">
-                  <div class="mafia-tile__media-shell">
-                    <div class="mafia-tile__media" [class.mafia-tile__media--live]="hasLiveCamera(player.userId)">
-                      @if (mediaFor(player.userId); as liveMedia) {
-                        @if (liveMedia.cameraEnabled && liveMedia.stream) {
-                          <video
-                            appMediaStream
-                            class="mafia-tile__live-video"
-                            [mediaStream]="liveMedia.stream"
-                            autoplay
-                            playsinline
-                            [muted]="liveMedia.isSelf"
-                          ></video>
-                        } @else if (player.avatarUrl) {
-                          <img [src]="player.avatarUrl" [alt]="player.playerLabel + ' avatar'" loading="lazy" decoding="async" referrerpolicy="no-referrer" />
-                        } @else {
-                          <span>{{ player.playerLabel.charAt(0).toUpperCase() }}</span>
-                        }
-                      } @else if (player.avatarUrl) {
-                        <img [src]="player.avatarUrl" [alt]="player.playerLabel + ' avatar'" loading="lazy" decoding="async" referrerpolicy="no-referrer" />
-                      } @else {
-                        <span>{{ player.playerLabel.charAt(0).toUpperCase() }}</span>
-                      }
-                    </div>
+        <div class="mafia-live-grid" [class.mafia-live-grid--compact]="room.players.length <= 4">
+          <div class="mafia-board-status">
+            <span>{{ phaseLabel() }}</span>
+            <strong>{{ room.players.length }}/{{ room.maxPlayers }}</strong>
+            <p>{{ phaseStatusCopy() }}</p>
+          </div>
 
-                    @if (mediaFor(player.userId)?.stream; as liveMedia) {
-                      <audio
+          @for (player of room.players; track player.userId) {
+            <div class="mafia-tile" [class.mafia-tile--self]="player.isSelf" [class.mafia-tile--out]="!player.alive">
+              <div class="mafia-tile__media-shell">
+                <div class="mafia-tile__media" [class.mafia-tile__media--live]="hasLiveCamera(player.userId)">
+                  @if (mediaFor(player.userId); as liveMedia) {
+                    @if (liveMedia.cameraEnabled && liveMedia.stream) {
+                      <video
                         appMediaStream
-                        class="mafia-tile__live-audio"
-                        [mediaStream]="liveMedia"
+                        class="mafia-tile__live-video"
+                        [mediaStream]="liveMedia.stream"
                         autoplay
                         playsinline
-                        [muted]="mediaFor(player.userId)?.isSelf"
-                      ></audio>
+                        [muted]="liveMedia.isSelf"
+                      ></video>
+                    } @else if (player.avatarUrl) {
+                      <img [src]="player.avatarUrl" [alt]="player.playerLabel + ' avatar'" loading="lazy" decoding="async" referrerpolicy="no-referrer" />
+                    } @else {
+                      <span>{{ player.playerLabel.charAt(0).toUpperCase() }}</span>
                     }
-
-                    <div class="mafia-tile__badges">
-                      @for (tag of playerTags(player); track tag) {
-                        <span class="pill">{{ tag }}</span>
-                      }
-                      @if (hasLiveCamera(player.userId)) {
-                        <span class="pill">CAM</span>
-                      }
-                      @if (hasLiveAudio(player.userId)) {
-                        <span class="pill">MIC</span>
-                      }
-                    </div>
-                  </div>
-
-                  <div class="mafia-tile__meta">
-                    <div>
-                      <strong>{{ player.isSelf ? 'You' : player.playerLabel }}</strong>
-                      <span>{{ playerStatus(player) }}</span>
-                    </div>
-                    <span class="pill">S{{ player.seatIndex + 1 }}</span>
-                  </div>
+                  } @else if (player.avatarUrl) {
+                    <img [src]="player.avatarUrl" [alt]="player.playerLabel + ' avatar'" loading="lazy" decoding="async" referrerpolicy="no-referrer" />
+                  } @else {
+                    <span>{{ player.playerLabel.charAt(0).toUpperCase() }}</span>
+                  }
                 </div>
-              }
-            </div>
-          </div>
-        </app-card>
 
-        <app-card tone="muted" class="mafia-chat-panel">
-          <div class="page-stack">
+                @if (mediaFor(player.userId)?.stream; as liveMedia) {
+                  <audio
+                    appMediaStream
+                    class="mafia-tile__live-audio"
+                    [mediaStream]="liveMedia"
+                    autoplay
+                    playsinline
+                    [muted]="mediaFor(player.userId)?.isSelf"
+                  ></audio>
+                }
+
+                <div class="mafia-tile__badges">
+                  @for (tag of playerTags(player); track tag) {
+                    <span class="pill">{{ tag }}</span>
+                  }
+                  @if (hasLiveCamera(player.userId)) {
+                    <span class="pill">CAM</span>
+                  }
+                  @if (hasLiveAudio(player.userId)) {
+                    <span class="pill">MIC</span>
+                  }
+                </div>
+              </div>
+
+              <div class="mafia-tile__meta">
+                <div>
+                  <strong>{{ player.isSelf ? 'You' : player.playerLabel }}</strong>
+                  <span>{{ playerStatus(player) }}</span>
+                </div>
+                <span class="pill">S{{ player.seatIndex + 1 }}</span>
+              </div>
+            </div>
+          }
+        </div>
+
+        <div class="mafia-room-panels">
+          <section class="mafia-dock-panel mafia-chat-panel">
             <div class="utility-row">
               <span class="page-heading__eyebrow">{{ room.textChatEnabled ? 'Chat' : 'Roles' }}</span>
               <span class="pill">{{ room.textChatEnabled ? room.messages.length : room.roles.length }}</span>
@@ -206,101 +250,97 @@
                 }
               </div>
             }
-          </div>
-        </app-card>
-      </div>
-    </div>
-  }
+          </section>
 
-  @if (roomState(); as room) {
-    <app-card sidebar [class]="'mafia-sidebar'">
-      <div class="page-stack">
-        <div class="utility-row">
-          <span class="page-heading__eyebrow">Panel</span>
-          <span class="pill">{{ phaseLabel() }}</span>
-        </div>
+          <section class="mafia-dock-panel mafia-control-panel">
+            <div class="utility-row">
+              <span class="page-heading__eyebrow">Panel</span>
+              <span class="pill">{{ phaseLabel() }}</span>
+              @if (phaseRemainingLabel()) {
+                <span class="pill pill--timer">{{ phaseRemainingLabel() }}</span>
+              }
+            </div>
 
-        @if (room.selfRole) {
-          <div class="page-stack">
-            <span class="page-heading__eyebrow">Role</span>
-            <strong>{{ room.selfRole }}</strong>
+            @if (room.selfRole) {
+              <div class="mafia-role-callout">
+                <span>Role</span>
+                <strong>{{ room.selfRole }}</strong>
+              </div>
+            }
             @if (room.selfTeamHint) {
               <p class="status-copy">{{ room.selfTeamHint }}</p>
             }
             @if (room.lastInvestigation) {
               <p class="status-copy">{{ room.lastInvestigation }}</p>
             }
-          </div>
-        }
 
-        @if (room.canStartGame) {
-          <app-button block (click)="startGame()">Start game</app-button>
-        }
-
-        @if (room.canAdvanceIntro) {
-          <app-button block (click)="beginNight()">Open full night</app-button>
-        }
-
-        @if (room.canAdvancePhase) {
-          <app-button block (click)="beginVote()">Open voting</app-button>
-        }
-
-        @if (room.videoEnabled && room.isSeated) {
-          <div class="page-stack">
-            <span class="page-heading__eyebrow">Live media</span>
-            <div class="mafia-target-list">
-              <button
-                type="button"
-                class="mafia-target-button"
-                [class.mafia-target-button--active]="media.cameraEnabled()"
-                [disabled]="!canUseMediaControls() && !media.cameraEnabled()"
-                (click)="toggleCamera()"
-              >
-                Camera
-              </button>
-              <button
-                type="button"
-                class="mafia-target-button"
-                [class.mafia-target-button--active]="media.microphoneEnabled()"
-                [disabled]="!canUseMediaControls() && !media.microphoneEnabled()"
-                (click)="toggleMicrophone()"
-              >
-                Mic
-              </button>
-            </div>
-            @if (media.mediaError()) {
-              <p class="status-copy text-danger">{{ media.mediaError() }}</p>
+            @if (room.canStartGame) {
+              <app-button block (click)="startGame()">Start game</app-button>
             }
-          </div>
-        }
 
-        @if (actionOptions().length) {
-          <div class="page-stack">
-            <span class="page-heading__eyebrow">Action</span>
-            <p class="status-copy">{{ actionPrompt() }}</p>
-            <div class="mafia-target-list">
-              @for (option of actionOptions(); track option.userId) {
+            @if (room.canAdvanceIntro) {
+              <app-button block (click)="beginNight()">Open full night</app-button>
+            }
+
+            @if (room.canAdvancePhase) {
+              <app-button block (click)="beginVote()">Open voting</app-button>
+            }
+
+            @if (room.videoEnabled && room.isSeated) {
+              <div class="mafia-target-list">
                 <button
                   type="button"
-                  class="mafia-target-button"
-                  [class.mafia-target-button--active]="selectedActionTargetId() === option.userId"
-                  (click)="selectedActionTargetId.set(option.userId)"
+                  class="mafia-target-button mafia-icon-button"
+                  [class.mafia-target-button--active]="media.cameraEnabled()"
+                  [disabled]="!canUseMediaControls() && !media.cameraEnabled()"
+                  (click)="toggleCamera()"
                 >
-                  {{ option.playerLabel }}
+                  Cam
                 </button>
+                <button
+                  type="button"
+                  class="mafia-target-button mafia-icon-button"
+                  [class.mafia-target-button--active]="media.microphoneEnabled()"
+                  [disabled]="!canUseMediaControls() && !media.microphoneEnabled()"
+                  (click)="toggleMicrophone()"
+                >
+                  Mic
+                </button>
+              </div>
+              @if (media.mediaError()) {
+                <p class="status-copy text-danger">{{ media.mediaError() }}</p>
               }
-            </div>
-            <app-button block [disabled]="room.hasSubmittedAction || !selectedActionTargetId()" (click)="submitAction()">
-              {{ room.hasSubmittedAction ? 'Submitted' : room.phase === 'night' ? 'Submit night action' : 'Submit vote' }}
-            </app-button>
-          </div>
-        } @else if (room.phase === 'night' || room.phase === 'voting') {
-          <p class="status-copy">{{ room.hasSubmittedAction ? 'Your action is locked in.' : actionPrompt() }}</p>
-        }
+            }
 
-        <app-button variant="ghost" block (click)="leaveRoom()">{{ room.isSeated ? 'Leave room' : 'Back to lobby' }}</app-button>
+            @if (actionOptions().length) {
+              <div class="mafia-action-block">
+                <span class="page-heading__eyebrow">Action</span>
+                <p class="status-copy">{{ actionPrompt() }}</p>
+                <div class="mafia-target-list">
+                  @for (option of actionOptions(); track option.userId) {
+                    <button
+                      type="button"
+                      class="mafia-target-button"
+                      [class.mafia-target-button--active]="selectedActionTargetId() === option.userId"
+                      (click)="selectedActionTargetId.set(option.userId)"
+                    >
+                      {{ option.playerLabel }}
+                    </button>
+                  }
+                </div>
+                <app-button block [disabled]="room.hasSubmittedAction || !selectedActionTargetId()" (click)="submitAction()">
+                  {{ room.hasSubmittedAction ? 'Submitted' : room.phase === 'night' ? 'Submit night action' : 'Submit vote' }}
+                </app-button>
+              </div>
+            } @else if (room.phase === 'night' || room.phase === 'voting') {
+              <p class="status-copy">{{ room.hasSubmittedAction ? 'Your action is locked in.' : actionPrompt() }}</p>
+            }
+
+            <app-button variant="ghost" block (click)="leaveRoom()">{{ room.isSeated ? 'Leave room' : 'Back to lobby' }}</app-button>
+          </section>
+        </div>
       </div>
-    </app-card>
+    </div>
   }
 
   @if (showCreateRoomModal()) {

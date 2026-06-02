@@ -6,8 +6,9 @@
       [error]="socket.lastError() || ''"
       [hasSidebar]="hasSidebarContent()"
       [splitSidebar]="false"
+      (fullscreenChange)="setFullscreen($event)"
     >
-      <app-card table>
+      <app-card table [class.fullscreen]="isFullscreen()">
         <div class="roulette-table">
           <div class="roulette-table__topline">
             <span class="roulette-table__brand">Roulette Royale</span>

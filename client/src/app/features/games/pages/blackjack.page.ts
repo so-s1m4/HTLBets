@@ -81,6 +81,7 @@ export class BlackjackPageComponent {
   readonly betAmount = signal('50');
   readonly selectedBackImageUrl = signal('/cards/back_dark.png');
   readonly selectedFaceImageTemplate = signal('/cards/{suit}_{rank}.png');
+  readonly isFullscreen = signal(false);
   readonly state = computed(() => this.socket.currentState());
   readonly viewState = computed(() => (this.state()?.state as unknown as BlackjackViewState | null) || null);
   readonly currentBet = computed(() => this.state()?.currentBet || 0);
@@ -169,6 +170,10 @@ export class BlackjackPageComponent {
     this.displayedDealerHand.set([]);
     this.isDealing.set(true);
     this.socket.placeBet('blackjack', amount);
+  }
+
+  setFullscreen(value: boolean): void {
+    this.isFullscreen.set(value);
   }
 
   action(action: 'hit' | 'stand' | 'double' | 'split' | 'insurance' | 'skip-insurance'): void {

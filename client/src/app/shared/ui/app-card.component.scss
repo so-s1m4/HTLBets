@@ -11,6 +11,17 @@
       transform: translateZ(0);
     }
 
+    :host(.fullscreen) {
+      display: block;
+      min-height: 0;
+      height: 100%;
+    }
+
+    :host(.fullscreen) .app-card {
+      min-height: 0;
+      height: 100%;
+    }
+
     .app-card::before,
     .app-card::after {
       content: '';

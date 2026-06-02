@@ -57,6 +57,7 @@ export class PokerPageComponent {
   readonly countdownMs = signal(0);
   readonly emoteCooldownRemainingMs = signal(0);
   readonly emotePanelOpen = signal(false);
+  readonly isFullscreen = signal(false);
   readonly emotes = ['Good luck', 'Nice hand', 'Oops', 'Wow', 'gg'] as const;
   private nextEmoteAt = 0;
 
@@ -254,6 +255,10 @@ export class PokerPageComponent {
   openCreateRoomModal(): void {
     this.showCreateRoomModal.set(true);
     this.createPassword.set('');
+  }
+
+  setFullscreen(value: boolean): void {
+    this.isFullscreen.set(value);
   }
 
   closeCreateRoomModal(): void {

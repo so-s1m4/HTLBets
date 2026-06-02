@@ -528,11 +528,12 @@ const emitMafiaRoomState = async (io: Server) => {
     sockets.map(async (socket) => {
       const requestedSessionId = socket.data.mafiaSessionId || mafiaRoomManager.getLobbySessionId();
       const state = await mafiaRoomManager.getStateForUser(socket.data.user.userId, requestedSessionId);
-      if (state.state.kind !== 'room' || !state.state.videoEnabled) {
+      if (state.state.kind !== 'room' || !state.state.videoEnabled || !state.state.isSeated) {
         clearMafiaMediaStatus(io, requestedSessionId, socket.data.user.userId);
       }
       syncMafiaSocketSession(io, socket, state.sessionId);
       socket.emit(socketEvents.state, state);
+      await emitMafiaMediaSnapshot(socket, state.sessionId);
     })
   );
 };

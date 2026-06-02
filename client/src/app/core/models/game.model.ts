@@ -243,6 +243,7 @@ export interface MafiaRoomState {
   players: MafiaPlayerView[];
   messages: MafiaChatMessageView[];
   notes: string;
+  phaseEndsAt?: string;
   isSeated: boolean;
   canJoin: boolean;
   selfRole?: MafiaRoleKey | null;

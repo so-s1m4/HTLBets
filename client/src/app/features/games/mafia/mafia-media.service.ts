@@ -551,6 +551,7 @@ export class MafiaMediaService {
     }
 
     this.rebuildSeatMedia();
+    this.ensurePeerConnections();
   }
 
   private applyRemoteStatus(payload: MafiaMediaStatusPayload): void {

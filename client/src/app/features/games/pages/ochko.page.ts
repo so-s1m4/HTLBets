@@ -65,6 +65,7 @@ export class OchkoPageComponent {
   readonly selectedRoomId = signal<string | null>(null);
   readonly selectedTargetUserId = signal<string | null>(null);
   readonly countdownMs = signal(0);
+  readonly isFullscreen = signal(false);
 
   readonly state = computed(() => this.socket.currentState());
   readonly ochkoState = computed(() => {
@@ -153,6 +154,10 @@ export class OchkoPageComponent {
       buyIn: Number(this.roomBuyIn()),
       maxPlayers: Number(this.roomMaxPlayers())
     });
+  }
+
+  setFullscreen(value: boolean): void {
+    this.isFullscreen.set(value);
   }
 
   joinRoom(room: OchkoTableSummary): void {

@@ -31,6 +31,7 @@ export class CrashPageComponent {
 
   readonly betAmount = signal('50');
   readonly clock = signal(Date.now());
+  readonly isFullscreen = signal(false);
   readonly state = computed(() => this.socket.currentState());
   readonly viewState = computed(() => (this.state()?.state as unknown as CrashViewState | null) || null);
   readonly currentBet = computed(() => this.state()?.currentBet || 0);
@@ -251,6 +252,10 @@ export class CrashPageComponent {
     }
 
     this.socket.placeBet('crash', amount);
+  }
+
+  setFullscreen(value: boolean): void {
+    this.isFullscreen.set(value);
   }
 
   cashOut(): void {

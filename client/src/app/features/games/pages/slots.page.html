@@ -5,8 +5,9 @@
   [currentBet]="currentBet()"
   [error]="socket.lastError() || ''"
   [splitSidebar]="false"
+  (fullscreenChange)="setFullscreen($event)"
 >
-  <app-card table>
+  <app-card table [class.fullscreen]="isFullscreen()">
     <div class="slots-table">
       <div class="slots-machines">
         @for (machine of machines(); track machine.id) {
@@ -42,7 +43,7 @@
 
         <div class="slots-reels" [class.is-spinning]="isSpinning()">
             <img class="slots--background" src="/SlotMachine.png" alt="">
-            <img class="slots--lever" src="/lever.png" (click) = "spin()" onClick="this.classList.add('is-pulled'); setTimeout(() => this.classList.remove('is-pulled'), 1000);" alt="">
+            <img class="slots--lever" [class.is-pulled]="isLeverPulled()" src="/lever.png" (click)="spin()" alt="">
             <div class="slots-reels__viewport">
 
                   @for (row of grid(); track $index; let rowIndex = $index) {

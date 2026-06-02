@@ -3,6 +3,17 @@
       gap: 1rem;
     }
 
+    .game-shell--fullscreen {
+      position: fixed;
+      inset: 0;
+      z-index: 1000;
+      width: 100vw;
+      height: 100vh;
+      padding: clamp(0.75rem, 2vw, 1.5rem);
+      overflow: auto;
+      background: var(--gradient-bg);
+    }
+
     .game-shell__header {
       display: grid;
       gap: 1rem;
@@ -14,6 +25,49 @@
       justify-content: flex-start;
       gap: 0.75rem;
       flex-wrap: wrap;
+    }
+
+    .game-shell__fullscreen {
+      position: relative;
+      display: grid;
+      grid-template-columns: repeat(2, 0.7rem);
+      place-content: center;
+      gap: 0.05rem;
+      width: 2.55rem;
+      height: 2.55rem;
+      padding: 0;
+      border: 1px solid rgba(149, 171, 211, 0.2);
+      border-radius: 50%;
+      background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0)),
+        rgba(9, 14, 22, 0.9);
+      color: rgba(245, 248, 255, 0.86);
+      cursor: pointer;
+      box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.06),
+        0 12px 24px rgba(5, 9, 20, 0.28);
+      transition:
+        transform 180ms ease,
+        border-color 180ms ease,
+        color 180ms ease;
+    }
+
+    .game-shell__fullscreen span {
+      display: block;
+      width: 0.7rem;
+      line-height: 0.7rem;
+      font-size: 0.9rem;
+      font-weight: 700;
+    }
+
+    .game-shell__fullscreen:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+    }
+
+    .game-shell__fullscreen[aria-pressed='true'] {
+      border-color: rgba(125, 227, 255, 0.46);
+      color: var(--accent-cyan);
     }
 
     .game-shell__dot {
@@ -35,6 +89,19 @@
       gap: 1rem;
     }
 
+    .game-shell--fullscreen .game-shell__grid {
+      align-content: start;
+      min-height: 0;
+    }
+
+    @media (hover: hover) {
+      .game-shell__fullscreen:hover:not(:disabled) {
+        transform: translateY(-1px) scale(1.04);
+        border-color: rgba(149, 171, 211, 0.34);
+        color: var(--text);
+      }
+    }
+
     @media (min-width: 900px) {
       .game-shell__header {
         grid-template-columns: minmax(0, 1fr) auto;
@@ -51,9 +118,22 @@
   gap: 1rem;
 }
 
+@media (min-width: 1180px) {
+  .game-shell__grid.has-sidebar:not(.split-sidebar) {
+    grid-template-columns: minmax(0, 1fr) minmax(18rem, 28rem);
+    align-items: start;
+  }
+}
+
 @media (min-width: 1480px) {
   .game-shell__grid.split-sidebar {
     grid-template-columns: 100%;
+  }
+}
+
+@media (min-width: 1180px) {
+  .game-shell--fullscreen .game-shell__grid.has-sidebar:not(.split-sidebar) {
+    grid-template-columns: minmax(0, 1fr) minmax(18rem, 24rem);
   }
 }
 
