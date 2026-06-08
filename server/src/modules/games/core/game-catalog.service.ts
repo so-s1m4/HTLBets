@@ -1,8 +1,8 @@
 import { prisma } from '../../../prisma/client';
 import { HttpError } from '../../../utils/http-error';
 
-export type GameCatalogId = 'roulette' | 'blackjack' | 'poker' | 'miner' | 'crash' | 'slots' | 'ochko' | 'mafia';
-export type RealtimeGameCatalogId = Exclude<GameCatalogId, 'mafia'>;
+export type GameCatalogId = 'roulette' | 'blackjack' | 'poker' | 'miner' | 'crash' | 'slots' | 'ochko' | 'mafia' | 'balatro';
+export type RealtimeGameCatalogId = Exclude<GameCatalogId, 'mafia' | 'balatro'>;
 
 export interface PublicGameCatalogEntry {
   id: GameCatalogId;
@@ -24,7 +24,8 @@ const GAME_CATALOG_SEED: Array<{ id: GameCatalogId; name: string; sortOrder: num
   { id: 'crash', name: 'Crash', sortOrder: 50 },
   { id: 'slots', name: 'Slots', sortOrder: 60 },
   { id: 'ochko', name: 'Ochko', sortOrder: 70 },
-  { id: 'mafia', name: 'Mafia', sortOrder: 80 }
+  { id: 'mafia', name: 'Mafia', sortOrder: 80 },
+  { id: 'balatro', name: 'Balatro', sortOrder: 90 }
 ];
 
 const GAME_CATALOG_BY_ID = new Map(GAME_CATALOG_SEED.map((entry) => [entry.id, entry]));

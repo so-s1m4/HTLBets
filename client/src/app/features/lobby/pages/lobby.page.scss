@@ -197,6 +197,47 @@
   gap: 0.8rem;
 }
 
+.lobby-preview__balatro {
+  position: absolute;
+  right: 1.15rem;
+  bottom: 1rem;
+  width: 5.2rem;
+  aspect-ratio: 0.72;
+  display: grid;
+  place-items: center;
+  border: 3px solid #10151f;
+  border-radius: 0.5rem;
+  color: #171923;
+  background:
+    radial-gradient(circle at 30% 20%, #fff8b8 0 7%, transparent 8%),
+    repeating-linear-gradient(135deg, rgba(255, 255, 255, 0.18) 0 3px, transparent 3px 8px),
+    linear-gradient(145deg, #ffcc4d, #ff4c68 62%, #7a42ff);
+  box-shadow: -0.6rem 0.55rem 0 rgba(19, 211, 168, 0.48), 0 16px 32px rgba(0, 0, 0, 0.45);
+  transform: rotate(7deg);
+  font-family: 'SF Mono', ui-monospace, monospace;
+}
+
+.lobby-preview__balatro span {
+  position: absolute;
+  top: 0.28rem;
+  left: 0.38rem;
+  font-size: 1rem;
+  font-weight: 950;
+}
+
+.lobby-preview__balatro strong {
+  font-size: 1.45rem;
+  text-shadow: 2px 2px 0 rgba(255, 255, 255, 0.5);
+}
+
+.lobby-preview__balatro em {
+  position: absolute;
+  right: 0.35rem;
+  bottom: 0.2rem;
+  font-size: 1.25rem;
+  font-style: normal;
+}
+
 .lobby-game-card {
   position: relative;
   overflow: hidden;

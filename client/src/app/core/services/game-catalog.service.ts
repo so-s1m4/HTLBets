@@ -16,7 +16,8 @@ const DEFAULT_GAME_CATALOG: GameCatalogEntry[] = [
   { id: 'crash', name: 'Crash', enabled: true },
   { id: 'slots', name: 'Slots', enabled: true },
   { id: 'ochko', name: 'Ochko', enabled: true },
-  { id: 'mafia', name: 'Mafia', enabled: true }
+  { id: 'mafia', name: 'Mafia', enabled: true },
+  { id: 'balatro', name: 'Balatro', enabled: true }
 ];
 
 @Injectable({

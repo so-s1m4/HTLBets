@@ -13,7 +13,7 @@
   padding: 0.35rem 0.8rem;
   border-radius: var(--radius-lg);
   background: transparent;
-  min-height: 10.5rem;
+  min-height: var(--blackjack-hand-min-height, 10.5rem);
   transition: opacity 180ms ease;
 }
 
@@ -58,9 +58,22 @@
   flex-wrap: wrap;
 }
 
+:host-context(.blackjack-table--fullscreen) .hand {
+  align-items: center;
+  text-align: center;
+}
+
+:host-context(.blackjack-table--fullscreen) .hand__header {
+  justify-content: center;
+}
+
+:host-context(.blackjack-table--fullscreen) .hand__cards {
+  justify-content: center;
+}
+
 .card {
-  width: 70px;
-  height: 96px;
+  width: var(--blackjack-card-width, 70px);
+  height: var(--blackjack-card-height, 96px);
   position: relative;
   perspective: 1100px;
   animation: deal-in 1200ms cubic-bezier(0.18, 0.82, 0.2, 1) both;

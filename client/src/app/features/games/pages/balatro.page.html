@@ -1,0 +1,610 @@
+<app-game-shell
+  title="Balatro"
+  subtitle="Build poker hands, bend the rules with Jokers, and crush every Blind in the run."
+  connectionState="connected"
+  [hasSidebar]="false"
+  [edgeToEdge]="true"
+  (fullscreenChange)="setFullscreen($event)"
+>
+  <main
+    table
+    class="balatro"
+    [class.balatro--fullscreen]="isFullscreen()"
+    [class.balatro--no-crt]="!crtEnabled()"
+    [class.balatro--reduced-motion]="reducedMotion()"
+    [class.balatro--no-shake]="!screenShakeEnabled()"
+    [class.balatro--playing]="phase() === 'playing'"
+    [class.balatro--shop]="phase() === 'shop'"
+    [style.--game-speed]="gameSpeed()"
+  >
+    <div class="balatro__noise"></div>
+
+    <header class="run-header">
+      <div class="run-brand">
+        <span class="run-brand__kicker">HTL BETS PRESENTS</span>
+        <h1>BALATRO</h1>
+        <span class="run-brand__tag">NEON DECK</span>
+      </div>
+
+      <div class="run-meta">
+        <div><span>ANTE</span><strong>{{ ante() }}/8</strong></div>
+        <div><span>BLIND</span><strong>{{ blindIndex() + 1 }}/3</strong></div>
+        <div><span>MONEY</span><strong>${{ money() }}</strong></div>
+        <div><span>DECK</span><strong>{{ deckRemaining() }}</strong></div>
+        <button class="menu-trigger" type="button" (click)="openMenu()">
+          <span>☰</span>
+          MENU
+        </button>
+      </div>
+    </header>
+
+    @if (phase() === 'blind-select') {
+      <section class="blind-select-screen">
+        <div class="screen-heading">
+          <span>ANTE {{ ante() }}</span>
+          <h2>CHOOSE YOUR BLIND</h2>
+          <p>Beat the score requirement or skip a non-Boss Blind for its Tag.</p>
+        </div>
+
+        <div class="blind-choice-row">
+          @for (blind of blindOptions(); track blind.index) {
+            <article
+              class="blind-choice"
+              [class.is-current]="blind.status === 'current'"
+              [class.is-cleared]="blind.status === 'cleared'"
+              [class.is-locked]="blind.status === 'locked'"
+              [class.is-boss]="blind.type === 'boss'"
+            >
+              <span class="blind-choice__type">{{ blind.type === 'boss' ? 'BOSS BLIND' : blind.type + ' BLIND' }}</span>
+              <div class="blind-choice__token">{{ blind.glyph }}</div>
+              <h3>{{ blind.name }}</h3>
+              <div class="blind-choice__score">
+                <span>Score at least</span>
+                <strong>{{ blind.target.toLocaleString() }}</strong>
+              </div>
+              <div class="blind-choice__reward">
+                <span>Reward</span>
+                <strong>${{ blind.reward }} + hands</strong>
+              </div>
+
+              @if (blind.status === 'current') {
+                <button class="blind-choice__play" type="button" (click)="selectBlind(blind.index)">SELECT</button>
+                @if (blind.type !== 'boss') {
+                  <button class="blind-choice__skip" type="button" (click)="skipBlind(blind.index)">
+                    SKIP FOR TAG
+                    <small>{{ blind.tag }}</small>
+                  </button>
+                }
+              } @else if (blind.status === 'cleared') {
+                <div class="blind-choice__state">CLEARED</div>
+              } @else {
+                <div class="blind-choice__state">LOCKED</div>
+              }
+            </article>
+          }
+        </div>
+      </section>
+    } @else if (phase() === 'shop') {
+      <section class="shop-screen">
+        <div class="shop-heading">
+          <div>
+            <span>AFTER THE {{ blindName() }}</span>
+            <h2>THE SHOP</h2>
+            <p>{{ message() }}</p>
+          </div>
+        </div>
+
+        <div class="shop-layout">
+          <aside class="shop-sidebar">
+            <div class="shop-wallet">
+              <span>ROUND SCORE</span>
+              <strong>{{ score().toLocaleString() }}</strong>
+            </div>
+            <div class="shop-wallet shop-wallet--money">
+              <span>MONEY</span>
+              <strong>${{ money() }}</strong>
+            </div>
+            <button type="button" [disabled]="money() < rerollCost()" (click)="rerollShop()">
+              REROLL <small>${{ rerollCost() }}</small>
+            </button>
+            <button class="shop-next" type="button" (click)="leaveShop()">NEXT ROUND</button>
+            <span class="shop-slot-count">{{ jokerSlotsLeft() }}/5 slots free</span>
+            <span class="shop-slot-count">{{ consumableSlotsLeft() }}/2 utility slots free</span>
+            <div class="shop-utility-inventory">
+              @for (consumable of consumables(); track consumable.instanceId) {
+                <article
+                  [class.is-glitch]="consumable.kind === 'glitch'"
+                  [style.--consumable-accent]="consumable.accent"
+                >
+                  <b>{{ consumable.glyph }}</b>
+                  <span>{{ consumable.name }}</span>
+                  <button type="button" (click)="useConsumable(consumable)">USE</button>
+                </article>
+              }
+              @for (slot of emptyConsumableSlots(); track slot) {
+                <div><b>+</b><span>UTILITY</span></div>
+              }
+            </div>
+          </aside>
+
+          <div class="shop-main">
+            <div class="shop-owned-row">
+              @for (joker of ownedJokers(); track joker.instanceId; let index = $index) {
+                <article
+                  class="shop-owned-card"
+                  [class.is-selected]="selectedJoker()?.id === joker.id"
+                  [style.--joker-accent]="joker.accent"
+                  [style.--tilt]="(index - 2) * 1.2 + 'deg'"
+                  (click)="showJoker(joker)"
+                >
+                  <span>{{ joker.rarity }}</span>
+                  <img class="joker-art" [src]="jokerArtUrl(joker)" [alt]="joker.name" />
+                  <strong>{{ joker.name }}</strong>
+                  @if (jokerStatus(joker); as status) {
+                    <em class="joker-status">{{ status }}</em>
+                  }
+                  <button type="button" (click)="$event.stopPropagation(); sellJoker(joker.instanceId)">
+                    SELL ${{ joker.sellValue }}
+                  </button>
+                </article>
+              }
+              @for (slot of emptyJokerSlots(); track slot) {
+                <div class="shop-owned-slot"><b>+</b><small>JOKER</small></div>
+              }
+            </div>
+
+            <div class="shop-stock">
+              <section class="shop-stock-group">
+                <header><span>JOKERS</span><small>Build the engine</small></header>
+                <div class="shop-shelf">
+                  @for (joker of shopOffers(); track joker.id) {
+                    <article
+                      class="shop-card"
+                      [class.is-selected]="selectedJoker()?.id === joker.id"
+                      [style.--joker-accent]="joker.accent"
+                      (click)="showJoker(joker)"
+                    >
+                      <span class="shop-card__rarity">{{ joker.rarity }}</span>
+                      <img
+                        class="joker-art shop-card__art"
+                        [src]="jokerArtUrl(joker)"
+                        [alt]="joker.name"
+                      />
+                      <h3>{{ joker.name }}</h3>
+                      @if (jokerStatus(joker); as status) {
+                        <em class="joker-status">{{ status }}</em>
+                      }
+                      <button
+                        type="button"
+                        [disabled]="!canBuyJoker(joker)"
+                        (click)="$event.stopPropagation(); buyJoker(joker)"
+                      >
+                        BUY ${{ joker.cost }}
+                      </button>
+                    </article>
+                  } @empty {
+                    <div class="shop-empty">Shelf sold out.</div>
+                  }
+                </div>
+              </section>
+
+              <section class="shop-stock-group shop-stock-group--utility">
+                <header><span>GLITCHES + PROTOCOLS</span><small>Store up to two</small></header>
+                <div class="consumable-shelf">
+                  @for (consumable of consumableOffers(); track consumable.id) {
+                    <article
+                      class="consumable-card"
+                      [class.is-selected]="selectedConsumable()?.id === consumable.id"
+                      [class.is-protocol]="consumable.kind === 'protocol'"
+                      [style.--consumable-accent]="consumable.accent"
+                      (click)="showConsumable(consumable)"
+                    >
+                      <span>{{ consumableKindLabel(consumable.kind) }}</span>
+                      <b>{{ consumable.glyph }}</b>
+                      <h3>{{ consumable.name }}</h3>
+                      <em>{{ consumableStatus(consumable) }}</em>
+                      <button
+                        type="button"
+                        [disabled]="!canBuyConsumable(consumable)"
+                        (click)="$event.stopPropagation(); buyConsumable(consumable)"
+                      >
+                        BUY ${{ consumable.cost }}
+                      </button>
+                    </article>
+                  }
+                </div>
+              </section>
+            </div>
+
+            @if (selectedJoker(); as joker) {
+              <div class="joker-inspector shop-joker-inspector">
+                <img class="joker-art" [src]="jokerArtUrl(joker)" [alt]="joker.name" />
+                <div>
+                  <strong>{{ joker.name }}</strong>
+                  @if (jokerStatus(joker); as status) {
+                    <em class="joker-status joker-status--detail">{{ status }}</em>
+                  }
+                  <p>{{ joker.effect }}</p>
+                </div>
+                <span>{{ joker.rarity }} · ${{ joker.cost }}</span>
+              </div>
+            } @else if (selectedConsumable(); as consumable) {
+              <div class="consumable-inspector">
+                <b [style.--consumable-accent]="consumable.accent">{{ consumable.glyph }}</b>
+                <div>
+                  <strong>{{ consumable.name }}</strong>
+                  <em>{{ consumableStatus(consumable) }}</em>
+                  <p>{{ consumable.effect }}</p>
+                </div>
+                <span>{{ consumableKindLabel(consumable.kind) }} · ${{ consumable.cost }}</span>
+              </div>
+            }
+          </div>
+        </div>
+      </section>
+    } @else {
+      <section class="game-board">
+        <aside class="blind-panel">
+          <div class="blind-panel__cap">
+            <span>RUN INFO</span>
+            <b>ANTE {{ ante() }}</b>
+          </div>
+          <div class="blind-token" [class.is-boss]="blindIndex() === 2">
+            <span>{{ blindIndex() === 2 ? '★' : blindIndex() + 1 }}</span>
+          </div>
+          <span class="eyebrow">{{ blindIndex() === 2 ? 'BOSS BLIND' : 'CURRENT BLIND' }}</span>
+          <h2>{{ blindName() }}</h2>
+
+          <div class="score-target">
+            <span>Score at least</span>
+            <strong>{{ target().toLocaleString() }}</strong>
+          </div>
+
+          <div class="progress-track"><span [style.width.%]="progress()"></span></div>
+          <div class="progress-label">
+            <strong>{{ score().toLocaleString() }}</strong>
+            <span>{{ progress().toFixed(0) }}%</span>
+          </div>
+
+          <div class="run-counters">
+            <div><span>HANDS</span><strong>{{ handsLeft() }}</strong></div>
+            <div><span>DISCARDS</span><strong>{{ discardsLeft() }}</strong></div>
+          </div>
+
+          <div class="action-bar">
+            <button
+              class="action action--discard"
+              type="button"
+              [disabled]="!selected().length || !discardsLeft() || gameOver() || isScoring() || isChangingHand()"
+              (click)="discard()"
+            >
+              <span>DISCARD</span>
+              <strong>{{ selected().length || '—' }}</strong>
+            </button>
+            <button
+              class="action action--play"
+              type="button"
+              [disabled]="!selected().length || !handsLeft() || gameOver() || isScoring() || isChangingHand()"
+              (click)="playHand()"
+            >
+              <span>PLAY HAND</span>
+              <strong>▶</strong>
+            </button>
+            <div class="selection-copy">
+              <strong>{{ selected().length }}/5 selected</strong>
+              <span>{{ preview().name }} · {{ preview().chips }} × {{ preview().mult }}</span>
+            </div>
+          </div>
+        </aside>
+
+        <div class="table">
+          <div class="joker-row">
+            @for (joker of ownedJokers(); track joker.instanceId; let index = $index) {
+              <article
+                class="joker"
+                [style.--joker-accent]="joker.accent"
+                [style.--tilt]="(index - 1) * 2 + 'deg'"
+                [class.is-triggering]="activeJokerInstanceId() === joker.instanceId"
+                [class.is-selected]="selectedJoker()?.id === joker.id"
+                (click)="showJoker(joker)"
+              >
+                <span class="joker__edition">{{ joker.rarity }}</span>
+                <img
+                  class="joker-art joker__art"
+                  [src]="jokerArtUrl(joker)"
+                  [alt]="joker.name"
+                />
+                <h3>{{ joker.name }}</h3>
+                @if (jokerStatus(joker); as status) {
+                  <em class="joker-status">{{ status }}</em>
+                }
+              </article>
+            }
+            @for (slot of emptyJokerSlots(); track slot) {
+              <div class="joker-slot"><span>+</span><small>empty</small></div>
+            }
+          </div>
+
+          <div class="consumable-tray">
+            <span class="consumable-tray__label">UTILITY</span>
+            @for (consumable of consumables(); track consumable.instanceId) {
+              <article
+                class="consumable-mini"
+                [class.is-protocol]="consumable.kind === 'protocol'"
+                [style.--consumable-accent]="consumable.accent"
+                (click)="showConsumable(consumable)"
+              >
+                <b>{{ consumable.glyph }}</b>
+                <span>{{ consumable.name }}</span>
+                <em>{{ consumableStatus(consumable) }}</em>
+                <button
+                  type="button"
+                  [disabled]="isScoring() || isChangingHand()"
+                  (click)="$event.stopPropagation(); useConsumable(consumable)"
+                >
+                  USE
+                </button>
+              </article>
+            }
+            @for (slot of emptyConsumableSlots(); track slot) {
+              <div class="consumable-mini consumable-mini--empty"><b>+</b><span>EMPTY</span></div>
+            }
+            @if (pendingBoost()) {
+              <strong class="pending-boost">{{ pendingBoost() }}</strong>
+            }
+          </div>
+
+          @if (selectedJoker(); as joker) {
+            <div class="joker-inspector table-joker-inspector">
+              <img class="joker-art" [src]="jokerArtUrl(joker)" [alt]="joker.name" />
+              <div>
+                <strong>{{ joker.name }}</strong>
+                @if (jokerStatus(joker); as status) {
+                  <em class="joker-status joker-status--detail">{{ status }}</em>
+                }
+                <p>{{ joker.effect }}</p>
+              </div>
+              <span>{{ joker.rarity }}</span>
+            </div>
+          } @else if (selectedConsumable(); as consumable) {
+            <div class="consumable-inspector table-consumable-inspector">
+              <b [style.--consumable-accent]="consumable.accent">{{ consumable.glyph }}</b>
+              <div>
+                <strong>{{ consumable.name }}</strong>
+                <em>{{ consumableStatus(consumable) }}</em>
+                <p>{{ consumable.effect }}</p>
+              </div>
+              <span>{{ consumableKindLabel(consumable.kind) }}</span>
+            </div>
+          }
+
+          @if (playedCards().length) {
+            <div class="played-hand" [class.is-flying]="playedCardsFlying()" aria-label="Played cards">
+              @for (card of playedCards(); track card.id; let index = $index) {
+                <div
+                  class="played-card"
+                  [class.is-red]="isRed(card.suit)"
+                  [class.is-counting]="activeScoringCardId() === card.id"
+                  [class.is-scoring-card]="lastResult()?.scoringIds?.has(card.id)"
+                  [class.is-non-scoring]="!lastResult()?.scoringIds?.has(card.id)"
+                  [style.--played-index]="index"
+                  [style.--played-count]="playedCards().length"
+                >
+                  <img
+                    class="card-face-image"
+                    [src]="cardFaceUrl(card)"
+                    alt=""
+                    (error)="$any($event.target).style.display = 'none'"
+                  />
+                  <span><strong>{{ card.rank }}</strong><i>{{ suitGlyph(card.suit) }}</i></span>
+                  <b>{{ suitGlyph(card.suit) }}</b>
+                  @if (activeScoringCardId() === card.id) {
+                    <em class="card-score-burst">+{{ cardChipValue(card) }}</em>
+                  }
+                </div>
+              }
+            </div>
+          }
+
+          <div
+            class="score-stage"
+            [class.is-active]="lastResult()"
+            [class.is-counting]="isScoring()"
+            [class.is-fading]="resultFading()"
+            [attr.data-pulse]="pulse()"
+          >
+            @if (lastResult(); as result) {
+              <span class="hand-name">{{ result.name }}</span>
+              @if (isScoring()) {
+                <span class="scoring-caption">{{ scoringCaption() }}</span>
+              }
+              <div class="score-equation">
+                <strong class="chips">{{ displayedChips() }}</strong>
+                <span>×</span>
+                <strong class="mult">{{ displayedMult() }}</strong>
+                @if (displayedXMult() > 1) {
+                  <span>×</span>
+                  <strong class="x-mult">{{ displayedXMult().toFixed(2) }}</strong>
+                }
+                <i>=</i>
+                <b>{{ displayedTotal().toLocaleString() }}</b>
+              </div>
+            } @else {
+              <span class="hand-name hand-name--preview">{{ preview().name }}</span>
+              <p>{{ message() }}</p>
+            }
+          </div>
+
+          <div class="hand" [class.is-locked]="gameOver()" [class.is-changing]="isChangingHand()">
+            @for (card of hand(); track card.id; let index = $index) {
+              <button
+                type="button"
+                class="playing-card"
+                [class.is-selected]="card.selected"
+                [class.is-red]="isRed(card.suit)"
+                [class.is-scoring]="lastResult()?.scoringIds?.has(card.id)"
+                [class.is-played-original]="playedCardIds().has(card.id)"
+                [class.is-counting]="activeScoringCardId() === card.id"
+                [class.is-discarding]="discardingCardIds().has(card.id)"
+                [class.is-dealing]="dealingCardIds().has(card.id)"
+                [style.--card-index]="index"
+                [style.--card-tilt]="(index - 3.5) * 1.2 + 'deg'"
+                (click)="toggleCard(card.id)"
+              >
+                <img
+                  class="card-face-image"
+                  [src]="cardFaceUrl(card)"
+                  alt=""
+                  (error)="$any($event.target).style.display = 'none'"
+                />
+                <span class="playing-card__corner">
+                  <strong>{{ card.rank }}</strong>
+                  <i>{{ suitGlyph(card.suit) }}</i>
+                </span>
+                <span class="playing-card__suit">{{ suitGlyph(card.suit) }}</span>
+                <span class="playing-card__corner playing-card__corner--bottom">
+                  <strong>{{ card.rank }}</strong>
+                  <i>{{ suitGlyph(card.suit) }}</i>
+                </span>
+              </button>
+            }
+          </div>
+
+          <button
+            class="deck-stack"
+            type="button"
+            aria-label="View remaining deck"
+            [disabled]="isScoring() || isChangingHand()"
+            (click)="toggleDeckView()"
+          >
+            <span class="deck-stack__back"></span>
+            <span class="deck-stack__front"><img [src]="selectedBackImageUrl()" alt="" /></span>
+            <strong>{{ deckRemaining() }}/52</strong>
+            <small>VIEW DECK</small>
+          </button>
+        </div>
+      </section>
+    }
+
+    @if (deckViewOpen()) {
+      <div class="deck-view-overlay" (click)="toggleDeckView()">
+        <section class="deck-view" (click)="$event.stopPropagation()">
+          <header>
+            <div>
+              <span>REMAINING CARDS</span>
+              <h2>{{ deckRemaining() }} CARDS LEFT</h2>
+            </div>
+            <button type="button" aria-label="Close deck view" (click)="toggleDeckView()">×</button>
+          </header>
+
+          <div class="deck-suit-counts">
+            <span class="is-red">♥ <strong>{{ cardsLeftInSuit('hearts') }}</strong></span>
+            <span>♠ <strong>{{ cardsLeftInSuit('spades') }}</strong></span>
+            <span class="is-red">♦ <strong>{{ cardsLeftInSuit('diamonds') }}</strong></span>
+            <span>♣ <strong>{{ cardsLeftInSuit('clubs') }}</strong></span>
+          </div>
+
+          <div class="deck-card-grid">
+            @for (row of deckSuitRows(); track row.suit) {
+              <section class="deck-suit-row" [class.is-red]="isRed(row.suit)">
+                <div class="deck-suit-label">
+                  <b>{{ suitGlyph(row.suit) }}</b>
+                  <span>{{ row.label }}</span>
+                  <strong>{{ cardsLeftInSuit(row.suit) }}/13</strong>
+                </div>
+                <div class="deck-suit-cards">
+                  @for (slot of row.cards; track slot.rank) {
+                    <article class="deck-view-card" [class.is-missing]="!slot.card">
+                      @if (slot.card; as card) {
+                        <img
+                          [src]="cardFaceUrl(card)"
+                          alt=""
+                          (error)="$any($event.target).style.display = 'none'"
+                        />
+                      }
+                      <span><strong>{{ slot.rank }}</strong>{{ suitGlyph(row.suit) }}</span>
+                    </article>
+                  }
+                </div>
+              </section>
+            }
+          </div>
+        </section>
+      </div>
+    }
+
+    @if (gameOver()) {
+      <div class="run-overlay">
+        <div class="run-dialog" [class.is-win]="won()">
+          <span>{{ won() ? 'RUN COMPLETE' : 'GAME OVER' }}</span>
+          <h2>{{ won() ? 'The deck is on fire.' : 'The Blind wins this one.' }}</h2>
+          <p>{{ message() }}</p>
+          <button type="button" (click)="startRun()">NEW RUN</button>
+        </div>
+      </div>
+    }
+
+    @if (menuView(); as view) {
+      <div class="pause-overlay">
+        <div class="pause-overlay__wash"></div>
+
+        <section class="pause-card" [class.pause-card--options]="view === 'options' || view === 'collection'">
+          <div class="pause-card__suit" aria-hidden="true">♠</div>
+
+          @if (view === 'pause') {
+            <span class="pause-card__eyebrow">GAME MENU</span>
+            <h2>PAUSED</h2>
+            <p>Ante {{ ante() }} · {{ blindName() }} · ${{ money() }}</p>
+            <div class="pause-actions">
+              <button class="pause-button pause-button--resume" type="button" (click)="resume()"><span>▶</span>Resume</button>
+              <button class="pause-button pause-button--new" type="button" (click)="restartFromMenu()"><span>↻</span>New Run</button>
+              <button class="pause-button pause-button--options" type="button" (click)="openOptions()"><span>⚙</span>Options</button>
+              <button class="pause-button pause-button--collection" type="button" (click)="menuView.set('collection')"><span>150</span>Collection</button>
+              <button class="pause-button pause-button--main" type="button" (click)="returnToLobby()"><span>⌂</span>Main Menu</button>
+            </div>
+          } @else if (view === 'collection') {
+            <span class="pause-card__eyebrow">COLLECTION</span>
+            <h2>150 JOKERS</h2>
+            <div class="joker-collection">
+              @for (joker of BALATRO_JOKERS; track joker.id) {
+                <article [style.--joker-accent]="joker.accent" [title]="joker.effect">
+                  <img
+                    class="joker-art collection-art"
+                    [src]="jokerArtUrl(joker)"
+                    [alt]="joker.name"
+                  />
+                  <span>{{ joker.name }}</span>
+                  <small>${{ joker.cost }}</small>
+                </article>
+              }
+            </div>
+            <button class="pause-button pause-button--back" type="button" (click)="menuView.set('pause')">← Back</button>
+          } @else {
+            <span class="pause-card__eyebrow">OPTIONS</span>
+            <h2>SETTINGS</h2>
+            <div class="option-list">
+              <label class="option-row option-row--slider">
+                <span><strong>Game Speed</strong><small>Animation multiplier</small></span>
+                <input type="range" min="0.5" max="2" step="0.5" [value]="gameSpeed()" (input)="setGameSpeed($any($event.target).value)" />
+                <b>{{ gameSpeed().toFixed(1) }}x</b>
+              </label>
+              <button class="option-row" type="button" (click)="crtEnabled.set(!crtEnabled())">
+                <span><strong>CRT Filter</strong><small>Scanlines and screen texture</small></span>
+                <i [class.is-on]="crtEnabled()">{{ crtEnabled() ? 'ON' : 'OFF' }}</i>
+              </button>
+              <button class="option-row" type="button" (click)="screenShakeEnabled.set(!screenShakeEnabled())">
+                <span><strong>Screen Shake</strong><small>Impact on scoring hands</small></span>
+                <i [class.is-on]="screenShakeEnabled()">{{ screenShakeEnabled() ? 'ON' : 'OFF' }}</i>
+              </button>
+              <button class="option-row" type="button" (click)="reducedMotion.set(!reducedMotion())">
+                <span><strong>Reduced Motion</strong><small>Disable card and score movement</small></span>
+                <i [class.is-on]="reducedMotion()">{{ reducedMotion() ? 'ON' : 'OFF' }}</i>
+              </button>
+            </div>
+            <button class="pause-button pause-button--back" type="button" (click)="menuView.set('pause')">← Back</button>
+          }
+        </section>
+      </div>
+    }
+  </main>
+</app-game-shell>

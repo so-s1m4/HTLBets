@@ -25,22 +25,7 @@ interface PositionedOchkoSeat {
 
 const orbitLayouts: Record<number, Array<{ left: number; top: number }>> = {
   0: [],
-  1: [{ left: 50, top: 17 }],
-  2: [
-    { left: 30, top: 18 },
-    { left: 70, top: 18 }
-  ],
-  3: [
-    { left: 14, top: 48 },
-    { left: 50, top: 17 },
-    { left: 86, top: 48 }
-  ],
-  4: [
-    { left: 14, top: 48 },
-    { left: 30, top: 18 },
-    { left: 70, top: 18 },
-    { left: 86, top: 48 }
-  ]
+  1: [{ left: 50, top: 60 }]
 };
 
 @Component({
@@ -60,7 +45,6 @@ export class OchkoPageComponent {
   readonly roomVisibility = signal<'public' | 'private'>('public');
   readonly roomPassword = signal('');
   readonly roomBuyIn = signal('250');
-  readonly roomMaxPlayers = signal('5');
   readonly joinPassword = signal('');
   readonly selectedRoomId = signal<string | null>(null);
   readonly selectedTargetUserId = signal<string | null>(null);
@@ -82,6 +66,7 @@ export class OchkoPageComponent {
   readonly hasRoomState = computed(() => this.roomState() !== null);
   readonly currentBet = computed(() => this.state()?.currentBet || 0);
   readonly self = computed(() => this.roomState()?.players.find((player) => player.isSelf) || null);
+  readonly opponent = computed(() => this.roomState()?.players.find((player) => !player.isSelf) || null);
   readonly orbitSeats = computed(() => {
     const room = this.roomState();
     if (!room) {
@@ -89,7 +74,7 @@ export class OchkoPageComponent {
     }
 
     const players = room.players.filter((player) => !player.isSelf);
-    const layout = orbitLayouts[players.length] || orbitLayouts[4];
+    const layout = orbitLayouts[players.length] || orbitLayouts[1];
 
     return players.map((player, index) => ({
       player,
@@ -151,8 +136,7 @@ export class OchkoPageComponent {
       roomName: this.roomName().trim(),
       visibility: this.roomVisibility(),
       password: this.roomVisibility() === 'private' ? this.roomPassword().trim() : undefined,
-      buyIn: Number(this.roomBuyIn()),
-      maxPlayers: Number(this.roomMaxPlayers())
+      buyIn: Number(this.roomBuyIn())
     });
   }
 
@@ -229,5 +213,22 @@ export class OchkoPageComponent {
 
   cardToneClass(suit?: string): string {
     return suit === 'hearts' || suit === 'diamonds' ? 'is-red' : 'is-dark';
+  }
+
+  fullCardTotal(player: OchkoPlayerView): number {
+    return [...player.publicCards, ...player.privateCards].reduce((total, card) => {
+      const value = Number(card.rank);
+      return total + (Number.isFinite(value) ? value : 0);
+    }, 0);
+  }
+
+  remainingLives(player: OchkoPlayerView, room: OchkoRoomState): number {
+    const completedRounds =
+      room.phase === 'round-end' || room.phase === 'finished'
+        ? room.roundNumber
+        : Math.max(0, room.roundNumber - 1);
+    const lostRounds = Math.max(0, completedRounds - player.roundWins);
+
+    return Math.max(0, room.totalRounds - lostRounds);
   }
 }

@@ -162,7 +162,7 @@ const MAX_ACTION_CARDS = 3;
 const START_DELAY_MS = 3_500;
 const ROUND_END_DELAY_MS = 4_500;
 const MIN_BUY_IN = 100;
-const MAX_ROOM_PLAYERS = 5;
+const ROOM_PLAYERS = 2;
 const ACTION_DROP_CHANCE = 0.65;
 const EVENT_LIMIT = 8;
 
@@ -283,15 +283,10 @@ const normalizeRoomConfig = (payload?: Record<string, unknown>): Omit<OchkoRoomC
   const visibility = payload?.visibility === 'private' ? 'private' : 'public';
   const roomName = String(payload?.roomName || '').trim() || 'Ochko Arena';
   const buyIn = parseNonNegativeAmount(payload?.buyIn ?? MIN_BUY_IN, 'Buy-in');
-  const maxPlayers = Number(payload?.maxPlayers || MAX_ROOM_PLAYERS);
   const password = visibility === 'private' ? String(payload?.password || '').trim() : '';
 
   if (buyIn < MIN_BUY_IN) {
     throw new HttpError(400, `Buy-in must be at least ${MIN_BUY_IN} credits.`);
-  }
-
-  if (!Number.isInteger(maxPlayers) || maxPlayers < 2 || maxPlayers > MAX_ROOM_PLAYERS) {
-    throw new HttpError(400, `Ochko rooms must allow between 2 and ${MAX_ROOM_PLAYERS} players.`);
   }
 
   if (visibility === 'private' && !/^\d{5}$/.test(password)) {
@@ -303,7 +298,7 @@ const normalizeRoomConfig = (payload?: Record<string, unknown>): Omit<OchkoRoomC
     visibility,
     password: visibility === 'private' ? password : null,
     buyIn,
-    maxPlayers
+    maxPlayers: ROOM_PLAYERS
   };
 };
 
@@ -350,7 +345,7 @@ class OchkoRoom {
   phase: OchkoPhase = 'waiting';
   roundNumber = 0;
   readonly totalRounds = TOTAL_ROUNDS;
-  notes = 'Get at least two players into the room and ready up to begin the five-round match.';
+  notes = 'Waiting for one opponent. Both players must ready up to begin the five-round duel.';
   phaseEndsAt?: number;
   currentPlayerId?: string;
   winners: OchkoWinnerView[] = [];
@@ -395,6 +390,10 @@ class OchkoRoom {
 
   isEmpty(): boolean {
     return this.seats.length === 0;
+  }
+
+  canAcceptSeat(): boolean {
+    return this.phase === 'waiting' && this.seats.length < ROOM_PLAYERS;
   }
 
   getLastOutcome(userId: string): GameResolution | null {
@@ -449,7 +448,7 @@ class OchkoRoom {
 
     if (this.phase === 'waiting') {
       this.notes = this.seats.length > 0
-        ? 'Seat freed. Ready up again when at least two players remain.'
+        ? 'Opponent left. Waiting for a new challenger.'
         : 'Room is empty.';
       this.phaseEndsAt = undefined;
       this.emit();
@@ -472,7 +471,7 @@ class OchkoRoom {
     const seat = this.requireSeat(userId);
     seat.isReady = true;
 
-    if (this.seats.length >= 2 && this.seats.every((entry) => entry.isReady)) {
+    if (this.seats.length === ROOM_PLAYERS && this.seats.every((entry) => entry.isReady)) {
       this.scheduleMatchStart();
     } else {
       this.notes = `Waiting for ${Math.max(0, this.seats.filter((entry) => !entry.isReady).length)} more ready check${this.seats.filter((entry) => !entry.isReady).length === 1 ? '' : 's'}.`;
@@ -545,7 +544,7 @@ class OchkoRoom {
       notes: this.notes,
       phaseEndsAt: this.phaseEndsAt ? new Date(this.phaseEndsAt).toISOString() : undefined,
       isSeated: this.hasUser(userId),
-      canJoin: this.phase === 'waiting' && this.seats.length < this.maxPlayers
+      canJoin: this.canAcceptSeat()
     };
   }
 
@@ -670,10 +669,10 @@ class OchkoRoom {
     this.clearStartTimer();
     this.clearRoundEndTimer();
 
-    if (this.seats.length < 2) {
+    if (this.seats.length !== ROOM_PLAYERS) {
       this.phase = 'waiting';
       this.phaseEndsAt = undefined;
-      this.notes = 'Need at least two players to start Ochko.';
+      this.notes = 'Ochko requires exactly two players.';
       this.emit();
       return;
     }
@@ -1107,6 +1106,10 @@ class OchkoTableManager {
 
     if (room.isPrivate() && room.password !== config.password) {
       throw new HttpError(400, 'That private Ochko room password is incorrect.');
+    }
+
+    if (!room.canAcceptSeat()) {
+      throw new HttpError(400, 'That Ochko duel is already full or in progress.');
     }
 
     const user = await this.reserveBalance(userId, room.buyIn);

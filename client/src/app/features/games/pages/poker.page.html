@@ -4,11 +4,11 @@
   [connectionState]="socket.connectionState()"
   [currentBet]="currentBet()"
   [error]="socket.lastError() || ''"
-  [splitSidebar]="tableState()?.kind === 'table'"
+  [splitSidebar]="tableState()?.kind === 'table' && !isFullscreen()"
   (fullscreenChange)="setFullscreen($event)"
 >
   @if (lobbyState(); as lobby) {
-    <div table [class.fullscreen]="isFullscreen()">
+    <div table>
       <div class="page-stack">
         <div class="auth-split-shell">
           <app-card tone="muted">
@@ -115,7 +115,7 @@
   }
 
   @if (tableState(); as table) {
-    <app-card table [class.fullscreen]="isFullscreen()">
+    <app-card table>
 
         @if (table.isSeated) {
             <div class="poker-board-emote-overlay" style="position: absolute; bottom: 23%; left: 5%">
@@ -147,7 +147,7 @@
                 </button>
             </div>
         }
-      <div class="page-stack poker-table-shell">
+      <div class="page-stack poker-table-shell" [class.poker-table-shell--fullscreen]="isFullscreen()">
         @if (previewTableState(); as preview) {
         <app-poker-table
           [tableName]="preview.tableName"
@@ -163,10 +163,33 @@
           [seatMedia]="media.seatMedia()"
           [communityCards]="preview.communityCards"
           [winners]="preview.winners || null"
-        />
+        >
+          @if (table.isSeated) {
+            <div tableHeaderActions class="poker-table-media-header">
+              <button
+                type="button"
+                class="media-toggle media-toggle--header"
+                [class.media-toggle--active]="media.cameraEnabled()"
+                (click)="toggleCamera()"
+              >
+                <span class="media-toggle__label">Camera</span>
+                <strong>{{ media.cameraEnabled() ? 'On' : 'Off' }}</strong>
+              </button>
+              <button
+                type="button"
+                class="media-toggle media-toggle--header"
+                [class.media-toggle--active]="media.microphoneEnabled()"
+                (click)="toggleMicrophone()"
+              >
+                <span class="media-toggle__label">Mic</span>
+                <strong>{{ media.microphoneEnabled() ? 'On' : 'Off' }}</strong>
+              </button>
+            </div>
+          }
+        </app-poker-table>
         }
 
-        <app-card tone="muted">
+        <app-card tone="muted" class="poker-table-status-card" [class.poker-table-status-card--hidden]="isFullscreen()">
           <div class="page-stack">
             <div class="utility-row">
               <span class="pill">{{ table.visibility }}</span>
@@ -182,50 +205,26 @@
   }
 
   @if (tableState(); as table) {
-    <app-card sidebar [class]="'sidebar'">
-        @if (table.isSeated) {
-          <app-card tone="muted">
+    <div
+      sidebar
+      class="poker-action-panel"
+      [class.sidebar]="!isFullscreen()"
+      [class.poker-sidebar-fullscreen]="isFullscreen()"
+    >
+        @if (isFullscreen()) {
+          <app-card tone="muted" class="poker-dock-status">
             <div class="page-stack">
               <div class="utility-row">
-                <span class="pill">Table media</span>
-                <span class="pill">
-                  @if (media.cameraEnabled() || media.microphoneEnabled()) {
-                    Live
-                  } @else {
-                    Off
-                  }
-                </span>
+                <span class="pill">{{ table.visibility }}</span>
+                <span class="pill">{{ timerLabel() }}</span>
               </div>
-              <p class="status-copy">Camera and microphone are optional. Only seated players can go live, and everyone at the table sees the round video badge in the seat ring.</p>
-              <div class="media-toggle-row">
-                <button
-                  type="button"
-                  class="media-toggle"
-                  [class.media-toggle--active]="media.cameraEnabled()"
-                  (click)="toggleCamera()"
-                >
-                  <span class="media-toggle__label">Camera</span>
-                  <strong>{{ media.cameraEnabled() ? 'On' : 'Off' }}</strong>
-                </button>
-                <button
-                  type="button"
-                  class="media-toggle"
-                  [class.media-toggle--active]="media.microphoneEnabled()"
-                  (click)="toggleMicrophone()"
-                >
-                  <span class="media-toggle__label">Mic</span>
-                  <strong>{{ media.microphoneEnabled() ? 'On' : 'Off' }}</strong>
-                </button>
-              </div>
-              @if (media.mediaError()) {
-                <p class="status-copy status-copy--warning">{{ media.mediaError() }}</p>
-              }
+              <p class="status-copy">{{ table.notes }}</p>
             </div>
           </app-card>
         }
 
         @if (table.phase === 'waiting') {
-          <div class="page-stack poker-sidebar">
+          <app-card tone="muted" class="poker-sidebar">
             <div class="glass-stat-grid">
               <div class="glass-stat">
                 <span class="glass-stat__label">Seats</span>
@@ -240,11 +239,12 @@
                 <strong class="glass-stat__value">{{ table.visibility }}</strong>
               </div>
             </div>
-          </div>
+          </app-card>
         }
 
         @if (!table.isSeated) {
-          <div class="page-stack">
+          <app-card tone="muted">
+            <div class="page-stack">
             <app-input
               label="Buy in to take a seat"
               inputMode="numeric"
@@ -252,7 +252,8 @@
               (valueChange)="publicJoinBuyIn.set($event.replace(/\D/g, ''))"
             />
             <app-button block [disabled]="!table.canJoin" (click)="buyInCurrentTable()">Take a seat</app-button>
-          </div>
+            </div>
+          </app-card>
         } @else if (table.phase === 'waiting') {
           <app-card tone="muted">
             <div class="page-stack">
@@ -277,7 +278,8 @@
           <app-button variant="ghost" block (click)="leaveTable()">{{ table.isSeated ? 'Leave table' : 'Back to lobby' }}</app-button>
           </app-card>
         } @else {
-          <div class="page-stack">
+          <app-card tone="muted">
+            <div class="page-stack">
             @if (can('check')) {
               <app-button variant="secondary" block (click)="action('check')">Check</app-button>
             }
@@ -303,9 +305,10 @@
             @if (can('fold')) {
               <app-button variant="ghost" block (click)="action('fold')">Fold hand</app-button>
             }
-          </div>
+            </div>
+          </app-card>
         }
-    </app-card>
+    </div>
   }
 
   @if (showCreateRoomModal()) {

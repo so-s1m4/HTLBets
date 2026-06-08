@@ -4,10 +4,15 @@
   [connectionState]="socket.connectionState()"
   [currentBet]="currentBet()"
   [error]="socket.lastError() || ''"
+  [splitSidebar]="!isFullscreen()"
   (fullscreenChange)="setFullscreen($event)"
 >
-  <app-card table [class.fullscreen]="isFullscreen()">
-    <div class="blackjack-table" [style.--blackjack-card-back-url]="'url(' + selectedBackImageUrl() + ')'">
+  <app-card table [class.fullscreen]="isFullscreen()" [class.table-fullscreen]="isFullscreen()">
+    <div
+      class="blackjack-table"
+      [class.blackjack-table--fullscreen]="isFullscreen()"
+      [style.--blackjack-card-back-url]="'url(' + selectedBackImageUrl() + ')'"
+    >
       <div class="blackjack-table__surface"></div>
       <div class="blackjack-table__deck" [class.blackjack-table__deck--active]="isDealing()" aria-hidden="true">
         <span></span>
@@ -25,17 +30,20 @@
       }
 
       <div class="page-stack blackjack-table__content">
-        <app-blackjack-hand
-          label="Dealer"
-          [cards]="displayedDealerHand()"
-          [score]="displayedDealerScore()"
-          [backImageUrl]="selectedBackImageUrl()"
-          [faceImageTemplate]="selectedFaceImageTemplate()"
-          [hidden]="dealerHandHidden()"
-          [isDealer]="true"
-        />
+        <div class="blackjack-table__hand-zone blackjack-table__hand-zone--dealer">
+          <app-blackjack-hand
+            label="Dealer"
+            [cards]="displayedDealerHand()"
+            [score]="displayedDealerScore()"
+            [backImageUrl]="selectedBackImageUrl()"
+            [faceImageTemplate]="selectedFaceImageTemplate()"
+            [hidden]="dealerHandHidden()"
+            [isDealer]="true"
+          />
+        </div>
 
-        <div class="blackjack-table__player-hands" [class.blackjack-table__player-hands--split]="isSplitView()">
+        <div class="blackjack-table__hand-zone blackjack-table__hand-zone--player">
+          <div class="blackjack-table__player-hands" [class.blackjack-table__player-hands--split]="isSplitView()">
           @for (hand of displayedPlayerHands(); track $index) {
             <app-blackjack-hand
               [label]="playerHandLabel($index)"
@@ -48,12 +56,13 @@
               [hidden]="playerHandsHidden()"
             />
           }
+          </div>
         </div>
       </div>
     </div>
   </app-card>
 
-  <app-card sidebar class="blackjack-sidebar">
+  <app-card sidebar class="blackjack-sidebar" [class.sidebar-fullscreen]="isFullscreen()">
     <div class="page-stack">
       @if (isInsuranceDecision()) {
         <div class="page-stack">

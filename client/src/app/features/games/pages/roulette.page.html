@@ -84,40 +84,4 @@
           </div>
         </div>
       </app-card>
-
-      @if (hasSidebarContent()) {
-        <app-card sidebar>
-  <div class="page-stack roulette-sidebar">
-            @if (viewState()?.bets?.length) {
-              <div class="page-stack">
-                <div class="utility-row">
-                  <h3>Live table bets</h3>
-                  <span class="pill">{{ viewState()?.bets?.length }} placed</span>
-                </div>
-
-                <div class="roulette-bet-feed">
-                  @for (bet of viewState()?.bets || []; track $index) {
-                    <div class="roulette-bet-feed__item">
-                      <strong>{{ bet.playerLabel }}</strong>
-                      <span>{{ bet.selection.type }} {{ bet.selection.value }}</span>
-                      <span>{{ bet.amount }} cr</span>
-                    </div>
-                  }
-                </div>
-              </div>
-            }
-
-            @if (viewState()?.history?.length) {
-              <div class="page-stack">
-                <h3>Recent spins</h3>
-                <div class="history">
-                  @for (entry of viewState()?.history || []; track $index) {
-                    <span class="pill">{{ entry.number }} / {{ entry.color }}</span>
-                  }
-                </div>
-              </div>
-            }
-          </div>
-        </app-card>
-      }
     </app-game-shell>

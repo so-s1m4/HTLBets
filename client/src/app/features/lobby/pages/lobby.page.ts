@@ -8,7 +8,7 @@ import { GameCatalogService } from '../../../core/services/game-catalog.service'
 import { LeaderboardService } from '../../../core/services/leaderboard.service';
 import { CreditsPipe } from '../../../shared/pipes/credits.pipe';
 
-type LobbyTheme = 'roulette' | 'blackjack' | 'poker' | 'miner' | 'crash' | 'slots' | 'ochko' | 'mafia';
+type LobbyTheme = 'roulette' | 'blackjack' | 'poker' | 'miner' | 'crash' | 'slots' | 'ochko' | 'mafia' | 'balatro';
 
 interface LobbyGameCard {
   title: string;
@@ -148,6 +148,16 @@ export class LobbyPageComponent {
       queueCopy: 'Private rooms',
       badge: 'new',
       previewImage: '/lobby-icons/mafia_hat.png'
+    },
+    {
+      title: 'Balatro',
+      strapline: 'Roguelike poker',
+      description: 'Build impossible poker hands, stack wild jokers, and crush escalating blinds.',
+      route: '/games/balatro',
+      theme: 'balatro',
+      players: 1,
+      queueCopy: 'Solo run',
+      badge: 'new'
     }
   ];
 

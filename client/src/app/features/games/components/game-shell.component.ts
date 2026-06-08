@@ -19,6 +19,7 @@ export class GameShellComponent {
   @Input() error = '';
   @Input() hasSidebar = true;
   @Input() splitSidebar = true;
+  @Input() edgeToEdge = false;
   @Output() fullscreenChange = new EventEmitter<boolean>();
 
   readonly isFullscreen = signal(false);

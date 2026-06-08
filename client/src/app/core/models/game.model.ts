@@ -1,5 +1,5 @@
-export type GameSlug = 'roulette' | 'blackjack' | 'poker' | 'miner' | 'crash' | 'slots' | 'ochko' | 'mafia';
-export type GameType = 'ROULETTE' | 'BLACKJACK' | 'POKER' | 'MINER' | 'CRASH' | 'SLOTS' | 'OCHKO' | 'MAFIA' | 'ADMIN';
+export type GameSlug = 'roulette' | 'blackjack' | 'poker' | 'miner' | 'crash' | 'slots' | 'ochko' | 'mafia' | 'balatro';
+export type GameType = 'ROULETTE' | 'BLACKJACK' | 'POKER' | 'MINER' | 'CRASH' | 'SLOTS' | 'OCHKO' | 'MAFIA' | 'BALATRO' | 'ADMIN';
 export type GameStatus = 'IDLE' | 'WAITING_ACTION' | 'COMPLETED';
 
 export interface GameOutcome {
@@ -347,7 +347,8 @@ export const gameSlugToType: Record<GameSlug, GameType> = {
   crash: 'CRASH',
   slots: 'SLOTS',
   ochko: 'OCHKO',
-  mafia: 'MAFIA'
+  mafia: 'MAFIA',
+  balatro: 'BALATRO'
 };
 
 export const gameTypeLabels: Record<GameType, string> = {
@@ -359,5 +360,6 @@ export const gameTypeLabels: Record<GameType, string> = {
   SLOTS: 'Slots',
   OCHKO: 'Ochko',
   MAFIA: 'Mafia',
+  BALATRO: 'Balatro',
   ADMIN: 'Admin'
 };

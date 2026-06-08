@@ -126,6 +126,17 @@
   position: relative;
 }
 
+.poker-table-shell--fullscreen {
+  display: grid;
+  grid-template-rows: auto;
+  align-content: stretch;
+  min-height: calc(100vh - 8rem);
+}
+
+.poker-table-status-card--hidden {
+  display: none;
+}
+
 .poker-sidebar {
   padding-bottom: 1.5rem;
 }
@@ -301,19 +312,106 @@
   grid-template-columns: 1fr;
 }
 
+.poker-action-panel {
+  display: grid;
+  gap: 0.85rem;
+  align-content: start;
+}
+
 .sidebar {
-  max-width: 25%;
+  width: min(25rem, 34vw);
   position: absolute;
-  top: 50%;
+  top: 56%;
   right: 0;
 
   transform: translate(50%, -50%);
+}
+
+.poker-sidebar-fullscreen {
+  position: absolute;
+  left: auto;
+  right: clamp(1.5rem, 3vw, 2.5rem);
+  top: 54%;
+  bottom: auto;
+  z-index: 8;
+  width: min(20rem, calc(100% - 2rem));
+  max-height: calc(100% - 9rem);
+  overflow: visible;
+  transform: translateY(-50%);
+  padding: 0.2rem;
+  align-content: center;
+  gap: 0.7rem;
+}
+
+.poker-sidebar-fullscreen::before {
+  content: '';
+  position: absolute;
+  inset: -0.7rem;
+  z-index: -1;
+  border-radius: 1.35rem;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0)),
+    rgba(4, 9, 18, 0.18);
+  box-shadow: 0 22px 50px rgba(0, 0, 0, 0.28);
+}
+
+.poker-sidebar-fullscreen .glass-stat-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-rows: auto;
+  gap: 0.45rem;
+}
+
+.poker-sidebar-fullscreen app-card {
+  display: block;
+  min-width: 0;
+}
+
+.poker-sidebar-fullscreen app-card + app-card {
+  margin-top: 0.15rem;
+}
+
+.poker-dock-status .status-copy {
+  margin: 0;
+}
+
+.poker-sidebar-fullscreen .glass-stat {
+  padding: 0.72rem;
+}
+
+.poker-sidebar-fullscreen .glass-stat__label {
+  font-size: 0.62rem;
+}
+
+.poker-sidebar-fullscreen .glass-stat__value {
+  font-size: 0.88rem;
+  line-height: 1.1;
+}
+
+.poker-sidebar-fullscreen .status-copy {
+  font-size: 0.82rem;
+  line-height: 1.45;
+}
+
+.poker-sidebar-fullscreen .media-toggle-row {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.poker-sidebar-fullscreen .media-toggle {
+  min-height: 3.2rem;
+  padding: 0.7rem 0.78rem;
 }
 
 .media-toggle-row {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 0.75rem;
+}
+
+.poker-table-media-header {
+  display: flex;
+  align-items: stretch;
+  gap: 0.55rem;
+  flex-wrap: wrap;
 }
 
 .media-toggle {
@@ -331,6 +429,13 @@
     transform 180ms ease,
     border-color 180ms ease,
     box-shadow 180ms ease;
+}
+
+.media-toggle--header {
+  min-height: 3.55rem;
+  min-width: 6.6rem;
+  padding: 0.72rem 0.85rem;
+  border-radius: 1.1rem;
 }
 
 .media-toggle:hover {

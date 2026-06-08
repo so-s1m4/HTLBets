@@ -5,6 +5,11 @@
   overflow: hidden;
 }
 
+.crash-desk--fullscreen {
+  min-height: 0;
+  height: 100%;
+}
+
 .crash-desk__surface {
   position: absolute;
   inset: 0;
@@ -32,6 +37,12 @@
   display: grid;
   gap: 1.1rem;
   padding: 1.1rem;
+}
+
+.crash-desk--fullscreen .crash-desk__content {
+  grid-template-rows: auto minmax(0, 1fr);
+  min-height: 0;
+  height: 100%;
 }
 
 .crash-desk__topline,
@@ -90,6 +101,11 @@
   gap: 1rem;
 }
 
+.crash-desk--fullscreen .crash-desk__body {
+  min-height: 0;
+  height: 100%;
+}
+
 .crash-stage,
 .crash-pit {
   min-width: 0;
@@ -111,6 +127,12 @@
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.04),
     0 24px 60px rgba(5, 10, 18, 0.32);
+}
+
+.crash-desk--fullscreen .crash-stage {
+  grid-template-rows: auto minmax(16rem, 1fr) auto auto auto;
+  min-height: 0;
+  height: 100%;
 }
 
 .crash-stage__eyebrow {
@@ -135,6 +157,11 @@
     radial-gradient(circle at 52% 18%, rgba(255, 209, 102, 0.08), transparent 30%),
     linear-gradient(180deg, rgba(17, 28, 44, 0.98), rgba(6, 11, 19, 0.98));
   overflow: hidden;
+}
+
+.crash-desk--fullscreen .crash-stage__chart {
+  min-height: 0;
+  height: 100%;
 }
 
 .crash-stage__chart-head {
@@ -395,6 +422,13 @@
   gap: 1rem;
 }
 
+.crash-desk--fullscreen .crash-pit {
+  min-height: 0;
+  align-content: start;
+  overflow: auto;
+  scrollbar-width: thin;
+}
+
 .crash-panel {
   display: grid;
   gap: 0.9rem;
@@ -558,7 +592,22 @@
     align-items: start;
   }
 
+  .crash-desk--fullscreen .crash-desk__body {
+    align-items: stretch;
+  }
+
   .crash-player-board {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 900px) {
+  .crash-desk--fullscreen .crash-desk__body {
+    grid-template-columns: minmax(0, 1.55fr) minmax(20rem, 0.72fr);
+    align-items: stretch;
+  }
+
+  .crash-desk--fullscreen .crash-player-board {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }

@@ -6,6 +6,7 @@
   border-radius: var(--radius-xl);
   overflow: hidden;
 }
+
 .poker-table__background {
   position: absolute;
   width: 100%;
@@ -30,6 +31,14 @@
   justify-content: space-between;
   gap: 1rem;
   align-items: flex-start;
+  flex-wrap: wrap;
+}
+
+.poker-table__header-actions {
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-end;
+  gap: 0.75rem;
   flex-wrap: wrap;
 }
 
@@ -66,6 +75,10 @@
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.05),
     inset 0 -12px 20px rgba(0, 0, 0, 0.12);
+}
+
+:host-context(.poker-table-shell--fullscreen) .poker-table__arena {
+  min-height: calc(100vh - 16rem);
 }
 
 .poker-board,

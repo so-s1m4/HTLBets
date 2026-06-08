@@ -20,9 +20,11 @@ export class GameSocketService {
   private readonly blackjackPerCardRevealDelayMs = 1200;
   private readonly blackjackInitialCardRevealDelayMs = 260;
   private readonly blackjackFinalRevealBufferMs = 180;
+  private readonly errorDismissDelayMs = 30_000;
 
   private socket: Socket | null = null;
   private delayedBalanceTimer: number | null = null;
+  private errorDismissTimer: number | null = null;
 
   readonly connectionState = signal<ConnectionState>('disconnected');
   readonly currentState = signal<RealtimeGameState | null>(null);
@@ -94,6 +96,7 @@ export class GameSocketService {
 
   reset(): void {
     this.clearDelayedBalanceTimer();
+    this.clearErrorDismissTimer();
     this.currentState.set(null);
     this.lastError.set(null);
   }
@@ -110,7 +113,7 @@ export class GameSocketService {
     const token = this.auth.token();
 
     if (!token) {
-      this.lastError.set('Sign in again to access realtime games.');
+      this.showError('Sign in again to access realtime games.');
       return;
     }
 
@@ -134,7 +137,7 @@ export class GameSocketService {
 
     this.socket.on('connect', () => {
       this.connectionState.set('connected');
-      this.lastError.set(null);
+      this.clearError();
     });
 
     this.socket.on('disconnect', () => {
@@ -143,13 +146,13 @@ export class GameSocketService {
 
     this.socket.on('connect_error', (error) => {
       this.connectionState.set('disconnected');
-      this.lastError.set(error.message);
+      this.showError(error.message);
     });
 
     this.socket.on('game:state', (payload: RealtimeGameState) => {
       const previousState = this.currentState();
       this.currentState.set(payload);
-      this.lastError.set(null);
+      this.clearError();
 
       const previousPhase = this.readPhase(previousState);
       const nextPhase = this.readPhase(payload);
@@ -185,8 +188,31 @@ export class GameSocketService {
     });
 
     this.socket.on('game:error', (payload: { message: string }) => {
-      this.lastError.set(payload.message);
+      this.showError(payload.message);
     });
+  }
+
+  private showError(message: string): void {
+    this.clearErrorDismissTimer();
+    this.lastError.set(message);
+    this.errorDismissTimer = window.setTimeout(() => {
+      this.lastError.set(null);
+      this.errorDismissTimer = null;
+    }, this.errorDismissDelayMs);
+  }
+
+  private clearError(): void {
+    this.clearErrorDismissTimer();
+    this.lastError.set(null);
+  }
+
+  private clearErrorDismissTimer(): void {
+    if (this.errorDismissTimer === null) {
+      return;
+    }
+
+    window.clearTimeout(this.errorDismissTimer);
+    this.errorDismissTimer = null;
   }
 
   private readPhase(state: RealtimeGameState | null): string | null {

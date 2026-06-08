@@ -106,6 +106,13 @@ export const routes: Routes = [
           import('./features/games/pages/mafia.page').then((module) => module.MafiaPageComponent)
       },
       {
+        path: 'games/balatro',
+        data: { title: 'Balatro', gameId: 'balatro' },
+        canActivate: [gameAvailabilityGuard],
+        loadComponent: () =>
+          import('./features/games/pages/balatro.page').then((module) => module.BalatroPageComponent)
+      },
+      {
         path: 'games/leaderboard',
         data: { title: 'Leaderboard' },
         loadComponent: () =>

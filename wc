@@ -1,0 +1,365 @@
+client/src/:
+drwxr-xr-x@   - s1m4 18 May 07:45 app
+.rw-r--r--@ 391 s1m4 15 May 13:36 index.html
+.rw-r--r--@ 250 s1m4 15 May 13:36 main.ts
+.rw-r--r--@ 10k s1m4 18 May 07:45 styles.scss
+
+client/src/app:
+.rw-r--r--@  241 s1m4 15 May 13:36 app.component.html
+.rw-r--r--@  837 s1m4 15 May 13:36 app.component.scss
+.rw-r--r--@  371 s1m4 15 May 13:36 app.component.ts
+.rw-r--r--@  537 s1m4 15 May 13:36 app.config.ts
+.rw-r--r--@ 5.0k s1m4  8 Jun 09:20 app.routes.ts
+drwxr-xr-x@    - s1m4 15 May 13:36 core
+drwxr-xr-x@    - s1m4 15 May 13:36 features
+drwxr-xr-x@    - s1m4 15 May 13:36 layout
+drwxr-xr-x@    - s1m4 18 May 07:45 shared
+
+client/src/app/core:
+drwxr-xr-x@ - s1m4 18 May 07:45 guards
+drwxr-xr-x@ - s1m4 15 May 13:36 interceptors
+drwxr-xr-x@ - s1m4 18 May 07:45 models
+drwxr-xr-x@ - s1m4 18 May 07:45 services
+drwxr-xr-x@ - s1m4 15 May 13:36 utils
+
+client/src/app/core/guards:
+.rw-r--r--@ 1.9k s1m4 15 May 13:36 auth.guard.ts
+.rw-r--r--@  669 s1m4 18 May 07:45 game-availability.guard.ts
+
+client/src/app/core/interceptors:
+.rw-r--r--@ 465 s1m4 15 May 13:36 auth-token.interceptor.ts
+
+client/src/app/core/models:
+.rw-r--r--@   77 s1m4 15 May 13:36 app-config.model.ts
+.rw-r--r--@  325 s1m4 15 May 13:36 auth.model.ts
+.rw-r--r--@ 8.6k s1m4  8 Jun 08:56 game.model.ts
+.rw-r--r--@ 2.3k s1m4  8 Jun 08:55 user.model.ts
+
+client/src/app/core/services:
+.rw-r--r--@ 3.1k s1m4 18 May 07:45 admin.service.ts
+.rw-r--r--@  467 s1m4 15 May 13:36 app-config.service.ts
+.rw-r--r--@ 5.0k s1m4 15 May 13:36 auth.service.ts
+.rw-r--r--@  982 s1m4 15 May 19:25 card-deck.service.ts
+.rw-r--r--@  793 s1m4 15 May 13:36 daily-rewards.service.ts
+.rw-r--r--@ 2.8k s1m4  8 Jun 08:55 game-catalog.service.ts
+.rw-r--r--@  10k s1m4  6 Jun 11:12 game-socket.service.ts
+.rw-r--r--@  588 s1m4 15 May 13:36 history.service.ts
+.rw-r--r--@  602 s1m4 15 May 13:36 leaderboard.service.ts
+
+client/src/app/core/utils:
+.rw-r--r--@ 543 s1m4 15 May 13:36 email-rules.test.ts
+.rw-r--r--@ 665 s1m4 15 May 13:36 email-rules.ts
+
+client/src/app/features:
+drwxr-xr-x@ - s1m4 15 May 13:36 admin
+drwxr-xr-x@ - s1m4 15 May 13:36 auth
+drwxr-xr-x@ - s1m4  8 Jun 09:10 games
+drwxr-xr-x@ - s1m4 15 May 13:36 lobby
+drwxr-xr-x@ - s1m4 15 May 13:36 profile
+
+client/src/app/features/admin:
+drwxr-xr-x@ - s1m4 18 May 07:45 pages
+
+client/src/app/features/admin/pages:
+.rw-r--r--@  33k s1m4 18 May 07:45 admin.page.html
+.rw-r--r--@ 9.0k s1m4 15 May 19:25 admin.page.scss
+.rw-r--r--@  21k s1m4 18 May 07:45 admin.page.ts
+
+client/src/app/features/auth:
+drwxr-xr-x@ - s1m4 15 May 13:36 components
+drwxr-xr-x@ - s1m4 15 May 13:36 pages
+drwxr-xr-x@ - s1m4 15 May 13:36 services
+
+client/src/app/features/auth/components:
+.rw-r--r--@  614 s1m4 15 May 13:36 auth-panel.component.html
+.rw-r--r--@ 1.4k s1m4 15 May 13:36 auth-panel.component.scss
+.rw-r--r--@  435 s1m4 15 May 13:36 auth-panel.component.ts
+
+client/src/app/features/auth/pages:
+.rw-r--r--@  777 s1m4 15 May 13:36 email-entry.page.html
+.rw-r--r--@  989 s1m4 15 May 13:36 email-entry.page.scss
+.rw-r--r--@ 1.8k s1m4 15 May 13:36 email-entry.page.ts
+.rw-r--r--@  789 s1m4 15 May 13:36 password-entry.page.html
+.rw-r--r--@  842 s1m4 15 May 13:36 password-entry.page.scss
+.rw-r--r--@ 1.6k s1m4 15 May 13:36 password-entry.page.ts
+.rw-r--r--@  953 s1m4 15 May 13:36 set-password.page.html
+.rw-r--r--@  841 s1m4 15 May 13:36 set-password.page.scss
+.rw-r--r--@ 1.6k s1m4 15 May 13:36 set-password.page.ts
+.rw-r--r--@ 1.2k s1m4 15 May 13:36 verify-code.page.html
+.rw-r--r--@  990 s1m4 15 May 13:36 verify-code.page.scss
+.rw-r--r--@ 2.0k s1m4 15 May 13:36 verify-code.page.ts
+
+client/src/app/features/auth/services:
+.rw-r--r--@ 510 s1m4 15 May 13:36 auth-flow.service.ts
+
+client/src/app/features/games:
+drwxr-xr-x@ - s1m4  8 Jun 09:10 balatro
+drwxr-xr-x@ - s1m4 15 May 19:25 blackjack
+drwxr-xr-x@ - s1m4  2 Jun 10:45 components
+drwxr-xr-x@ - s1m4 18 May 07:45 mafia
+drwxr-xr-x@ - s1m4  8 Jun 09:14 pages
+drwxr-xr-x@ - s1m4 18 May 07:45 poker
+drwxr-xr-x@ - s1m4 15 May 19:25 roulette
+
+client/src/app/features/games/balatro:
+.rw-r--r--@ 15k s1m4  8 Jun 09:35 balatro-jokers.ts
+
+client/src/app/features/games/blackjack:
+.rw-r--r--@  864 s1m4 15 May 19:25 blackjack-hand.component.html
+.rw-r--r--@ 2.6k s1m4  2 Jun 11:41 blackjack-hand.component.scss
+.rw-r--r--@ 3.0k s1m4 15 May 19:25 blackjack-hand.component.ts
+
+client/src/app/features/games/components:
+.rw-r--r--@ 1.6k s1m4  6 Jun 11:02 game-shell.component.html
+.rw-r--r--@ 5.5k s1m4  6 Jun 11:04 game-shell.component.scss
+.rw-r--r--@ 1.9k s1m4  6 Jun 11:02 game-shell.component.ts
+
+client/src/app/features/games/mafia:
+.rw-r--r--@ 19k s1m4 29 May 09:19 mafia-media.service.ts
+
+client/src/app/features/games/pages:
+.rw-r--r--@  16k s1m4  8 Jun 09:36 balatro.page.html
+.rw-r--r--@  29k s1m4  8 Jun 09:36 balatro.page.scss
+.rw-r--r--@  36k s1m4  8 Jun 09:39 balatro.page.ts
+.rw-r--r--@ 4.0k s1m4  2 Jun 11:44 blackjack.page.html
+.rw-r--r--@ 7.1k s1m4  2 Jun 11:50 blackjack.page.scss
+.rw-r--r--@  17k s1m4  2 Jun 10:33 blackjack.page.ts
+.rw-r--r--@ 9.7k s1m4  2 Jun 11:57 crash.page.html
+.rw-r--r--@  13k s1m4  2 Jun 12:23 crash.page.scss
+.rw-r--r--@ 9.5k s1m4  2 Jun 10:34 crash.page.ts
+.rw-r--r--@ 3.4k s1m4 18 May 07:45 leaderboard.page.html
+.rw-r--r--@ 4.1k s1m4 18 May 07:45 leaderboard.page.scss
+.rw-r--r--@ 2.8k s1m4 18 May 07:45 leaderboard.page.ts
+.rw-r--r--@  18k s1m4  2 Jun 10:35 mafia.page.html
+.rw-r--r--@  15k s1m4 29 May 10:30 mafia.page.scss
+.rw-r--r--@  12k s1m4  2 Jun 10:35 mafia.page.ts
+.rw-r--r--@ 3.5k s1m4  2 Jun 12:15 miner.page.html
+.rw-r--r--@ 6.4k s1m4  2 Jun 12:16 miner.page.scss
+.rw-r--r--@ 3.5k s1m4  2 Jun 10:32 miner.page.ts
+.rw-r--r--@  16k s1m4  6 Jun 11:31 ochko.page.html
+.rw-r--r--@  27k s1m4  6 Jun 12:26 ochko.page.scss
+.rw-r--r--@ 7.9k s1m4  6 Jun 11:40 ochko.page.ts
+.rw-r--r--@  16k s1m4  2 Jun 11:46 poker.page.html
+.rw-r--r--@  10k s1m4  2 Jun 11:36 poker.page.scss
+.rw-r--r--@  15k s1m4  2 Jun 10:34 poker.page.ts
+.rw-r--r--@ 3.9k s1m4  2 Jun 11:40 roulette.page.html
+.rw-r--r--@  11k s1m4 15 May 19:25 roulette.page.scss
+.rw-r--r--@ 9.7k s1m4  2 Jun 10:34 roulette.page.ts
+.rw-r--r--@ 4.5k s1m4  2 Jun 10:35 slots.page.html
+.rw-r--r--@ 5.4k s1m4 15 May 19:25 slots.page.scss
+.rw-r--r--@ 7.4k s1m4  2 Jun 10:33 slots.page.ts
+
+client/src/app/features/games/poker:
+.rw-r--r--@  16k s1m4 18 May 07:45 poker-media.service.ts
+.rw-r--r--@ 8.8k s1m4  2 Jun 11:34 poker-table.component.html
+.rw-r--r--@ 9.0k s1m4  2 Jun 11:35 poker-table.component.scss
+.rw-r--r--@ 7.6k s1m4 18 May 07:45 poker-table.component.ts
+
+client/src/app/features/games/roulette:
+.rw-r--r--@  13k s1m4 15 May 19:25 roulette-board.component.html
+.rw-r--r--@ 3.1k s1m4 15 May 19:25 roulette-board.component.scss
+.rw-r--r--@ 3.9k s1m4 15 May 19:25 roulette-board.component.ts
+.rw-r--r--@ 1.1k s1m4 15 May 19:25 roulette-wheel.component.html
+.rw-r--r--@ 5.0k s1m4 15 May 19:25 roulette-wheel.component.scss
+.rw-r--r--@ 2.0k s1m4 15 May 19:25 roulette-wheel.component.ts
+
+client/src/app/features/lobby:
+drwxr-xr-x@ - s1m4 15 May 13:36 components
+drwxr-xr-x@ - s1m4 18 May 07:45 pages
+
+client/src/app/features/lobby/components:
+.rw-r--r--@ 831 s1m4 15 May 13:36 coming-soon.component.html
+.rw-r--r--@ 158 s1m4 15 May 13:36 coming-soon.component.scss
+.rw-r--r--@ 343 s1m4 15 May 13:36 coming-soon.component.ts
+
+client/src/app/features/lobby/pages:
+.rw-r--r--@ 5.3k s1m4  8 Jun 08:55 lobby.page.html
+.rw-r--r--@  17k s1m4  8 Jun 08:55 lobby.page.scss
+.rw-r--r--@ 7.5k s1m4  8 Jun 08:55 lobby.page.ts
+
+client/src/app/features/profile:
+drwxr-xr-x@ - s1m4 15 May 13:36 components
+drwxr-xr-x@ - s1m4 15 May 19:25 pages
+
+client/src/app/features/profile/components:
+.rw-r--r--@ 1.6k s1m4 15 May 13:36 profile-summary.component.html
+.rw-r--r--@ 2.8k s1m4 15 May 13:36 profile-summary.component.scss
+.rw-r--r--@ 1.1k s1m4 15 May 13:36 profile-summary.component.ts
+
+client/src/app/features/profile/pages:
+.rw-r--r--@  12k s1m4 15 May 19:25 profile.page.html
+.rw-r--r--@ 5.0k s1m4 15 May 19:25 profile.page.scss
+.rw-r--r--@  11k s1m4 15 May 19:25 profile.page.ts
+
+client/src/app/layout:
+drwxr-xr-x@ - s1m4 18 May 07:45 bottom-navigation
+drwxr-xr-x@ - s1m4 18 May 07:45 mobile-shell
+drwxr-xr-x@ - s1m4 18 May 07:45 top-bar
+
+client/src/app/layout/bottom-navigation:
+.rw-r--r--@  489 s1m4 18 May 07:45 bottom-navigation.component.html
+.rw-r--r--@ 2.7k s1m4 18 May 07:45 bottom-navigation.component.scss
+.rw-r--r--@ 2.0k s1m4 18 May 07:45 bottom-navigation.component.ts
+
+client/src/app/layout/mobile-shell:
+.rw-r--r--@  325 s1m4 15 May 13:36 mobile-shell.component.html
+.rw-r--r--@ 1.5k s1m4 18 May 07:45 mobile-shell.component.scss
+.rw-r--r--@  519 s1m4 15 May 13:36 mobile-shell.component.ts
+
+client/src/app/layout/top-bar:
+.rw-r--r--@ 1.4k s1m4 18 May 07:45 top-bar.component.html
+.rw-r--r--@ 5.3k s1m4 18 May 07:45 top-bar.component.scss
+.rw-r--r--@ 1.8k s1m4 18 May 07:45 top-bar.component.ts
+
+client/src/app/shared:
+drwxr-xr-x@ - s1m4 18 May 07:45 directives
+drwxr-xr-x@ - s1m4 18 May 07:45 pipes
+drwxr-xr-x@ - s1m4 18 May 07:45 ui
+
+client/src/app/shared/directives:
+.rw-r--r--@ 668 s1m4 18 May 07:45 media-stream.directive.ts
+
+client/src/app/shared/pipes:
+.rw-r--r--@ 387 s1m4 15 May 13:36 credits.pipe.test.ts
+.rw-r--r--@ 288 s1m4 18 May 07:47 credits.pipe.ts
+.rw-r--r--@ 378 s1m4 15 May 13:36 game-label.pipe.ts
+
+client/src/app/shared/ui:
+.rw-r--r--@  384 s1m4 15 May 13:36 app-balance-badge.component.html
+.rw-r--r--@ 2.7k s1m4 15 May 13:36 app-balance-badge.component.scss
+.rw-r--r--@ 2.5k s1m4 15 May 19:25 app-balance-badge.component.ts
+.rw-r--r--@  181 s1m4 15 May 13:36 app-button.component.html
+.rw-r--r--@ 2.8k s1m4 15 May 19:25 app-button.component.scss
+.rw-r--r--@  563 s1m4 15 May 13:36 app-button.component.ts
+.rw-r--r--@   84 s1m4 15 May 13:36 app-card.component.html
+.rw-r--r--@ 2.7k s1m4  6 Jun 11:04 app-card.component.scss
+.rw-r--r--@  365 s1m4 15 May 13:36 app-card.component.ts
+.rw-r--r--@ 4.1k s1m4 18 May 07:45 app-game-card.component.html
+.rw-r--r--@  16k s1m4 18 May 07:45 app-game-card.component.scss
+.rw-r--r--@  760 s1m4 18 May 07:45 app-game-card.component.ts
+.rw-r--r--@  481 s1m4 15 May 13:36 app-input.component.html
+.rw-r--r--@ 1.3k s1m4 15 May 13:36 app-input.component.scss
+.rw-r--r--@  739 s1m4 15 May 13:36 app-input.component.ts
+.rw-r--r--@  164 s1m4 15 May 13:36 app-modal-shell.component.html
+.rw-r--r--@  840 s1m4 15 May 13:36 app-modal-shell.component.scss
+.rw-r--r--@  248 s1m4 15 May 13:36 app-modal-shell.component.ts
+
+server/src/:
+.rw-r--r--@ 802 s1m4 15 May 13:36 app.ts
+drwxr-xr-x@   - s1m4 18 May 07:45 config
+drwxr-xr-x@   - s1m4 15 May 19:25 middleware
+drwxr-xr-x@   - s1m4 15 May 13:36 modules
+drwxr-xr-x@   - s1m4 15 May 13:36 prisma
+.rw-r--r--@ 357 s1m4 15 May 13:36 server.ts
+drwxr-xr-x@   - s1m4 15 May 13:36 types
+drwxr-xr-x@   - s1m4 15 May 19:25 utils
+
+server/src/config:
+.rw-r--r--@ 2.4k s1m4 18 May 07:45 env.ts
+
+server/src/middleware:
+.rw-r--r--@  378 s1m4 15 May 13:36 admin.middleware.ts
+.rw-r--r--@ 1.2k s1m4 15 May 19:25 auth.middleware.ts
+.rw-r--r--@  583 s1m4 15 May 13:36 error-handler.ts
+.rw-r--r--@  499 s1m4 15 May 13:36 validate.ts
+
+server/src/modules:
+drwxr-xr-x@ - s1m4 15 May 19:25 auth
+drwxr-xr-x@ - s1m4 18 May 07:45 email
+drwxr-xr-x@ - s1m4 18 May 07:45 games
+drwxr-xr-x@ - s1m4 18 May 07:45 users
+drwxr-xr-x@ - s1m4 18 May 07:45 websocket
+
+server/src/modules/auth:
+.rw-r--r--@ 1.7k s1m4 15 May 13:36 auth.controller.ts
+.rw-r--r--@ 1.3k s1m4 15 May 13:36 auth.routes.ts
+.rw-r--r--@ 4.9k s1m4 15 May 19:25 auth.service.ts
+.rw-r--r--@ 1.4k s1m4 15 May 13:36 auth.validation.test.ts
+.rw-r--r--@ 1.6k s1m4 15 May 13:36 auth.validation.ts
+
+server/src/modules/email:
+.rw-r--r--@ 1.6k s1m4 18 May 07:45 email.service.ts
+.rw-r--r--@ 1.2k s1m4 15 May 13:36 email.templates.ts
+
+server/src/modules/games:
+drwxr-xr-x@ - s1m4 15 May 19:25 blackjack
+drwxr-xr-x@ - s1m4 18 May 07:45 core
+drwxr-xr-x@ - s1m4 15 May 19:25 crash
+drwxr-xr-x@ - s1m4 18 May 07:45 mafia
+drwxr-xr-x@ - s1m4 15 May 19:25 miner
+drwxr-xr-x@ - s1m4 15 May 19:25 ochko
+drwxr-xr-x@ - s1m4 15 May 19:25 poker
+drwxr-xr-x@ - s1m4 15 May 19:25 roulette
+drwxr-xr-x@ - s1m4 15 May 19:25 slots
+
+server/src/modules/games/blackjack:
+.rw-r--r--@ 15k s1m4 15 May 19:25 blackjack.engine.ts
+
+server/src/modules/games/core:
+.rw-r--r--@ 1.5k s1m4 15 May 13:36 card.utils.ts
+.rw-r--r--@ 4.1k s1m4  8 Jun 08:55 game-catalog.service.ts
+.rw-r--r--@ 1.2k s1m4 15 May 19:25 game-engine.interface.ts
+.rw-r--r--@  11k s1m4 18 May 07:45 game-room.manager.ts
+
+server/src/modules/games/crash:
+.rw-r--r--@  15k s1m4 15 May 19:25 crash-round.manager.ts
+.rw-r--r--@ 2.1k s1m4 15 May 19:25 crash.engine.test.ts
+.rw-r--r--@ 5.8k s1m4 15 May 19:25 crash.engine.ts
+
+server/src/modules/games/mafia:
+.rw-r--r--@ 40k s1m4 29 May 09:19 mafia-room.manager.ts
+
+server/src/modules/games/miner:
+.rw-r--r--@ 1.2k s1m4 15 May 19:25 miner.engine.test.ts
+.rw-r--r--@ 6.7k s1m4 15 May 19:25 miner.engine.ts
+
+server/src/modules/games/ochko:
+.rw-r--r--@ 38k s1m4  6 Jun 11:09 ochko-table.manager.ts
+
+server/src/modules/games/poker:
+.rw-r--r--@  52k s1m4 15 May 19:25 poker-table.manager.ts
+.rw-r--r--@ 5.9k s1m4 15 May 19:25 poker.engine.ts
+.rw-r--r--@ 2.2k s1m4 15 May 13:36 poker.utils.test.ts
+.rw-r--r--@ 6.9k s1m4 15 May 13:36 poker.utils.ts
+
+server/src/modules/games/roulette:
+.rw-r--r--@  13k s1m4 15 May 19:25 roulette-table.manager.ts
+.rw-r--r--@ 1.1k s1m4 15 May 13:36 roulette.engine.test.ts
+.rw-r--r--@ 5.7k s1m4 15 May 19:25 roulette.engine.ts
+
+server/src/modules/games/slots:
+.rw-r--r--@ 1.5k s1m4 15 May 19:25 slots.engine.test.ts
+.rw-r--r--@ 8.9k s1m4 15 May 19:25 slots.engine.ts
+
+server/src/modules/users:
+.rw-r--r--@  15k s1m4 15 May 19:25 card-deck.service.ts
+.rw-r--r--@ 3.9k s1m4 15 May 19:25 daily-rewards.service.ts
+.rw-r--r--@ 1.3k s1m4 15 May 13:36 daily-rewards.test.ts
+.rw-r--r--@ 2.2k s1m4 15 May 13:36 daily-rewards.ts
+.rw-r--r--@ 1.8k s1m4 15 May 19:25 user.model.ts
+.rw-r--r--@ 6.4k s1m4 18 May 07:45 user.routes.ts
+.rw-r--r--@ 1.1k s1m4 15 May 19:25 user.service.test.ts
+.rw-r--r--@  14k s1m4 18 May 07:45 user.service.ts
+
+server/src/modules/websocket:
+.rw-r--r--@ 1.6k s1m4 15 May 19:25 socket.auth.ts
+.rw-r--r--@  516 s1m4 18 May 07:45 socket.events.ts
+.rw-r--r--@  30k s1m4 29 May 09:19 socket.server.ts
+
+server/src/prisma:
+.rw-r--r--@ 540 s1m4 15 May 13:36 client.ts
+
+server/src/types:
+.rw-r--r--@ 177 s1m4 15 May 13:36 express.d.ts
+
+server/src/utils:
+.rw-r--r--@  149 s1m4 15 May 13:36 admin.ts
+.rw-r--r--@  603 s1m4 15 May 13:36 code.ts
+.rw-r--r--@  486 s1m4 15 May 13:36 email.test.ts
+.rw-r--r--@  611 s1m4 15 May 13:36 email.ts
+.rw-r--r--@  175 s1m4 15 May 13:36 http-error.ts
+.rw-r--r--@  502 s1m4 15 May 13:36 jwt.ts
+.rw-r--r--@ 1.3k s1m4 15 May 19:25 money.ts
+.rw-r--r--@  912 s1m4 15 May 13:36 password.ts
+.rw-r--r--@  694 s1m4 15 May 13:36 trust-proxy.test.ts
+.rw-r--r--@  778 s1m4 15 May 13:36 trust-proxy.ts

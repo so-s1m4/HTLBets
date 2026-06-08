@@ -9,9 +9,13 @@
       <h2>{{ tableName }}</h2>
     </div>
 
-    <div class="poker-table__pot">
-      <span class="glass-stat__label">{{ phase === 'waiting' ? 'Stacks in play' : 'Pot' }}</span>
-      <strong>{{ pot }} cr</strong>
+    <div class="poker-table__header-actions">
+      <ng-content select="[tableHeaderActions]" />
+
+      <div class="poker-table__pot">
+        <span class="glass-stat__label">{{ phase === 'waiting' ? 'Stacks in play' : 'Pot' }}</span>
+        <strong>{{ pot }} cr</strong>
+      </div>
     </div>
   </div>
 

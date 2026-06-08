@@ -54,7 +54,7 @@ export interface AdminUserDeckMutationResponse {
 }
 
 export interface GameCatalogEntry {
-  id: 'roulette' | 'blackjack' | 'poker' | 'miner' | 'crash' | 'slots' | 'ochko' | 'mafia';
+  id: 'roulette' | 'blackjack' | 'poker' | 'miner' | 'crash' | 'slots' | 'ochko' | 'mafia' | 'balatro';
   name: string;
   enabled: boolean;
 }

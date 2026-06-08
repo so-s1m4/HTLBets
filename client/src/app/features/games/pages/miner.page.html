@@ -7,7 +7,7 @@
   (fullscreenChange)="setFullscreen($event)"
 >
   <app-card table [class.fullscreen]="isFullscreen()">
-    <div class="miner-table">
+    <div class="miner-table" [class.miner-table--fullscreen]="isFullscreen()">
       <div class="miner-table__surface"></div>
 
       @if (resultBanner(); as result) {
@@ -21,9 +21,18 @@
 
       <div class="miner-table__content">
         <div class="miner-table__stats">
-          <span class="pill">Mines: {{ viewState()?.mineCount || mineCount() }}</span>
-          <span class="pill">Safe left: {{ safeRemaining() }}</span>
-          <span class="pill">Multiplier: x{{ (viewState()?.payoutMultiplier || 1).toFixed(2) }}</span>
+          <span class="miner-chip">
+            <span>Mines</span>
+            <strong>{{ viewState()?.mineCount || mineCount() }}</strong>
+          </span>
+          <span class="miner-chip">
+            <span>Safe left</span>
+            <strong>{{ safeRemaining() }}</strong>
+          </span>
+          <span class="miner-chip miner-chip--accent">
+            <span>Multiplier</span>
+            <strong>x{{ (viewState()?.payoutMultiplier || 1).toFixed(2) }}</strong>
+          </span>
         </div>
 
         <div class="miner-grid">
@@ -53,7 +62,7 @@
     </div>
   </app-card>
 
-  <app-card sidebar class="miner-sidebar">
+  <app-card sidebar class="miner-sidebar" [class.sidebar-fullscreen]="isFullscreen()">
     <div class="page-stack">
       @if (isRoundActive()) {
         <app-button block (click)="cashOut()">Cash out</app-button>

@@ -1,51 +1,54 @@
-    <div #shellRoot class="game-shell" [class.game-shell--fullscreen]="isFullscreen()">
-
-        @if (!isFullscreen()){
-            <app-card tone="accent">
-        <div class="game-shell__header">
-          <div class="page-heading">
-            <span class="page-heading__eyebrow">{{ connectionState }}</span>
-            <h1>{{ title }}</h1>
-            <p class="status-copy">{{ subtitle }}</p>
-          </div>
-
-          <div class="game-shell__meta">
-            <span class="game-shell__dot" [class.connected]="connectionState === 'connected'"></span>
-            <span class="pill">Realtime {{ connectionState }}</span>
-            <span class="pill">Current bet: {{ currentBet }} cr</span>
-            <button
-              class="game-shell__fullscreen"
-              type="button"
-              [attr.aria-pressed]="isFullscreen()"
-              [attr.aria-label]="isFullscreen() ? 'Exit fullscreen' : 'Open fullscreen'"
-              [title]="isFullscreen() ? 'Exit fullscreen' : 'Open fullscreen'"
-              (click)="toggleFullscreen()"
-            >
-              @if (isFullscreen()) {
-                <span aria-hidden="true">↙</span>
-                <span aria-hidden="true">↘</span>
-              } @else {
-                <span aria-hidden="true">↗</span>
-                <span aria-hidden="true">↖</span>
-              }
-            </button>
-          </div>
+<div
+  #shellRoot
+  class="game-shell"
+  [class.game-shell--fullscreen]="isFullscreen()"
+  [class.game-shell--edge-to-edge]="edgeToEdge"
+>
+  @if (!isFullscreen()) {
+    <app-card tone="accent">
+      <div class="game-shell__entry">
+        <div class="page-heading">
+          <span class="page-heading__eyebrow">{{ connectionState }}</span>
+          <h1>{{ title }}</h1>
+          <p class="status-copy">{{ subtitle }}</p>
         </div>
-      </app-card>
-        }
-        @if (error) {
-            <app-card tone="muted">
-                <p class="status-copy text-danger">{{ error }}</p>
-            </app-card>
-        }
 
-
-      <div class="game-shell__grid" [class.has-sidebar]="hasSidebar" [class.split-sidebar]="hasSidebar && splitSidebar">
-        <ng-content select="[table]" />
-        @if (hasSidebar) {
-          <ng-content select="[sidebar]" />
-        }
+        <div class="game-shell__entry-actions">
+          <span class="game-shell__dot" [class.connected]="connectionState === 'connected'"></span>
+          <span class="pill">Realtime {{ connectionState }}</span>
+          <button
+            class="game-shell__enter-fullscreen"
+            type="button"
+            aria-label="Open fullscreen"
+            title="Open fullscreen"
+            (click)="toggleFullscreen()"
+          >
+            <span aria-hidden="true">↗</span>
+            Open fullscreen
+          </button>
+        </div>
       </div>
+    </app-card>
 
-      <ng-content />
+    @if (error) {
+      <app-card class="game-shell__error" tone="muted">
+        <p class="status-copy text-danger">{{ error }}</p>
+      </app-card>
+    }
+  } @else {
+    @if (error) {
+      <app-card class="game-shell__error" tone="muted">
+        <p class="status-copy text-danger">{{ error }}</p>
+      </app-card>
+    }
+
+    <div class="game-shell__grid" [class.has-sidebar]="hasSidebar" [class.split-sidebar]="hasSidebar && splitSidebar">
+      <ng-content select="[table]" />
+      @if (hasSidebar) {
+        <ng-content select="[sidebar]" />
+      }
     </div>
+
+    <ng-content />
+  }
+</div>
