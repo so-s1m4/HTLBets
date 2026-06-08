@@ -13,7 +13,7 @@
     [class.balatro--no-crt]="!crtEnabled()"
     [class.balatro--reduced-motion]="reducedMotion()"
     [class.balatro--no-shake]="!screenShakeEnabled()"
-    [class.balatro--playing]="phase() === 'playing'"
+    [class.balatro--playing]="phase() !== 'blind-select'"
     [class.balatro--shop]="phase() === 'shop'"
     [style.--game-speed]="gameSpeed()"
   >
@@ -115,10 +115,13 @@
                 <article
                   [class.is-glitch]="consumable.kind === 'glitch'"
                   [style.--consumable-accent]="consumable.accent"
+                  (mouseenter)="hoverConsumable(consumable)"
+                  (mouseleave)="hoverConsumable(null)"
+                  (click)="showConsumable(consumable)"
                 >
                   <b>{{ consumable.glyph }}</b>
                   <span>{{ consumable.name }}</span>
-                  <button type="button" (click)="useConsumable(consumable)">USE</button>
+                  <button type="button" (click)="$event.stopPropagation(); useConsumable(consumable)">USE</button>
                 </article>
               }
               @for (slot of emptyConsumableSlots(); track slot) {
@@ -143,9 +146,10 @@
                   @if (jokerStatus(joker); as status) {
                     <em class="joker-status">{{ status }}</em>
                   }
-                  <button type="button" (click)="$event.stopPropagation(); sellJoker(joker.instanceId)">
-                    SELL ${{ joker.sellValue }}
-                  </button>
+                  <div class="card-hover-tip">
+                    <strong>{{ joker.name }}</strong>
+                    <p>{{ joker.effect }}</p>
+                  </div>
                 </article>
               }
               @for (slot of emptyJokerSlots(); track slot) {
@@ -174,6 +178,10 @@
                       @if (jokerStatus(joker); as status) {
                         <em class="joker-status">{{ status }}</em>
                       }
+                      <div class="card-hover-tip">
+                        <strong>{{ joker.name }}</strong>
+                        <p>{{ joker.effect }}</p>
+                      </div>
                       <button
                         type="button"
                         [disabled]="!canBuyJoker(joker)"
@@ -203,6 +211,10 @@
                       <b>{{ consumable.glyph }}</b>
                       <h3>{{ consumable.name }}</h3>
                       <em>{{ consumableStatus(consumable) }}</em>
+                      <div class="card-hover-tip">
+                        <strong>{{ consumable.name }}</strong>
+                        <p>{{ consumable.effect }}</p>
+                      </div>
                       <button
                         type="button"
                         [disabled]="!canBuyConsumable(consumable)"
@@ -226,7 +238,16 @@
                   }
                   <p>{{ joker.effect }}</p>
                 </div>
-                <span>{{ joker.rarity }} · ${{ joker.cost }}</span>
+                <div class="inspector-actions">
+                  <span>{{ joker.rarity }} · ${{ joker.cost }}</span>
+                  @if (selectedOwnedJoker(); as owned) {
+                    @if (selectedJoker()?.id === joker.id) {
+                      <button type="button" (click)="sellJoker(owned.instanceId)">
+                        SELL ${{ owned.sellValue }}
+                      </button>
+                    }
+                  }
+                </div>
               </div>
             } @else if (selectedConsumable(); as consumable) {
               <div class="consumable-inspector">
@@ -242,7 +263,9 @@
           </div>
         </div>
       </section>
-    } @else {
+    }
+
+    @if (phase() !== 'blind-select') {
       <section class="game-board">
         <aside class="blind-panel">
           <div class="blind-panel__cap">
@@ -318,6 +341,10 @@
                 @if (jokerStatus(joker); as status) {
                   <em class="joker-status">{{ status }}</em>
                 }
+                <div class="card-hover-tip">
+                  <strong>{{ joker.name }}</strong>
+                  <p>{{ joker.effect }}</p>
+                </div>
               </article>
             }
             @for (slot of emptyJokerSlots(); track slot) {
@@ -337,6 +364,10 @@
                 <b>{{ consumable.glyph }}</b>
                 <span>{{ consumable.name }}</span>
                 <em>{{ consumableStatus(consumable) }}</em>
+                <div class="card-hover-tip">
+                  <strong>{{ consumable.name }}</strong>
+                  <p>{{ consumable.effect }}</p>
+                </div>
                 <button
                   type="button"
                   [disabled]="isScoring() || isChangingHand()"
@@ -364,7 +395,16 @@
                 }
                 <p>{{ joker.effect }}</p>
               </div>
-              <span>{{ joker.rarity }}</span>
+              <div class="inspector-actions">
+                <span>{{ joker.rarity }}</span>
+                @if (selectedOwnedJoker(); as owned) {
+                  @if (selectedJoker()?.id === joker.id) {
+                    <button type="button" (click)="sellJoker(owned.instanceId)">
+                      SELL ${{ owned.sellValue }}
+                    </button>
+                  }
+                }
+              </div>
             </div>
           } @else if (selectedConsumable(); as consumable) {
             <div class="consumable-inspector table-consumable-inspector">

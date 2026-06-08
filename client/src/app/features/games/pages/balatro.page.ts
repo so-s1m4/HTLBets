@@ -300,11 +300,13 @@ export class BalatroPageComponent {
   readonly consumables = signal<OwnedConsumable[]>([]);
   readonly consumableOffers = signal<ConsumableDefinition[]>([]);
   readonly selectedConsumable = signal<ConsumableDefinition | null>(null);
+  readonly hoveredConsumable = signal<ConsumableDefinition | null>(null);
   readonly handLevels = signal<Record<HandName, number>>({ ...INITIAL_HAND_LEVELS });
   readonly nextHandChips = signal(0);
   readonly nextHandMult = signal(0);
   readonly nextHandXMult = signal(1);
   readonly selectedJoker = signal<JokerDefinition | null>(null);
+  readonly hoveredJoker = signal<JokerDefinition | null>(null);
   readonly selectedBackImageUrl = signal('/cards/btf/deck.jpg');
   readonly selectedFaceImageTemplate = signal('/cards/btf/{rank}{suitShort}.jpg');
   readonly jokerCounters = signal<Record<string, number>>({});
@@ -339,6 +341,14 @@ export class BalatroPageComponent {
   readonly deckViewOpen = signal(false);
 
   readonly selected = computed(() => this.hand().filter((card) => card.selected));
+  readonly visibleJoker = computed(() => this.hoveredJoker() || this.selectedJoker());
+  readonly visibleConsumable = computed(() => this.hoveredConsumable() || this.selectedConsumable());
+  readonly selectedOwnedJoker = computed(() => {
+    const selected = this.selectedJoker();
+    return selected
+      ? this.ownedJokers().find((joker) => joker.id === selected.id) || null
+      : null;
+  });
   readonly playedCardIds = computed(() => new Set(this.playedCards().map((card) => card.id)));
   readonly deckSuitRows = computed<DeckSuitRow[]>(() => {
     const remaining = new Map(this.deck().map((card) => [`${card.suit}-${card.rank}`, card]));
@@ -441,9 +451,19 @@ export class BalatroPageComponent {
     this.selectedJoker.set(this.selectedJoker()?.id === joker.id ? null : joker);
   }
 
+  hoverJoker(joker: JokerDefinition | null): void {
+    this.hoveredJoker.set(joker);
+    if (joker) this.hoveredConsumable.set(null);
+  }
+
   showConsumable(consumable: ConsumableDefinition): void {
     this.selectedJoker.set(null);
     this.selectedConsumable.set(this.selectedConsumable()?.id === consumable.id ? null : consumable);
+  }
+
+  hoverConsumable(consumable: ConsumableDefinition | null): void {
+    this.hoveredConsumable.set(consumable);
+    if (consumable) this.hoveredJoker.set(null);
   }
 
   consumableKindLabel(kind: ConsumableKind): string {
@@ -564,11 +584,13 @@ export class BalatroPageComponent {
     this.consumables.set([]);
     this.consumableOffers.set([]);
     this.selectedConsumable.set(null);
+    this.hoveredConsumable.set(null);
     this.handLevels.set({ ...INITIAL_HAND_LEVELS });
     this.nextHandChips.set(0);
     this.nextHandMult.set(0);
     this.nextHandXMult.set(1);
     this.selectedJoker.set(null);
+    this.hoveredJoker.set(null);
     this.jokerCounters.set({});
     this.handHistory.set({});
     this.gameOver.set(false);
