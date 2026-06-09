@@ -2,9 +2,9 @@
 
 **Dokumenttyp:** Arbeitspakete  
 **Projekt:** HTLBets  
-**Version:** 1.0  
-**Status:** erstellt  
-**Datum:** 22.05.2026
+**Version:** 1.1
+**Status:** aktualisiert
+**Datum:** 09.06.2026
 
 ---
 
@@ -217,10 +217,10 @@ Drei zusätzliche Minigames in die Plattform integrieren.
 
 ---
 
-## AP9 – Ochko und Mafia
+## AP9 – Ochko, Mafia und Balatro
 
 **Ziel:**  
-Weitere Mehrspieler-Spiele mit Raumlogik und erweiterten Interaktionen umsetzen.
+Weitere Mehrspieler-Spiele sowie einen umfangreichen clientseitigen Einzelspielmodus umsetzen.
 
 **Inhalt:**
 
@@ -229,11 +229,15 @@ Weitere Mehrspieler-Spiele mit Raumlogik und erweiterten Interaktionen umsetzen.
 - Rollenlogik
 - Text-/Video-Funktionen in Mafia
 - Phasensteuerung und Realtime-Status
+- Balatro-Blinds und Pokerhand-Wertung
+- Joker-, Consumable- und Shop-System
+- umfangreiche Balatro-Spieloberfläche und Assets
 
 **Ergebnis:**
 
 - spielbares Ochko
 - spielbare Mafia-Demo
+- spielbarer Balatro-Demo-Run
 
 **Abhängigkeiten:** AP3, AP4, AP7
 
@@ -397,7 +401,7 @@ flowchart TD
     AP4 --> AP6
     AP4 --> AP7
     AP4 --> AP8
-    AP4 --> AP9["AP9 Ochko / Mafia"]
+    AP4 --> AP9["AP9 Ochko / Mafia / Balatro"]
     AP4 --> AP10
     AP10 --> AP11["AP11 Card-Deck-System"]
     AP10 --> AP12["AP12 Admin-Bereich"]
@@ -436,3 +440,4 @@ zueinander passen.
 | Version | Datum | Änderung |
 |---|---|---|
 | 1.0 | 22.05.2026 | Erstfassung der Arbeitspakete erstellt |
+| 1.1 | 09.06.2026 | AP9 um Balatro erweitert |

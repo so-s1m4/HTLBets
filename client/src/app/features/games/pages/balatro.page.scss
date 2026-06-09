@@ -2711,6 +2711,23 @@
   min-height: 2.2rem;
 }
 
+.consumable-card__actions {
+  display: grid;
+  grid-template-columns: 1fr 1.2fr;
+  gap: .28rem;
+}
+
+.consumable-card__actions button {
+  min-width: 0;
+  padding: .25rem .18rem;
+  font-size: .62rem;
+  line-height: 1.05;
+}
+
+.consumable-card__actions .buy-and-use {
+  background: #2aaa78;
+}
+
 .consumable-card button:disabled,
 .consumable-mini button:disabled {
   cursor: not-allowed;

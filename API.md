@@ -1,6 +1,6 @@
 # HTLBets API Documentation
 
-**Stand:** 11.05.2026
+**Stand:** 09.06.2026
 
 This document describes the current REST and websocket interface of **HTLBets** based on the implemented server routes and socket handlers.
 
@@ -347,6 +347,27 @@ Response:
 }
 ```
 
+`GET /api/game-catalog`
+
+Returns the current availability of all visible games:
+
+```json
+[
+  {
+    "id": "roulette",
+    "name": "Roulette",
+    "enabled": true
+  },
+  {
+    "id": "balatro",
+    "name": "Balatro",
+    "enabled": true
+  }
+]
+```
+
+The seeded catalog contains `roulette`, `blackjack`, `poker`, `miner`, `crash`, `slots`, `ochko`, `mafia`, and `balatro`.
+
 ### Admin
 
 All admin routes are protected and additionally require an admin account.
@@ -484,6 +505,22 @@ Returns the imported or updated `AdminCardDeck`.
 
 Sets the default deck and returns the updated `AdminCardDeck`.
 
+`GET /api/admin/games`
+
+Returns the game catalog including `sortOrder`, `createdAt`, and `updatedAt`.
+
+`PATCH /api/admin/games/:gameId`
+
+Request:
+
+```json
+{
+  "enabled": false
+}
+```
+
+Enables or disables a known game and returns the updated catalog entry.
+
 ## Websocket API
 
 Events are defined through Socket.io.
@@ -496,6 +533,8 @@ Events are defined through Socket.io.
 - client -> server: `game:action`
 - server -> client: `game:state`
 - server -> client: `game:error`
+- bidirectional media events: `poker:media-status`, `poker:media-snapshot`, `poker:media-signal`
+- bidirectional media events: `mafia:media-status`, `mafia:media-snapshot`, `mafia:media-signal`
 
 ### Generic State Envelope
 
@@ -516,7 +555,7 @@ Most game states are wrapped like this:
 Fields:
 
 - `sessionId`: current game or table session
-- `gameType`: `ROULETTE`, `BLACKJACK`, `POKER`, `MINER`, `CRASH`, `SLOTS`
+- `gameType`: `ROULETTE`, `BLACKJACK`, `POKER`, `MINER`, `CRASH`, `SLOTS`, `OCHKO`, or `MAFIA`
 - `status`: Prisma game session status
 - `balance`: current user balance
 - `currentBet`: committed amount for the active round
@@ -539,6 +578,7 @@ Notes:
 - `sessionId` is optional for most single-player games
 - for poker it selects the table or lobby to watch
 - roulette always joins the shared main table
+- ochko and Mafia use lobby or room session IDs
 
 ### `game:leave`
 
@@ -602,6 +642,8 @@ Supported actions by game:
 - `CRASH`: `cash-out`
 - `SLOTS`: no follow-up action required after a spin
 - `POKER`: `create-table`, `spectate-table`, `join-table`, `ready-table`, `leave-table`, `return-lobby`, `check`, `call`, `raise`, `all-in`, `fold`, `emote`
+- `OCHKO`: `create-room`, `join-room`, `ready-room`, `leave-room`, `return-lobby`, plus room-specific card actions
+- `MAFIA`: `create-room`, `join-room`, `leave-room`, `return-lobby`, plus room, chat, role, phase, and voting actions
 
 Poker action payload examples:
 
@@ -672,6 +714,7 @@ Special cases:
 - roulette broadcasts the table state to all joined clients
 - poker updates all sockets that currently watch the lobby or a table
 - crash can push a server-side state change when the round crashes
+- ochko and Mafia update connected lobby or room participants
 
 ### `game:error`
 
@@ -685,8 +728,18 @@ Typical payload:
 }
 ```
 
+### Media Signaling
+
+Poker and Mafia publish camera/audio status snapshots and relay WebRTC descriptions or ICE candidates through their media events. Media payloads identify the `sessionId`, source or target user, and optional `description` or `candidate`.
+
+The server validates table/room membership before forwarding media signals. Mafia additionally restricts media peers according to the current game phase and role visibility.
+
+## Client-only Game
+
+Balatro is listed in the REST game catalog and can be enabled or disabled by an admin, but it does not use the websocket game events. Its run state and internal shop money currently live in the Angular component and are not persisted as `GameSession` or `GameHistory` records.
+
 ## Notes
 
-- All balances and results are validated server-side.
+- Persisted user-credit changes and results for server-backed games are validated server-side.
 - Suspended users are blocked on both REST and websocket level.
 - The client should treat `game:state` as the source of truth.

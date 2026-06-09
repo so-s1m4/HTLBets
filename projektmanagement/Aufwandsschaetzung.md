@@ -2,9 +2,9 @@
 
 **Dokumenttyp:** Aufwandsschätzung  
 **Projekt:** HTLBets  
-**Version:** 1.0  
-**Status:** erstellt  
-**Datum:** 22.05.2026
+**Version:** 1.1
+**Status:** aktualisiert
+**Datum:** 09.06.2026
 
 ---
 
@@ -79,7 +79,7 @@ Die Schätzung basiert auf folgenden Annahmen:
 | AP6 | Blackjack | 10 | 14 | 20 | 14.3 |
 | AP7 | Poker mit öffentlichen / privaten Tischen | 20 | 30 | 44 | 30.7 |
 | AP8 | Miner, Crash und Slots | 16 | 24 | 34 | 24.3 |
-| AP9 | Ochko und Mafia | 24 | 34 | 50 | 35.0 |
+| AP9 | Ochko, Mafia und Balatro | 32 | 46 | 68 | 47.3 |
 | AP10 | Profil, Historie, Daily Rewards, Leaderboard | 14 | 20 | 30 | 20.7 |
 | AP11 | Card-Deck-System | 10 | 15 | 22 | 15.3 |
 | AP12 | Admin-Bereich inkl. Spiel-Verfügbarkeit | 14 | 20 | 30 | 20.7 |
@@ -89,7 +89,7 @@ Die Schätzung basiert auf folgenden Annahmen:
 
 ### Zwischensumme
 
-**Geschätzter Basisaufwand:** `286.6 h`
+**Geschätzter Basisaufwand:** `298.9 h`
 
 ---
 
@@ -102,20 +102,20 @@ Empfohlener Puffer:
 - **15 % Reserve** auf den Basisaufwand
 
 ```text
-286.6 h * 0.15 = 43.0 h
+298.9 h * 0.15 = 44.8 h
 ```
 
 ### Aufwand inkl. Puffer
 
 | Wert | Stunden |
 |---|---:|
-| Basisaufwand | 286.6 h |
-| Reserve / Puffer (15 %) | 43.0 h |
-| **Gesamtaufwand** | **329.6 h** |
+| Basisaufwand | 298.9 h |
+| Reserve / Puffer (15 %) | 44.8 h |
+| **Gesamtaufwand** | **343.7 h** |
 
 Gerundet:
 
-- **ca. 330 Stunden Gesamtaufwand**
+- **ca. 344 Stunden Gesamtaufwand**
 
 ---
 
@@ -125,7 +125,7 @@ Bei zwei Teammitgliedern ergibt sich im Mittel:
 
 | Teamgröße | Gesamtaufwand | Aufwand pro Person |
 |---|---:|---:|
-| 2 Personen | 330 h | 165 h |
+| 2 Personen | 344 h | 172 h |
 
 Für ein größeres Schulprojekt mit diesem Umfang ist das ein realistischer Wert:
 
@@ -143,12 +143,12 @@ Zur besseren Übersicht wurde der Aufwand zusätzlich nach Bereichen zusammengef
 | Bereich | Enthaltene Arbeitspakete | Aufwand |
 |---|---|---:|
 | Planung und Architektur | AP1-AP4 | 57.6 h |
-| Spieleentwicklung | AP5-AP9 | 122.6 h |
+| Spieleentwicklung | AP5-AP9 | 134.9 h |
 | Plattformfunktionen | AP10-AP11 | 36.0 h |
 | Administration | AP12 | 20.7 h |
 | UI/UX und QA | AP13-AP14 | 37.4 h |
 | Dokumentation und Abschluss | AP15 | 12.3 h |
-| **Gesamt ohne Puffer** |  | **286.6 h** |
+| **Gesamt ohne Puffer** |  | **298.9 h** |
 
 ---
 
@@ -169,6 +169,7 @@ Besonders betroffen sind:
 - Poker
 - Mafia
 - Ochko
+- Balatro
 - Admin-Funktionen
 - finale UI-Politur
 
@@ -194,8 +195,8 @@ Die Aufwandsschätzung ist deshalb eher als **grobe Projektschätzung** zu verst
 
 Für HTLBets ergibt sich ein realistischer Projektaufwand von:
 
-- **ca. 287 Stunden** ohne Reserve
-- **ca. 330 Stunden** inklusive 15 % Puffer
+- **ca. 299 Stunden** ohne Reserve
+- **ca. 344 Stunden** inklusive 15 % Puffer
 
 Die größten Aufwandstreiber sind:
 
@@ -213,3 +214,4 @@ Damit ist der Umfang für das Projekt nachvollziehbar abgeschätzt.
 | Version | Datum | Änderung |
 |---|---|---|
 | 1.0 | 22.05.2026 | Erstfassung der Aufwandsschätzung erstellt |
+| 1.1 | 09.06.2026 | Balatro in AP9 und Gesamtschätzung aufgenommen |

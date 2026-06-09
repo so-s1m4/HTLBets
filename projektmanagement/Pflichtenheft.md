@@ -2,9 +2,9 @@
 
 **Dokumenttyp:** Pflichtenheft  
 **Projekt:** HTLBets  
-**Version:** 1.0  
-**Status:** erstellt  
-**Datum:** 19.05.2026
+**Version:** 1.1
+**Status:** aktualisiert
+**Datum:** 09.06.2026
 
 ---
 
@@ -104,6 +104,7 @@ Die Anwendung ermöglicht registrierten Benutzer:innen das Spielen mehrerer Demo
 | F-25 | Slots | Spielbarer Slot-Demo-Modus |
 | F-26 | Ochko | Multiplayer-Kartenspiel mit Raumlogik |
 | F-27 | Mafia | Multiplayer-Spiel mit Rollen, Raumlogik, Text/Video und Phasensteuerung |
+| F-28 | Balatro | Clientseitiger Einzelspielmodus mit Blinds, Pokerhand-Wertung, Jokern, Consumables und Shop |
 
 ### 3.4 Karten-Deck-Funktionen
 
@@ -359,6 +360,7 @@ Das Frontend umfasst unter anderem folgende Hauptpfade:
 - `/games/slots`
 - `/games/ochko`
 - `/games/mafia`
+- `/games/balatro`
 - `/games/leaderboard`
 - `/profile`
 - `/admin`
@@ -380,6 +382,8 @@ Das Frontend umfasst unter anderem folgende Hauptpfade:
 - Guthabenänderungen müssen serverseitig berechnet und gespeichert werden.
 - Mehrspielerzustände müssen für alle Teilnehmer:innen konsistent sein.
 
+Ausnahme: Balatro ist ein isolierter Demo-Einzelspielmodus. Seine Run-Währung und sein Spielzustand sind nicht mit dem persistenten Benutzer:innen-Guthaben verbunden.
+
 ### 11.2 Poker
 
 - öffentliche und private Tische
@@ -400,6 +404,14 @@ Das Frontend umfasst unter anderem folgende Hauptpfade:
 - gemeinsamer Tischzustand
 - serverseitige Auswertung von Einsätzen
 - visuelle Darstellung des Tisches und des Rads
+
+### 11.5 Balatro
+
+- Auswahl und Abschluss aufeinanderfolgender Blinds
+- Wertung klassischer Pokerhände
+- begrenzte Hände und Discards pro Blind
+- Joker-, Consumable- und Shop-System
+- interne Run-Währung ohne Auswirkung auf das persistierte Benutzer:innen-Guthaben
 
 ---
 
@@ -467,3 +479,4 @@ Folgende Punkte sind bewusst als Projekt- bzw. Demo-Grenzen zu verstehen:
 | Version | Datum | Änderung |
 |---|---|---|
 | 1.0 | 19.05.2026 | Erstfassung des Pflichtenhefts erstellt |
+| 1.1 | 09.06.2026 | Balatro, aktuelles Routing und technische Abgrenzung ergänzt |

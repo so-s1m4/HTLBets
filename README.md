@@ -1,7 +1,7 @@
 # HTLBets
 
 HTLBets is a school project: a demo-only mini-game platform for HTL students built with Angular, Express, Socket.io, PostgreSQL, and Prisma.  
-The platform uses virtual credits only. There are no real-money payments, deposits, withdrawals, or gambling features.
+The platform uses virtual credits only. There are no real-money payments, deposits, withdrawals, or real-money gambling features.
 
 ## Current Scope
 
@@ -19,7 +19,11 @@ Implemented modules:
 - miner
 - crash
 - slots
+- ochko
+- mafia with room, role, chat, and optional WebRTC media flows
+- Balatro-inspired single-player run with blinds, poker-hand scoring, jokers, consumables, and a shop
 - admin area with user search, balance changes, deck granting, deck management, banning, wipe, and deletion
+- admin-controlled game availability
 
 ## Tech Stack
 
@@ -113,7 +117,10 @@ Important values:
 - `POSTGRES_PUBLISHED_PORT`
 - `DATABASE_URL`
 - `CLIENT_ORIGIN`
+- `JWT_SECRET`
+- `ADMIN_EMAILS`
 - `DEBUG_AUTH`
+- `MAIL_HOST`, `MAIL_PORT`, `MAIL_USER`, `MAIL_PASS`, `MAIL_FROM`
 
 `DEBUG_AUTH=true` is useful for local demo flows where email delivery should be bypassed.
 
@@ -148,6 +155,7 @@ Admin routes are protected separately and require an account whose email is conf
 - `POST /api/me/card-decks/:deckId/purchase`
 - `POST /api/me/card-decks/:deckId/select`
 - `GET /api/leaderboard`
+- `GET /api/game-catalog`
 
 ### Admin
 
@@ -162,15 +170,24 @@ Admin routes are protected separately and require an account whose email is conf
 - `GET /api/admin/card-decks`
 - `POST /api/admin/card-decks/import`
 - `POST /api/admin/card-decks/:deckId/default`
+- `GET /api/admin/games`
+- `PATCH /api/admin/games/:gameId`
+
+## Game Architecture
+
+- Roulette, blackjack, poker, miner, crash, slots, and ochko use authenticated Socket.io events.
+- Mafia uses a dedicated in-memory room manager plus Socket.io state and WebRTC signaling events.
+- Balatro is currently a client-side single-player mode. Its run score, shop money, jokers, and consumables are isolated from the persisted user credit balance.
+- The public game catalog and admin availability controls include all nine visible games.
 
 ## Notes
 
-- all game results and balance changes are validated on the backend
+- persisted user-credit changes for server-backed games are validated on the backend
 - suspended users are blocked on both REST and websocket access
 - this is a teaching/demo project, not a production betting platform
 
 ## Project Documents
 
-Project-management files are in [projektmanagement/README.md](/Users/maksym/Documents/Programming/Projects/HTLBets/projektmanagement/README.md).
+Project-management files are in [projektmanagement/README.md](./projektmanagement/README.md).
 
-Technical API reference is available in [API.md](/Users/maksym/Documents/Programming/Projects/HTLBets/API.md).
+Technical API reference is available in [API.md](./API.md).

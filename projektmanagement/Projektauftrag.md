@@ -2,9 +2,9 @@
 
 **Dokumenttyp:** Projektauftrag  
 **Projekt:** HTLBets  
-**Version:** 1.3  
+**Version:** 1.4
 **Status:** aktualisiert  
-**Datum:** 22.05.2026
+**Datum:** 09.06.2026
 
 ---
 
@@ -51,6 +51,7 @@ Am Projektende liegt eine vorführbare Webanwendung mit folgender Dokumentation 
 | Poker | Multiplayer-Poker mit öffentlichen und privaten Tischen ist verfügbar |
 | Weitere Spiele | Miner, Crash und Slots sind spielbar |
 | Zusätzliche Mehrspieler-Spiele | Ochko und Mafia sind verfügbar |
+| Zusätzlicher Einzelspielmodus | Balatro-inspirierter Run mit Blinds, Jokern und Shop ist verfügbar |
 | Profilfunktionen | Profil, Avatar, Benutzername, Historie und Daily Rewards sind vorhanden |
 | Card Decks | Kauf, Auswahl und Admin-Verwaltung von Karten-Decks sind vorhanden |
 | Leaderboard | Ranglistenansichten für Demo-Kennzahlen sind verfügbar |
@@ -83,6 +84,7 @@ Ziel des Projekts ist die Entwicklung einer funktionsfähigen und vorführbaren 
 | Z10 | Eine Admin-Oberfläche für Moderation und Verwaltung ist vorhanden. | Suche, Balance, Deck-Zuweisung, Ban, Wipe und Delete sind möglich. |
 | Z11 | Weitere Mehrspieler-Spiele ergänzen die Plattform. | Ochko und Mafia sind erreichbar und technisch eingebunden. |
 | Z12 | Das Projekt ist lokal vorführbar. | `npm run dev`, Build, Tests und Dokumentation funktionieren. |
+| Z13 | Ein roguelike Poker-Einzelspiel ergänzt den Umfang. | Balatro ist erreichbar, spielbar und vom persistenten Credit-System getrennt. |
 
 ### 5.3 Nicht-Projektziele / Abgrenzung
 
@@ -111,6 +113,7 @@ Die Plattform enthält mehrere Spiele mit unterschiedlichen Anforderungen:
 6. Slots
 7. Ochko als Multiplayer-Kartenspiel
 8. Mafia als Rollen- und Raumspiel mit optionalem Text-/Video-Modus
+9. Balatro als clientseitiger Einzelspiel-Run mit Blinds, Pokerhand-Wertung, Jokern, Consumables und Shop
 
 Zusätzlich gibt es Profilfunktionen, Daily Rewards, Leaderboards, ein Card-Deck-System sowie einen Admin-Bereich. Im Admin-Bereich können Nutzerkonten gesucht, Guthaben angepasst, Karten-Decks vergeben und Moderationsmaßnahmen wie Ban, Wipe oder Delete ausgelöst werden. Außerdem kann die Verfügbarkeit einzelner Spiele zentral gesteuert werden.
 
@@ -219,7 +222,7 @@ Das Projekt gilt als erfolgreich abgeschlossen, wenn folgende Kriterien erfüllt
 - Die Anwendung kann lokal gestartet und vorgeführt werden.
 - Authentifizierung mit berechtigter Schul-E-Mail funktioniert.
 - Guthaben wird angezeigt und ändert sich nachvollziehbar.
-- Roulette, Blackjack, Poker, Miner, Crash und Slots sind verwendbar.
+- Roulette, Blackjack, Poker, Miner, Crash, Slots, Ochko, Mafia und Balatro sind verwendbar.
 - Historie, Profil, Rewards und Leaderboard sind erreichbar.
 - Card-Deck-System ist nutzbar.
 - Admin-Bereich ist vorhanden und bietet Verwaltungs- sowie Moderationsfunktionen.
@@ -249,3 +252,4 @@ Mit der Unterzeichnung bestätigen Auftraggeber und Projektteam den beschriebene
 | 1.1 | 09.05.2026 | Aktualisierung auf Projektstand mit Poker, Profil, Rewards und Admin | Projektteam HTLBets |
 | 1.2 | 11.05.2026 | Erweiterung auf Miner, Crash, Slots, Deck-System, Leaderboard und Moderation | Projektteam HTLBets |
 | 1.3 | 22.05.2026 | Ergänzung um Ochko, Mafia sowie Admin-Steuerung der Spiel-Verfügbarkeit | Projektteam HTLBets |
+| 1.4 | 09.06.2026 | Balatro und aktueller Neun-Spiele-Umfang ergänzt | Projektteam HTLBets |

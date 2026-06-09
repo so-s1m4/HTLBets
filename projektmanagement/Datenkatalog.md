@@ -1,5 +1,7 @@
 # HTL Bets Datenkatalog
 
+**Stand:** 09.06.2026
+
 ## Überblick
 
 Dieser Datenkatalog beschreibt die zentralen Datenobjekte der aktuellen HTL-Bets-Datenbank auf Basis von `server/prisma/schema.prisma`.
@@ -29,6 +31,8 @@ Die Datenbank deckt im Moment folgende fachliche Bereiche ab:
 | `SLOTS` | Slots |
 | `OCHKO` | Ochko |
 | `ADMIN` | Admin-/Systemkontext |
+
+**Abgrenzung:** `MAFIA` und `BALATRO` sind keine Werte dieses Prisma-Enums. Mafia verwaltet ihren laufenden Raumzustand derzeit in einem eigenen In-Memory-Manager. Balatro läuft clientseitig und erzeugt aktuell keine `GameSession`- oder `GameHistory`-Datensätze.
 
 ### `GameSessionStatus`
 
@@ -222,7 +226,17 @@ Verwaltet, welche Spiele im System verfügbar bzw. deaktiviert sind.
 | `updatedAt` | `DateTime` | `@updatedAt` | Letzte Änderung |
 
 **Besonderheit:**  
-Diese Tabelle wird für die Admin-Steuerung der Spielverfügbarkeit verwendet.
+Diese Tabelle wird für die Admin-Steuerung der Spielverfügbarkeit verwendet. Der Seed enthält aktuell:
+
+- `roulette`
+- `blackjack`
+- `poker`
+- `miner`
+- `crash`
+- `slots`
+- `ochko`
+- `mafia`
+- `balatro`
 
 ---
 

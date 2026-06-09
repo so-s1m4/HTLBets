@@ -1,6 +1,6 @@
 # Gantt-Plan: HTLBets
 
-**Stand:** 22.05.2026  
+**Stand:** 09.06.2026
 **Projektzeitraum:** 28.04.2026 bis 30.06.2026
 
 ## Übersicht
@@ -24,7 +24,8 @@ gantt
     section Spiele
     Roulette, Blackjack, Poker          :g1, 2026-05-10, 2026-05-20
     Miner, Crash, Slots                 :g2, 2026-05-18, 2026-05-27
-    Ochko und Mafia                     :g3, 2026-05-20, 2026-06-02
+    Ochko und Mafia                     :done, g3, 2026-05-20, 2026-06-02
+    Balatro                             :done, g4, 2026-06-03, 2026-06-09
 
     section Plattform
     Profil, Rewards, Historie           :s1, 2026-05-19, 2026-06-01
@@ -49,6 +50,7 @@ gantt
 | Kernspiele integriert | 20.05.2026 | Roulette, Blackjack, Poker |
 | Erweiterte Spiele integriert | 27.05.2026 | Miner, Crash, Slots |
 | Weitere Mehrspieler-Spiele integriert | 02.06.2026 | Ochko und Mafia |
+| Balatro-Demo integriert | 09.06.2026 | Blinds, Pokerhand-Wertung, Joker, Consumables und Shop |
 | Zusatzfunktionen fertig | 03.06.2026 | Profil, Rewards, Historie, Decks |
 | Admin-Funktionen fertig | 10.06.2026 | Suche, Balance, Decks, Moderation |
 | Spielkatalog steuerbar | 10.06.2026 | Spiele aktivieren / deaktivieren |
@@ -59,5 +61,5 @@ gantt
 
 - Die Detailtermine können je nach Unterrichtsfortschritt leicht angepasst werden.
 - Die Phasen überschneiden sich bewusst, weil Dokumentation, Entwicklung und QA parallel laufen.
-- Der Plan berücksichtigt den erweiterten Scope mit Ochko, Mafia und steuerbarer Spiel-Verfügbarkeit.
+- Der Plan berücksichtigt den erweiterten Scope mit Ochko, Mafia, Balatro und steuerbarer Spiel-Verfügbarkeit.
 - Für die finale Abgabe sollten `README`, Projektunterlagen und Build-Status gemeinsam geprüft werden.

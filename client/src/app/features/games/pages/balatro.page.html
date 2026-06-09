@@ -228,13 +228,23 @@
                         <p>{{ consumable.effect }}</p>
                       </div>
                       @if (selectedConsumable()?.id === consumable.id) {
-                        <button
-                          type="button"
-                          [disabled]="!canBuyConsumable(consumable)"
-                          (click)="$event.stopPropagation(); buyConsumable(consumable)"
-                        >
-                          BUY ${{ consumable.cost }}
-                        </button>
+                        <div class="consumable-card__actions">
+                          <button
+                            type="button"
+                            [disabled]="!canBuyConsumable(consumable)"
+                            (click)="$event.stopPropagation(); buyConsumable(consumable)"
+                          >
+                            BUY ${{ consumable.cost }}
+                          </button>
+                          <button
+                            class="buy-and-use"
+                            type="button"
+                            [disabled]="!canBuyAndUseConsumable(consumable)"
+                            (click)="$event.stopPropagation(); buyAndUseConsumable(consumable)"
+                          >
+                            BUY &amp; USE
+                          </button>
+                        </div>
                       }
                     </article>
                   }

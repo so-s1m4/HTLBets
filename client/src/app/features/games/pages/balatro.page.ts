@@ -803,6 +803,23 @@ export class BalatroPageComponent {
     return this.phase() === 'shop' && this.consumables().length < 2 && this.canAfford(consumable.cost);
   }
 
+  canBuyAndUseConsumable(consumable: ConsumableDefinition): boolean {
+    return this.phase() === 'shop' && !this.gameOver() && this.canAfford(consumable.cost);
+  }
+
+  buyAndUseConsumable(consumable: ConsumableDefinition): void {
+    if (!this.canBuyAndUseConsumable(consumable)) {
+      return;
+    }
+
+    this.money.update((value) => value - consumable.cost);
+    this.consumableOffers.update((offers) => offers.filter((offer) => offer.id !== consumable.id));
+    this.useConsumable({
+      ...consumable,
+      instanceId: `${consumable.id}-instant-${Date.now()}`
+    });
+  }
+
   useConsumable(consumable: OwnedConsumable): void {
     if (this.isScoring() || this.isChangingHand() || this.gameOver()) {
       return;
