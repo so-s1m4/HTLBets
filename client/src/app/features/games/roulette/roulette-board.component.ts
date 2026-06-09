@@ -12,7 +12,16 @@ type RouletteSelectionType = 'color' | 'number' | 'parity' | 'dozen' | 'range' |
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class RouletteBoardComponent {
-  private readonly chipPalette = ['#f4f7ff', '#ff6f91', '#5da8ff', '#ffd166', '#7de3ff'];
+  private readonly chipAssetGroups = [
+    ['/casino/chips/chip_1_1.png', '/casino/chips/chip_1_2.png', '/casino/chips/chip_1_3.png', '/casino/chips/chip_1_4.png'],
+    ['/casino/chips/chip_1_5.png', '/casino/chips/chip_1_6.png', '/casino/chips/chip_1_7.png', '/casino/chips/chip_1_8.png'],
+    ['/casino/chips/chip_2_1.png', '/casino/chips/chip_2_2.png', '/casino/chips/chip_2_3.png', '/casino/chips/chip_2_4.png'],
+    ['/casino/chips/chip_2_5.png', '/casino/chips/chip_2_6.png', '/casino/chips/chip_2_7.png', '/casino/chips/chip_2_8.png'],
+    ['/casino/chips/chip_3_1.png', '/casino/chips/chip_3_2.png', '/casino/chips/chip_3_3.png', '/casino/chips/chip_3_4.png'],
+    ['/casino/chips/chip_3_5.png', '/casino/chips/chip_3_6.png', '/casino/chips/chip_3_7.png', '/casino/chips/chip_3_8.png'],
+    ['/casino/chips/chip_4_1.png', '/casino/chips/chip_4_2.png', '/casino/chips/chip_4_3.png', '/casino/chips/chip_4_4.png'],
+    ['/casino/chips/chip_4_5.png', '/casino/chips/chip_4_6.png', '/casino/chips/chip_4_7.png', '/casino/chips/chip_4_8.png']
+  ];
   private readonly redNumbers = new Set([1, 3, 5, 7, 9, 12, 14, 16, 18, 19, 21, 23, 25, 27, 30, 32, 34, 36]);
   private aggregateMap = new Map<string, { totalAmount: number; playerCount: number }>();
   private chipMap = new Map<string, string[]>();
@@ -90,6 +99,12 @@ export class RouletteBoardComponent {
 
   private createChips(totalAmount: number, playerCount: number): string[] {
     const chipCount = Math.min(5, Math.max(1, Math.ceil(playerCount)));
-    return Array.from({ length: chipCount }, (_, index) => this.chipPalette[(totalAmount + index) % this.chipPalette.length] || '#7de3ff');
+    const averageBet = totalAmount / chipCount;
+    const stackLevel = averageBet >= 10_000 ? 3 : averageBet >= 1_000 ? 2 : averageBet >= 500 ? 1 : 0;
+
+    return Array.from({ length: chipCount }, (_, index) => {
+      const group = this.chipAssetGroups[(totalAmount + index) % this.chipAssetGroups.length] || this.chipAssetGroups[0];
+      return group[stackLevel] || group[0];
+    });
   }
 }

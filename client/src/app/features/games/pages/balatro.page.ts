@@ -432,7 +432,8 @@ export class BalatroPageComponent {
   }
 
   jokerArtUrl(joker: JokerDefinition): string {
-    return `/balatro/jokers/joker-${joker.artIndex}.jpg`;
+    const assetIndex = (joker.artIndex % 125) + 1;
+    return `/balatro/relics/item_${String(assetIndex).padStart(3, '0')}.png`;
   }
 
   cardFaceUrl(card: PlayingCard): string {

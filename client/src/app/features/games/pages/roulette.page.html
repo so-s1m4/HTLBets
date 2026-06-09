@@ -59,13 +59,9 @@
                               <button
                                       class="roulette-chip"
                                       [class.active]="selectedChip() === chip.value"
-                                      [attr.data-color]="chip.color"
                                       (click)="selectChip(chip.value)"
                               >
-                                  <span class="roulette-chip__segments" aria-hidden="true"></span>
-                                  <span class="roulette-chip__face" aria-hidden="true"></span>
-                                  <span class="roulette-chip__inner-ring" aria-hidden="true"></span>
-                                  <span class="roulette-chip__dots" aria-hidden="true"></span>
+                                  <img class="roulette-chip__art" [src]="chip.asset" alt="" aria-hidden="true">
                                   <span class="roulette-chip__label">{{ chip.label }}</span>
                               </button>
                           }

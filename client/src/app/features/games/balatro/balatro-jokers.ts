@@ -27,7 +27,7 @@ const joker = (
   glyph = name.slice(0, 1)
 ): Omit<JokerDefinition, 'artIndex'> => ({ id, name, rarity, cost, effect, glyph, accent: COLORS[rarity] });
 
-// All 150 Jokers from Balatro's collection. Visuals are original to this project.
+// Persistent Relics. Legacy ids stay stable so existing game logic and saves keep working.
 const JOKER_DEFINITIONS: Array<Omit<JokerDefinition, 'artIndex'>> = [
   joker('8-ball', '8 Ball', 'common', 5, 'Scored 8s can generate $2', '8'),
   joker('abstract', 'Abstract Joker', 'common', 4, '+3 Mult for every owned Joker', 'A'),
@@ -183,6 +183,8 @@ const JOKER_DEFINITIONS: Array<Omit<JokerDefinition, 'artIndex'>> = [
 
 export const BALATRO_JOKERS: JokerDefinition[] = JOKER_DEFINITIONS.map((entry, artIndex) => ({
   ...entry,
+  name: entry.name.replace(/\bJokers\b/g, 'Relics').replace(/\bJoker\b/g, 'Relic'),
+  effect: entry.effect.replace(/\bJokers\b/g, 'Relics').replace(/\bJoker\b/g, 'Relic'),
   artIndex
 }));
 

@@ -10,7 +10,7 @@
               @if (getAggregate('number', '00'); as aggregate) {
                 <span class="roulette-board__chips">
                   @for (chip of chipsFor('number', '00', aggregate.totalAmount, aggregate.playerCount); track $index) {
-                    <span class="roulette-board__chip" [style.--chip-color]="chip"></span>
+                    <span class="roulette-board__chip" [style.background-image]="'url(' + chip + ')'"></span>
                   }
                 </span>
               }
@@ -24,7 +24,7 @@
               @if (getAggregate('number', 0); as aggregate) {
                 <span class="roulette-board__chips">
                   @for (chip of chipsFor('number', 0, aggregate.totalAmount, aggregate.playerCount); track $index) {
-                    <span class="roulette-board__chip" [style.--chip-color]="chip"></span>
+                    <span class="roulette-board__chip" [style.background-image]="'url(' + chip + ')'"></span>
                   }
                 </span>
               }
@@ -44,7 +44,7 @@
                     @if (getAggregate(choice.type, choice.value); as aggregate) {
                       <span class="roulette-board__chips">
                         @for (chip of chipsFor(choice.type, choice.value, aggregate.totalAmount, aggregate.playerCount); track $index) {
-                          <span class="roulette-board__chip" [style.--chip-color]="chip"></span>
+                          <span class="roulette-board__chip" [style.background-image]="'url(' + chip + ')'"></span>
                         }
                       </span>
                     }
@@ -61,7 +61,7 @@
                           @if (getAggregate('column', choice.value); as aggregate) {
                               <span class="roulette-board__chips">
                         @for (chip of chipsFor('column', choice.value, aggregate.totalAmount, aggregate.playerCount); track $index) {
-                            <span class="roulette-board__chip" [style.--chip-color]="chip"></span>
+                            <span class="roulette-board__chip" [style.background-image]="'url(' + chip + ')'"></span>
                         }
                       </span>
                           }
@@ -81,7 +81,7 @@
                             @if (getAggregate('dozen', bet.value); as aggregate) {
                                 <span class="roulette-board__chips">
                             @for (chip of chipsFor('dozen', bet.value, aggregate.totalAmount, aggregate.playerCount); track $index) {
-                                <span class="roulette-board__chip" [style.--chip-color]="chip"></span>
+                                <span class="roulette-board__chip" [style.background-image]="'url(' + chip + ')'"></span>
                             }
                         </span>
                             }
@@ -98,7 +98,7 @@
                           @if (getAggregate('range', '1-18'); as aggregate) {
                               <span class="roulette-board__chips">
                         @for (chip of chipsFor('range', '1-18', aggregate.totalAmount, aggregate.playerCount); track $index) {
-                            <span class="roulette-board__chip" [style.--chip-color]="chip"></span>
+                            <span class="roulette-board__chip" [style.background-image]="'url(' + chip + ')'"></span>
                         }
                       </span>
                           }
@@ -113,7 +113,7 @@
                           @if (getAggregate('parity', 'even'); as aggregate) {
                               <span class="roulette-board__chips">
                         @for (chip of chipsFor('parity', 'even', aggregate.totalAmount, aggregate.playerCount); track $index) {
-                            <span class="roulette-board__chip" [style.--chip-color]="chip"></span>
+                            <span class="roulette-board__chip" [style.background-image]="'url(' + chip + ')'"></span>
                         }
                       </span>
                           }
@@ -128,7 +128,7 @@
                           @if (getAggregate('color', 'red'); as aggregate) {
                               <span class="roulette-board__chips">
                         @for (chip of chipsFor('color', 'red', aggregate.totalAmount, aggregate.playerCount); track $index) {
-                            <span class="roulette-board__chip" [style.--chip-color]="chip"></span>
+                            <span class="roulette-board__chip" [style.background-image]="'url(' + chip + ')'"></span>
                         }
                       </span>
                           }
@@ -143,7 +143,7 @@
                           @if (getAggregate('color', 'black'); as aggregate) {
                               <span class="roulette-board__chips">
                         @for (chip of chipsFor('color', 'black', aggregate.totalAmount, aggregate.playerCount); track $index) {
-                            <span class="roulette-board__chip" [style.--chip-color]="chip"></span>
+                            <span class="roulette-board__chip" [style.background-image]="'url(' + chip + ')'"></span>
                         }
                       </span>
                           }
@@ -158,7 +158,7 @@
                           @if (getAggregate('parity', 'odd'); as aggregate) {
                               <span class="roulette-board__chips">
                         @for (chip of chipsFor('parity', 'odd', aggregate.totalAmount, aggregate.playerCount); track $index) {
-                            <span class="roulette-board__chip" [style.--chip-color]="chip"></span>
+                            <span class="roulette-board__chip" [style.background-image]="'url(' + chip + ')'"></span>
                         }
                       </span>
                           }
@@ -172,7 +172,7 @@
                           @if (getAggregate('range', '19-36'); as aggregate) {
                               <span class="roulette-board__chips">
                         @for (chip of chipsFor('range', '19-36', aggregate.totalAmount, aggregate.playerCount); track $index) {
-                            <span class="roulette-board__chip" [style.--chip-color]="chip"></span>
+                            <span class="roulette-board__chip" [style.background-image]="'url(' + chip + ')'"></span>
                         }
                       </span>
                           }

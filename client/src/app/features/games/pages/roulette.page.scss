@@ -258,118 +258,55 @@ h3 {
 }
 
 .roulette-chip {
-  width: 60px;
-  height: 60px;
-
-  --chip-accent: #2acdbd;
+  width: 64px;
+  height: 64px;
   position: relative;
   display: block;
   aspect-ratio: 1;
   border-radius: 50%;
   border: 0;
-  background: linear-gradient(180deg, #fbfcff, #d9dde5);
-  box-shadow:
-    inset 0 0 0 0.18rem rgba(255, 255, 255, 0.96),
-    0 0 0 0.12rem rgba(16, 20, 29, 0.44),
-    0 0.8rem 1.45rem rgba(5, 9, 20, 0.18);
+  padding: 0;
+  background: transparent;
+  filter: drop-shadow(0 0.55rem 0.45rem rgba(5, 9, 20, 0.42));
   cursor: pointer;
-  transition: transform 180ms ease, box-shadow 180ms ease;
-  overflow: hidden;
+  transition: transform 180ms ease, filter 180ms ease;
 }
 
-.roulette-chip[data-color='mint'] { --chip-accent: #27cfbe; }
-.roulette-chip[data-color='cyan'] { --chip-accent: #2f88d8; }
-.roulette-chip[data-color='purple'] { --chip-accent: #6d35d9; }
-.roulette-chip[data-color='hellpink'] { --chip-accent: #b62dd8; }
-.roulette-chip[data-color='yellow'] { --chip-accent: #d5ae2b; }
-.roulette-chip[data-color='orange'] { --chip-accent: #c97a1d; }
-.roulette-chip[data-color='red'] { --chip-accent: #d23b3b; }
-.roulette-chip[data-color='pink'] { --chip-accent: #d93b8f; }
-
-.roulette-chip__segments,
-.roulette-chip__face,
-.roulette-chip__inner-ring,
-.roulette-chip__dots,
+.roulette-chip__art,
 .roulette-chip__label {
   position: absolute;
   inset: 0;
 }
 
-.roulette-chip__segments {
-  inset: 0.5rem;
-  border-radius: 50%;
-  background:
-    repeating-conic-gradient(
-      from -2deg,
-      transparent 0deg 16deg,
-      var(--chip-accent) 16deg 31deg,
-      transparent 31deg 45deg
-    );
-  -webkit-mask: radial-gradient(circle, transparent 0 62%, #000 62% 100%);
-  mask: radial-gradient(circle, transparent 0 62%, #000 62% 100%);
-}
-
-.roulette-chip__face {
-  inset: 0.8rem;
-  border-radius: 50%;
-  background: radial-gradient(circle at 50% 34%, #ffffff, #eceef3 76%, #d8dbe3 100%);
-  box-shadow: inset 0 0 0 0.16rem rgba(255, 255, 255, 0.96);
-}
-
-.roulette-chip__inner-ring {
-  inset: 1.35rem;
-  border-radius: 50%;
-  border: 0.18rem solid color-mix(in srgb, var(--chip-accent) 92%, black);
-}
-
-.roulette-chip__dots {
-  inset: 1.16rem;
-  margin: auto;
-  width: 0.92rem;
-  height: 0.92rem;
-  border-radius: 50%;
-  background: color-mix(in srgb, var(--chip-accent) 92%, black);
-  box-shadow:
-    0 -3.15rem 0 0 color-mix(in srgb, var(--chip-accent) 92%, black),
-    2.2rem -2.2rem 0 0 color-mix(in srgb, var(--chip-accent) 92%, black),
-    3.15rem 0 0 0 color-mix(in srgb, var(--chip-accent) 92%, black),
-    2.2rem 2.2rem 0 0 color-mix(in srgb, var(--chip-accent) 92%, black),
-    0 3.15rem 0 0 color-mix(in srgb, var(--chip-accent) 92%, black),
-    -2.2rem 2.2rem 0 0 color-mix(in srgb, var(--chip-accent) 92%, black),
-    -3.15rem 0 0 0 color-mix(in srgb, var(--chip-accent) 92%, black),
-    -2.2rem -2.2rem 0 0 color-mix(in srgb, var(--chip-accent) 92%, black);
-  transform: scale(0.56);
-  transform-origin: center;
+.roulette-chip__art {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  image-rendering: pixelated;
 }
 
 .roulette-chip__label {
   display: grid;
   place-items: center;
   z-index: 2;
-  color: color-mix(in srgb, var(--chip-accent) 88%, black);
-  font-size: clamp(1rem, 1vw, 1.5rem);
+  color: #f8fbff;
+  font-size: clamp(0.72rem, 0.85vw, 1rem);
   font-weight: 900;
-  letter-spacing: -0.06em;
+  letter-spacing: -0.04em;
   line-height: 1;
   text-shadow:
-    0.08rem 0 0 rgba(255, 255, 255, 0.98),
-    -0.08rem 0 0 rgba(255, 255, 255, 0.98),
-    0 0.08rem 0 rgba(255, 255, 255, 0.98),
-    0 -0.08rem 0 rgba(255, 255, 255, 0.98),
-    0.06rem 0.06rem 0 rgba(255, 255, 255, 0.98),
-    -0.06rem 0.06rem 0 rgba(255, 255, 255, 0.98),
-    0.06rem -0.06rem 0 rgba(255, 255, 255, 0.98),
-    -0.06rem -0.06rem 0 rgba(255, 255, 255, 0.98),
-    0 0.12rem 0.2rem rgba(0, 0, 0, 0.14);
+    0 1px 0 #07131c,
+    1px 0 0 #07131c,
+    -1px 0 0 #07131c,
+    0 -1px 0 #07131c,
+    0 2px 4px rgba(0, 0, 0, 0.82);
 }
 
-
 .roulette-chip.active {
-  transform: translateY(-2px);
-  box-shadow:
-    inset 0 0 0 0.18rem rgba(255, 255, 255, 0.96),
-    0 0 0 0.12rem rgba(16, 20, 29, 0.52),
-    0 1rem 1.7rem rgba(5, 9, 20, 0.28);
+  transform: translateY(-7px) scale(1.08);
+  filter:
+    drop-shadow(0 0 0.42rem rgba(125, 227, 255, 0.72))
+    drop-shadow(0 0.7rem 0.5rem rgba(5, 9, 20, 0.52));
 }
 
 .roulette-result {

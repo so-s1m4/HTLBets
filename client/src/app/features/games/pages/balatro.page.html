@@ -1,6 +1,6 @@
 <app-game-shell
   title="Balatro"
-  subtitle="Build poker hands, bend the rules with Jokers, and crush every Blind in the run."
+  subtitle="Build poker hands, awaken powerful Relics, and crush every Blind in the run."
   connectionState="connected"
   [hasSidebar]="false"
   [edgeToEdge]="true"
@@ -132,7 +132,7 @@
 
           <div class="shop-main">
             <div class="shop-owned-row">
-              @for (joker of ownedJokers(); track joker.instanceId; let index = $index) {
+              @for (joker of ownedJokers(); track joker.instanceId; let index = $index; let first = $first; let last = $last) {
                 <article
                   class="shop-owned-card"
                   [class.is-selected]="selectedJoker()?.id === joker.id"
@@ -146,22 +146,32 @@
                   @if (jokerStatus(joker); as status) {
                     <em class="joker-status">{{ status }}</em>
                   }
-                  <div class="card-hover-tip">
+                  <div class="card-hover-tip" [class.tip-align-left]="first" [class.tip-align-right]="last">
                     <strong>{{ joker.name }}</strong>
                     <p>{{ joker.effect }}</p>
                   </div>
+                  @if (selectedJoker()?.id === joker.id) {
+                    <button
+                      class="joker-sell-tab"
+                      [class.is-left]="last"
+                      type="button"
+                      (click)="$event.stopPropagation(); sellJoker(joker.instanceId)"
+                    >
+                      SELL ${{ joker.sellValue }}
+                    </button>
+                  }
                 </article>
               }
               @for (slot of emptyJokerSlots(); track slot) {
-                <div class="shop-owned-slot"><b>+</b><small>JOKER</small></div>
+                <div class="shop-owned-slot"><b>+</b><small>RELIC</small></div>
               }
             </div>
 
             <div class="shop-stock">
               <section class="shop-stock-group">
-                <header><span>JOKERS</span><small>Build the engine</small></header>
+                <header><span>RELICS</span><small>Build the engine</small></header>
                 <div class="shop-shelf">
-                  @for (joker of shopOffers(); track joker.id) {
+                  @for (joker of shopOffers(); track joker.id; let first = $first; let last = $last) {
                     <article
                       class="shop-card"
                       [class.is-selected]="selectedJoker()?.id === joker.id"
@@ -178,17 +188,19 @@
                       @if (jokerStatus(joker); as status) {
                         <em class="joker-status">{{ status }}</em>
                       }
-                      <div class="card-hover-tip">
+                      <div class="card-hover-tip" [class.tip-align-left]="first" [class.tip-align-right]="last">
                         <strong>{{ joker.name }}</strong>
                         <p>{{ joker.effect }}</p>
                       </div>
-                      <button
-                        type="button"
-                        [disabled]="!canBuyJoker(joker)"
-                        (click)="$event.stopPropagation(); buyJoker(joker)"
-                      >
-                        BUY ${{ joker.cost }}
-                      </button>
+                      @if (selectedJoker()?.id === joker.id) {
+                        <button
+                          type="button"
+                          [disabled]="!canBuyJoker(joker)"
+                          (click)="$event.stopPropagation(); buyJoker(joker)"
+                        >
+                          BUY ${{ joker.cost }}
+                        </button>
+                      }
                     </article>
                   } @empty {
                     <div class="shop-empty">Shelf sold out.</div>
@@ -199,7 +211,7 @@
               <section class="shop-stock-group shop-stock-group--utility">
                 <header><span>GLITCHES + PROTOCOLS</span><small>Store up to two</small></header>
                 <div class="consumable-shelf">
-                  @for (consumable of consumableOffers(); track consumable.id) {
+                  @for (consumable of consumableOffers(); track consumable.id; let first = $first; let last = $last) {
                     <article
                       class="consumable-card"
                       [class.is-selected]="selectedConsumable()?.id === consumable.id"
@@ -211,55 +223,25 @@
                       <b>{{ consumable.glyph }}</b>
                       <h3>{{ consumable.name }}</h3>
                       <em>{{ consumableStatus(consumable) }}</em>
-                      <div class="card-hover-tip">
+                      <div class="card-hover-tip" [class.tip-align-left]="first" [class.tip-align-right]="last">
                         <strong>{{ consumable.name }}</strong>
                         <p>{{ consumable.effect }}</p>
                       </div>
-                      <button
-                        type="button"
-                        [disabled]="!canBuyConsumable(consumable)"
-                        (click)="$event.stopPropagation(); buyConsumable(consumable)"
-                      >
-                        BUY ${{ consumable.cost }}
-                      </button>
+                      @if (selectedConsumable()?.id === consumable.id) {
+                        <button
+                          type="button"
+                          [disabled]="!canBuyConsumable(consumable)"
+                          (click)="$event.stopPropagation(); buyConsumable(consumable)"
+                        >
+                          BUY ${{ consumable.cost }}
+                        </button>
+                      }
                     </article>
                   }
                 </div>
               </section>
             </div>
 
-            @if (selectedJoker(); as joker) {
-              <div class="joker-inspector shop-joker-inspector">
-                <img class="joker-art" [src]="jokerArtUrl(joker)" [alt]="joker.name" />
-                <div>
-                  <strong>{{ joker.name }}</strong>
-                  @if (jokerStatus(joker); as status) {
-                    <em class="joker-status joker-status--detail">{{ status }}</em>
-                  }
-                  <p>{{ joker.effect }}</p>
-                </div>
-                <div class="inspector-actions">
-                  <span>{{ joker.rarity }} · ${{ joker.cost }}</span>
-                  @if (selectedOwnedJoker(); as owned) {
-                    @if (selectedJoker()?.id === joker.id) {
-                      <button type="button" (click)="sellJoker(owned.instanceId)">
-                        SELL ${{ owned.sellValue }}
-                      </button>
-                    }
-                  }
-                </div>
-              </div>
-            } @else if (selectedConsumable(); as consumable) {
-              <div class="consumable-inspector">
-                <b [style.--consumable-accent]="consumable.accent">{{ consumable.glyph }}</b>
-                <div>
-                  <strong>{{ consumable.name }}</strong>
-                  <em>{{ consumableStatus(consumable) }}</em>
-                  <p>{{ consumable.effect }}</p>
-                </div>
-                <span>{{ consumableKindLabel(consumable.kind) }} · ${{ consumable.cost }}</span>
-              </div>
-            }
           </div>
         </div>
       </section>
@@ -322,7 +304,7 @@
 
         <div class="table">
           <div class="joker-row">
-            @for (joker of ownedJokers(); track joker.instanceId; let index = $index) {
+            @for (joker of ownedJokers(); track joker.instanceId; let index = $index; let first = $first; let last = $last) {
               <article
                 class="joker"
                 [style.--joker-accent]="joker.accent"
@@ -341,10 +323,20 @@
                 @if (jokerStatus(joker); as status) {
                   <em class="joker-status">{{ status }}</em>
                 }
-                <div class="card-hover-tip">
+                <div class="card-hover-tip" [class.tip-align-left]="first" [class.tip-align-right]="last">
                   <strong>{{ joker.name }}</strong>
                   <p>{{ joker.effect }}</p>
                 </div>
+                @if (selectedJoker()?.id === joker.id) {
+                  <button
+                    class="joker-sell-tab"
+                    [class.is-left]="last"
+                    type="button"
+                    (click)="$event.stopPropagation(); sellJoker(joker.instanceId)"
+                  >
+                    SELL ${{ joker.sellValue }}
+                  </button>
+                }
               </article>
             }
             @for (slot of emptyJokerSlots(); track slot) {
@@ -384,39 +376,6 @@
               <strong class="pending-boost">{{ pendingBoost() }}</strong>
             }
           </div>
-
-          @if (selectedJoker(); as joker) {
-            <div class="joker-inspector table-joker-inspector">
-              <img class="joker-art" [src]="jokerArtUrl(joker)" [alt]="joker.name" />
-              <div>
-                <strong>{{ joker.name }}</strong>
-                @if (jokerStatus(joker); as status) {
-                  <em class="joker-status joker-status--detail">{{ status }}</em>
-                }
-                <p>{{ joker.effect }}</p>
-              </div>
-              <div class="inspector-actions">
-                <span>{{ joker.rarity }}</span>
-                @if (selectedOwnedJoker(); as owned) {
-                  @if (selectedJoker()?.id === joker.id) {
-                    <button type="button" (click)="sellJoker(owned.instanceId)">
-                      SELL ${{ owned.sellValue }}
-                    </button>
-                  }
-                }
-              </div>
-            </div>
-          } @else if (selectedConsumable(); as consumable) {
-            <div class="consumable-inspector table-consumable-inspector">
-              <b [style.--consumable-accent]="consumable.accent">{{ consumable.glyph }}</b>
-              <div>
-                <strong>{{ consumable.name }}</strong>
-                <em>{{ consumableStatus(consumable) }}</em>
-                <p>{{ consumable.effect }}</p>
-              </div>
-              <span>{{ consumableKindLabel(consumable.kind) }}</span>
-            </div>
-          }
 
           @if (playedCards().length) {
             <div class="played-hand" [class.is-flying]="playedCardsFlying()" aria-label="Played cards">
@@ -588,7 +547,11 @@
       <div class="pause-overlay">
         <div class="pause-overlay__wash"></div>
 
-        <section class="pause-card" [class.pause-card--options]="view === 'options' || view === 'collection'">
+        <section
+          class="pause-card"
+          [class.pause-card--options]="view === 'options'"
+          [class.pause-card--collection]="view === 'collection'"
+        >
           <div class="pause-card__suit" aria-hidden="true">♠</div>
 
           @if (view === 'pause') {
@@ -604,7 +567,7 @@
             </div>
           } @else if (view === 'collection') {
             <span class="pause-card__eyebrow">COLLECTION</span>
-            <h2>150 JOKERS</h2>
+            <h2>150 RELICS</h2>
             <div class="joker-collection">
               @for (joker of BALATRO_JOKERS; track joker.id) {
                 <article [style.--joker-accent]="joker.accent" [title]="joker.effect">
@@ -613,8 +576,15 @@
                     [src]="jokerArtUrl(joker)"
                     [alt]="joker.name"
                   />
-                  <span>{{ joker.name }}</span>
-                  <small>${{ joker.cost }}</small>
+                  <div class="joker-collection__heading">
+                    <span>{{ joker.name }}</span>
+                    <small>${{ joker.cost }}</small>
+                  </div>
+                  <em>{{ joker.rarity }}</em>
+                  <div class="joker-collection__tip">
+                    <strong>{{ joker.name }}</strong>
+                    <p>{{ joker.effect }}</p>
+                  </div>
                 </article>
               }
             </div>

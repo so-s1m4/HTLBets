@@ -74,12 +74,12 @@ export class RoulettePageComponent {
   readonly revealedRound = signal<RouletteViewState['lastRound'] | null>(null);
   readonly chipValues = [10, 25, 100, 250];
   readonly chipOptions = [
-    { value: 100, label: '100', color: 'mint' },
-    { value: 500, label: '500', color: 'cyan' },
-    { value: 1000, label: '1K', color: 'purple' },
-    { value: 10000, label: '10K', color: 'hellpink' },
-    { value: 50000, label: '50K', color: 'yellow' },
-    { value: 100000, label: '100K', color: 'orange' },
+    { value: 100, label: '100', asset: '/casino/chips/chip_3_1.png' },
+    { value: 500, label: '500', asset: '/casino/chips/chip_1_5.png' },
+    { value: 1000, label: '1K', asset: '/casino/chips/chip_2_5.png' },
+    { value: 10000, label: '10K', asset: '/casino/chips/chip_3_5.png' },
+    { value: 50000, label: '50K', asset: '/casino/chips/chip_4_5.png' },
+    { value: 100000, label: '100K', asset: '/casino/chips/chip_1_1.png' },
   ] as const;
 
   readonly state = computed(() => this.socket.currentState());

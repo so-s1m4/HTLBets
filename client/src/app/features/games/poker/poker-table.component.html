@@ -14,7 +14,10 @@
 
       <div class="poker-table__pot">
         <span class="glass-stat__label">{{ phase === 'waiting' ? 'Stacks in play' : 'Pot' }}</span>
-        <strong>{{ pot }} cr</strong>
+        <div class="poker-table__pot-value">
+          <img src="/casino/chips/chip_4_4.png" alt="" aria-hidden="true">
+          <strong>{{ pot }} cr</strong>
+        </div>
       </div>
     </div>
   </div>
@@ -112,7 +115,10 @@
 
           <div class="poker-seat__meta">
             <strong>{{ entry.seat.playerLabel }}</strong>
-            <span class="poker-seat__info">{{ entry.seat.stackRemaining }}$</span>
+            <span class="poker-seat__info">
+              <img src="/casino/chips/chip_3_4.png" alt="" aria-hidden="true">
+              {{ entry.seat.stackRemaining }}$
+            </span>
           </div>
         </div>
 
@@ -192,7 +198,10 @@
 
           <div class="poker-seat__meta">
             <strong>You</strong>
-            <span class="poker-seat__info">{{ self.seat.stackRemaining }} $</span>
+            <span class="poker-seat__info">
+              <img src="/casino/chips/chip_1_8.png" alt="" aria-hidden="true">
+              {{ self.seat.stackRemaining }} $
+            </span>
           </div>
         </div>
 
