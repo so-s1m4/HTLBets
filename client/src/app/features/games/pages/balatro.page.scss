@@ -2193,6 +2193,27 @@
   transform: translate(-50%, 0) scale(1);
 }
 
+.shop-shelf .card-hover-tip,
+.consumable-shelf .card-hover-tip {
+  top: auto !important;
+  bottom: calc(100% + .75rem) !important;
+  transform: translate(-50%, .35rem) scale(.96);
+  transform-origin: bottom center;
+}
+
+.shop-shelf .card-hover-tip::before,
+.consumable-shelf .card-hover-tip::before {
+  top: 100%;
+  bottom: auto;
+  border-top-color: #151319;
+  border-bottom-color: transparent;
+}
+
+.shop-shelf .shop-card:hover > .card-hover-tip,
+.consumable-shelf .consumable-card:hover > .card-hover-tip {
+  transform: translate(-50%, 0) scale(1);
+}
+
 .shop-owned-card > span { font-size: .52rem; text-transform: uppercase; }
 .shop-owned-card > img { width: 100%; min-height: 0; object-fit: cover; }
 .shop-owned-card > strong { overflow: hidden; font-size: .68rem; text-align: center; text-overflow: ellipsis; white-space: nowrap; }
@@ -2709,8 +2730,8 @@
 }
 
 .run-overlay {
-  position: absolute;
-  z-index: 20;
+  position: fixed;
+  z-index: 1000;
   inset: 0;
   display: grid;
   place-items: center;

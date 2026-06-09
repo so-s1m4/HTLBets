@@ -871,6 +871,9 @@ export class BalatroPageComponent {
 
     if (this.blindIndex() === 2) {
       if (this.ante() === MAX_ANTE) {
+        this.phase.set('playing');
+        this.selectedJoker.set(null);
+        this.selectedConsumable.set(null);
         this.gameOver.set(true);
         this.won.set(true);
         this.message.set(`Ante ${MAX_ANTE} cleared. The deck belongs to you.`);
@@ -910,6 +913,19 @@ export class BalatroPageComponent {
     if (this.blindIndex() === 2) this.jokerCounters.update((counters) => ({ ...counters, campfire: 0 }));
     this.rerollCount.set(0);
     this.freeRerollUsed.set(false);
+
+    if (this.blindIndex() === 2 && this.ante() === MAX_ANTE) {
+      this.phase.set('playing');
+      this.selectedJoker.set(null);
+      this.selectedConsumable.set(null);
+      this.hoveredJoker.set(null);
+      this.hoveredConsumable.set(null);
+      this.gameOver.set(true);
+      this.won.set(true);
+      this.message.set(`Ante ${MAX_ANTE} cleared. The deck belongs to you.`);
+      return;
+    }
+
     this.phase.set('shop');
     this.generateShop();
     this.message.set(`Blind defeated. Earned $${reward + bonus}.`);
