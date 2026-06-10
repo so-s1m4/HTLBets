@@ -280,6 +280,7 @@
 
 .joker {
   --joker-accent: #ff4e68;
+  position: relative;
   width: min(10rem, 20%);
   display: flex;
   flex-direction: column;
@@ -323,10 +324,12 @@
 }
 
 .joker__art {
-  width: 72%;
-  aspect-ratio: .88;
+  width: 100%;
+  aspect-ratio: 1;
   align-self: center;
+  border: 2px solid #17151b;
   border-radius: .3rem;
+  object-fit: contain;
   filter: drop-shadow(2px 3px 0 rgba(0,0,0,.3));
 }
 
@@ -353,17 +356,21 @@
 }
 
 .joker-status {
+  position: absolute;
+  z-index: 6;
+  right: .35rem;
+  bottom: 1.65rem;
   display: block;
-  max-width: 100%;
-  margin: .12rem auto 0;
-  padding: .12rem .25rem;
+  max-width: calc(100% - .7rem);
+  margin: 0;
+  padding: .16rem .34rem;
   overflow: hidden;
-  border: 1px solid rgba(15, 18, 22, .75);
-  border-radius: .22rem;
+  border: 2px solid #151319;
+  border-radius: .3rem;
   color: #fff7d6;
   background: #20252b;
-  box-shadow: 1px 2px 0 rgba(0,0,0,.35);
-  font-size: .4rem;
+  box-shadow: 2px 2px 0 rgba(0,0,0,.42);
+  font-size: .48rem;
   font-style: normal;
   font-weight: 950;
   line-height: 1.15;
@@ -514,8 +521,8 @@
 }
 
 .playing-card:hover {
-  z-index: 5;
-  transform: translateY(-0.65rem) rotate(0);
+  z-index: auto;
+  transform: translateY(-0.65rem) rotate(var(--card-tilt));
 }
 
 .playing-card.is-selected {
@@ -879,6 +886,7 @@
 
 .shop-card {
   --joker-accent: #ef5f6f;
+  position: relative;
   min-height: min(23rem, 52vh);
   display: flex;
   flex-direction: column;
@@ -913,9 +921,12 @@
 }
 
 .shop-card__art {
-  width: min(9rem, 86%);
-  aspect-ratio: .88;
+  width: 100%;
+  aspect-ratio: 1;
   margin: .5rem auto;
+  border: 2px solid #17151b;
+  border-radius: .3rem;
+  object-fit: contain;
 }
 
 .shop-card h3 {
@@ -1410,10 +1421,11 @@
 
 .balatro--playing .joker__art {
   width: 100%;
-  height: calc(100% - 1.1rem);
-  aspect-ratio: auto;
+  height: auto;
+  aspect-ratio: 1;
+  flex: 0 0 auto;
   border-radius: .18rem;
-  object-fit: cover;
+  object-fit: contain;
 }
 
 .balatro--playing .joker h3 {
@@ -1981,8 +1993,11 @@
 }
 
 .balatro--shop .shop-card__art {
-  width: min(6.5rem, 88%);
-  max-height: 8rem;
+  width: 100%;
+  max-height: none;
+  aspect-ratio: 1;
+  flex: 0 0 auto;
+  object-fit: contain;
 }
 
 .balatro--shop .shop-card h3 { font-size: .7rem; }
@@ -2407,7 +2422,14 @@
 }
 
 .shop-owned-card > span { font-size: .52rem; text-transform: uppercase; }
-.shop-owned-card > img { width: 100%; min-height: 0; object-fit: cover; }
+.shop-owned-card > img {
+  width: 100%;
+  min-height: 0;
+  aspect-ratio: 1;
+  border: 2px solid #17151b;
+  border-radius: .25rem;
+  object-fit: contain;
+}
 .shop-owned-card > strong { overflow: hidden; font-size: .68rem; text-align: center; text-overflow: ellipsis; white-space: nowrap; }
 .shop-owned-card .joker-status { font-size: .5rem; }
 .shop-owned-card > button { padding: .22rem; border-width: 2px; background: #d89b35; font-size: .56rem; }
@@ -2449,10 +2471,11 @@
 .balatro--shop .shop-card__art {
   width: 100%;
   max-height: none;
-  flex: 1 1 auto;
+  aspect-ratio: 1;
+  flex: 0 0 auto;
   margin: .28rem 0;
   border: 2px solid #17151b;
-  object-fit: cover;
+  object-fit: contain;
 }
 
 .balatro--shop .shop-card h3 {
@@ -2461,8 +2484,12 @@
 }
 
 .balatro--shop .shop-card .joker-status {
-  margin-bottom: .12rem;
+  bottom: .45rem;
   font-size: .58rem;
+}
+
+.balatro--shop .shop-card.is-selected .joker-status {
+  bottom: 3rem;
 }
 
 .balatro--shop .shop-card__rarity {
@@ -2473,69 +2500,6 @@
   min-height: 2.45rem;
   margin-top: .2rem;
   font-size: .82rem;
-}
-
-.joker-inspector {
-  display: grid;
-  grid-template-columns: 3rem 1fr auto;
-  align-items: center;
-  gap: .65rem;
-  padding: .45rem .6rem;
-  border: 3px solid #17151b;
-  border-radius: .5rem;
-  color: #17151b;
-  background: #fff1ba;
-  box-shadow: 4px 4px 0 rgba(0,0,0,.4);
-  animation: caption-pop calc(180ms / var(--game-speed)) ease both;
-}
-
-.joker-inspector img {
-  width: 3rem;
-  aspect-ratio: 1;
-}
-
-.joker-inspector strong,
-.joker-inspector p { margin: 0; }
-.joker-inspector strong { font-size: .92rem; }
-.joker-inspector p { margin-top: .2rem; font-size: .72rem; line-height: 1.35; }
-.joker-inspector > span { font-size: .62rem; text-transform: uppercase; }
-
-.inspector-actions {
-  display: grid;
-  justify-items: stretch;
-  gap: .35rem;
-  min-width: 5.5rem;
-  font-size: .62rem;
-  text-align: center;
-  text-transform: uppercase;
-}
-
-.inspector-actions button {
-  min-height: 2rem;
-  padding: .35rem .55rem;
-  border: 2px solid #17151b;
-  border-radius: .3rem;
-  color: white;
-  background: #e94c65;
-  box-shadow: 2px 3px 0 #17151b;
-  font: inherit;
-  font-size: .68rem;
-  font-weight: 950;
-  cursor: pointer;
-}
-
-.inspector-actions button:hover {
-  filter: brightness(1.08);
-  transform: translateY(-1px);
-}
-
-.table-joker-inspector {
-  position: absolute;
-  z-index: 12;
-  top: clamp(7.5rem, 12vw, 11rem);
-  left: 50%;
-  width: min(24rem, 70%);
-  transform: translateX(-50%);
 }
 
 .shop-stock {
@@ -2735,39 +2699,6 @@
   opacity: .48;
 }
 
-.consumable-inspector {
-  display: grid;
-  grid-template-columns: 3rem 1fr auto;
-  align-items: center;
-  gap: .65rem;
-  padding: .45rem .6rem;
-  border: 3px solid #17151b;
-  border-radius: .5rem;
-  color: #17151b;
-  background: #d8fbff;
-  box-shadow: 4px 4px 0 rgba(0,0,0,.4);
-  animation: caption-pop calc(180ms / var(--game-speed)) ease both;
-}
-
-.consumable-inspector > b {
-  --consumable-accent: #49c5ff;
-  display: grid;
-  width: 3rem;
-  aspect-ratio: 1;
-  place-items: center;
-  border: 2px solid #17151b;
-  border-radius: .35rem;
-  background: var(--consumable-accent);
-  font-size: 1.4rem;
-}
-
-.consumable-inspector strong,
-.consumable-inspector p { margin: 0; }
-.consumable-inspector strong { font-size: .92rem; }
-.consumable-inspector em { display: block; margin-top: .15rem; color: #157a8f; font-size: .62rem; font-style: normal; }
-.consumable-inspector p { margin-top: .18rem; font-size: .7rem; line-height: 1.35; }
-.consumable-inspector > span { font-size: .62rem; text-transform: uppercase; }
-
 .consumable-tray {
   position: absolute;
   z-index: 11;
@@ -2858,15 +2789,6 @@
   box-shadow: 2px 3px 0 rgba(0,0,0,.35);
   font-size: .62rem;
   line-height: 1.35;
-}
-
-.table-consumable-inspector {
-  position: absolute;
-  z-index: 12;
-  top: clamp(8.5rem, 13vw, 12rem);
-  left: 50%;
-  width: min(25rem, 72%);
-  transform: translateX(-50%);
 }
 
 @keyframes consumable-glitch-scan {
