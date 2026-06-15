@@ -132,8 +132,19 @@
 }
 
 @media (max-width: 640px) {
+  .roulette-board {
+    overflow-x: auto;
+    overflow-y: hidden;
+    scrollbar-width: thin;
+    overscroll-behavior-inline: contain;
+  }
+
+  .roulette-board__surface {
+    min-width: 34rem;
+  }
+
   .roulette-board__layout {
-    min-width: 31.5rem;
+    min-width: 34rem;
     grid-template-columns: 2.9rem minmax(28rem, 1fr);
     padding: 0.65rem;
   }

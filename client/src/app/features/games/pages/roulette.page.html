@@ -9,7 +9,7 @@
       (fullscreenChange)="setFullscreen($event)"
     >
       <app-card table [class.fullscreen]="isFullscreen()">
-        <div class="roulette-table">
+        <div class="roulette-table" [class.roulette-table--fullscreen]="isFullscreen()">
           <div class="roulette-table__topline">
             <span class="roulette-table__brand">Roulette Royale</span>
             <span class="pill">Round #{{ viewState()?.roundId || 1 }}</span>

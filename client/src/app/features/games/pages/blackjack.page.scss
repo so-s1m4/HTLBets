@@ -199,8 +199,8 @@
 }
 
 .blackjack-table--fullscreen {
-  min-height: calc(100vh - 7.5rem);
-  height: calc(100vh - 7.5rem);
+  min-height: calc(100dvh - 7.5rem);
+  height: calc(100dvh - 7.5rem);
   border-radius: clamp(1rem, 2vw, var(--radius-xl));
 }
 
@@ -288,15 +288,15 @@
 
 @media (max-width: 720px) {
   .table-fullscreen {
-    --blackjack-fullscreen-controls-height: 11rem;
+    --blackjack-fullscreen-controls-height: 9.5rem;
     --blackjack-card-width: clamp(58px, 18vw, 78px);
     --blackjack-card-height: clamp(80px, 25vw, 107px);
     --blackjack-hand-min-height: 8.5rem;
   }
 
   .blackjack-table--fullscreen {
-    min-height: calc(100vh - 6rem);
-    height: calc(100vh - 6rem);
+    min-height: 38rem;
+    height: max(38rem, calc(100dvh - 4.5rem));
   }
 
   .blackjack-table--fullscreen .blackjack-table__content {
@@ -304,7 +304,40 @@
   }
 
   .sidebar-fullscreen {
-    bottom: 0.6rem;
+    bottom: max(0.6rem, env(safe-area-inset-bottom));
     width: calc(100% - 1rem);
+  }
+
+  .sidebar-fullscreen .page-stack {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.55rem;
+  }
+
+  .blackjack-table--fullscreen .blackjack-table__hand-zone--dealer {
+    top: 0.8rem;
+  }
+
+  .blackjack-table--fullscreen .blackjack-table__deck {
+    top: 48%;
+    width: 3.5rem;
+    height: 4.8rem;
+  }
+}
+
+@media (max-height: 620px) and (orientation: landscape) {
+  .table-fullscreen {
+    --blackjack-fullscreen-controls-height: 6.5rem;
+    --blackjack-card-width: clamp(48px, 8vh, 66px);
+    --blackjack-card-height: clamp(66px, 12vh, 91px);
+    --blackjack-hand-min-height: 6.8rem;
+  }
+
+  .blackjack-table--fullscreen {
+    min-height: 34rem;
+    height: 34rem;
+  }
+
+  .sidebar-fullscreen {
+    width: min(48rem, calc(100% - 5rem));
   }
 }

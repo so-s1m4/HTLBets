@@ -1,29 +1,48 @@
 <div class="lobby-shell">
   <section class="lobby-welcome">
+    <div class="lobby-welcome__copy">
+      <span class="lobby-welcome__eyebrow">HTL Mini Games</span>
+      <h1>Good evening, {{ displayName() }}</h1>
+      <p>Choose a table, place your bet, and make this round count.</p>
+    </div>
 
-    <div style="display: flex; align-items: center; justify-content: space-between">
-        <h2 class="lobby-welcome__section-title">Open a table</h2>
-
-
-        <div class="lobby-toolbar">
-            <label class="lobby-search" aria-label="Search games">
-                <span class="lobby-search__icon">⌕</span>
-                <input
-                        type="search"
-                        placeholder="Search games..."
-                        [value]="searchValue()"
-                        (input)="searchValue.set($any($event.target).value)"
-                />
-            </label>
-            <button type="button" class="lobby-filter-button">
-                <span>☰</span>
-                <span>Filters</span>
-            </button>
+    <div class="lobby-welcome__stats" aria-label="Lobby status">
+      <div class="lobby-stat">
+        <span class="lobby-stat__indicator"></span>
+        <div>
+          <strong>{{ visibleGames().length }}</strong>
+          <span>tables open</span>
         </div>
+      </div>
+      <div class="lobby-stat">
+        <span class="lobby-stat__icon">◎</span>
+        <div>
+          <strong>{{ compactNumber(balance()) }}</strong>
+          <span>your credits</span>
+        </div>
+      </div>
     </div>
   </section>
 
   <section class="lobby-section">
+    <div class="lobby-section__header lobby-section__header--games">
+      <div>
+        <span class="lobby-section__eyebrow">Casino floor</span>
+        <h2>Open a table</h2>
+      </div>
+
+      <div class="lobby-toolbar">
+        <label class="lobby-search" aria-label="Search games">
+          <span class="lobby-search__icon">⌕</span>
+          <input
+            type="search"
+            placeholder="Search games..."
+            [value]="searchValue()"
+            (input)="searchValue.set($any($event.target).value)"
+          />
+        </label>
+      </div>
+    </div>
 
     <div class="lobby-games-grid">
       @for (game of visibleGames(); track game.route) {
@@ -40,10 +59,18 @@
 
             <div class="lobby-game-card__footer">
               <div class="lobby-game-card__players">
-
+                <span></span>
+                {{ game.players }} playing
               </div>
 
-              <a [routerLink]="game.route" class="lobby-play-button">Play</a>
+              @if (isGameUnavailable(game)) {
+                <span class="lobby-play-button lobby-play-button--disabled">Desktop only</span>
+              } @else {
+                <a [routerLink]="game.route" class="lobby-play-button">
+                  Play
+                  <span aria-hidden="true">→</span>
+                </a>
+              }
             </div>
           </div>
 
@@ -72,6 +99,11 @@
             }
           </div>
         </article>
+      } @empty {
+        <div class="lobby-empty">
+          <strong>No tables found</strong>
+          <span>Try another game name.</span>
+        </div>
       }
     </div>
   </section>
@@ -102,6 +134,7 @@
 
     <a routerLink="/games/leaderboard" class="lobby-banner">
       <div class="lobby-banner__copy">
+        <span class="lobby-banner__eyebrow">Hall of fame</span>
         <strong>Leaderboard</strong>
         <span>Open the full ranking browser and switch between the top money, losses, and wins.</span>
       </div>

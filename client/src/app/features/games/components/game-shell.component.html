@@ -36,6 +36,16 @@
       </app-card>
     }
   } @else {
+    <button
+      class="game-shell__exit-fullscreen"
+      type="button"
+      aria-label="Exit fullscreen"
+      title="Exit fullscreen"
+      (click)="toggleFullscreen()"
+    >
+      <span aria-hidden="true">×</span>
+    </button>
+
     @if (error) {
       <app-card class="game-shell__error" tone="muted">
         <p class="status-copy text-danger">{{ error }}</p>

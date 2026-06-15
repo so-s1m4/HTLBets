@@ -94,6 +94,12 @@
   letter-spacing: -0.02em;
 }
 
+@media (min-width: 901px) {
+  .bottom-nav {
+    display: none;
+  }
+}
+
 @media (max-width: 640px) {
   .bottom-nav {
     width: min(calc(100% - 0.5rem), 100%);

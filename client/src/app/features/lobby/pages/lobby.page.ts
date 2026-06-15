@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, DestroyRef, computed, inject, signal } from '@angular/core';
+import { Component, DestroyRef, HostListener, computed, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 
 import type { LeaderboardEntry, LeaderboardSnapshot } from '../../../core/models/user.model';
@@ -20,6 +20,7 @@ interface LobbyGameCard {
   queueCopy: string;
   badge: 'live' | 'new';
   previewImage?: string;
+  desktopOnly?: boolean;
 }
 
 interface LobbyHighlightCard {
@@ -157,10 +158,12 @@ export class LobbyPageComponent {
       theme: 'balatro',
       players: 1,
       queueCopy: 'Solo run',
-      badge: 'new'
+      badge: 'new',
+      desktopOnly: true
     }
   ];
 
+  readonly isPhone = signal(this.detectPhone());
   readonly visibleGames = computed(() => {
     const filtered = this.gameCatalog.visibleItems(this.games.map((game) => ({ ...game, gameId: game.theme })));
     const query = this.searchValue().trim().toLowerCase();
@@ -174,6 +177,19 @@ export class LobbyPageComponent {
     );
   });
   readonly queueGames = computed(() => this.visibleGames().slice(0, 4));
+
+  @HostListener('window:resize')
+  onWindowResize(): void {
+    this.isPhone.set(this.detectPhone());
+  }
+
+  isGameUnavailable(game: LobbyGameCard): boolean {
+    return Boolean(game.desktopOnly && this.isPhone());
+  }
+
+  private detectPhone(): boolean {
+    return typeof window !== 'undefined' && Math.min(window.innerWidth, window.innerHeight) <= 600;
+  }
   readonly topHighlights = computed<LobbyHighlightCard[]>(() => {
     const board = this.leaderboard();
     return [

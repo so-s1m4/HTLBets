@@ -404,7 +404,7 @@ main {
 
 @media (min-width: 768px) {
   :root {
-    --content-width: 70vw;
+    --content-width: min(92vw, 1800px);
     --page-padding: 1.5rem;
   }
 
@@ -414,6 +414,13 @@ main {
 
   .hide-mobile {
     display: initial;
+  }
+}
+
+@media (min-width: 2200px) {
+  :root {
+    --content-width: min(88vw, 1920px);
+    --page-padding: 2rem;
   }
 }
 

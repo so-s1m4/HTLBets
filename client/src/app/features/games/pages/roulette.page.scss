@@ -14,6 +14,12 @@ h3 {
   padding: 0.25rem;
 }
 
+.roulette-table--fullscreen {
+  grid-template-rows: auto minmax(0, 1fr);
+  min-height: 0;
+  height: 100%;
+}
+
 .roulette-table__topline {
   display: flex;
   align-items: center;
@@ -85,6 +91,14 @@ h3 {
   border-radius: 32px;
   width: 100%;
   aspect-ratio: 16 / 9;
+}
+
+.roulette-table--fullscreen .roulette-table__surface {
+  align-self: center;
+  justify-self: center;
+  width: min(100%, calc((100dvh - 9rem) * 2.044));
+  max-height: 100%;
+  aspect-ratio: 5852 / 2863;
 }
 
 .roulette-table__background {
@@ -389,9 +403,29 @@ h3 {
     padding: 0;
   }
 
+  .roulette-table--fullscreen {
+    display: block;
+    height: auto;
+  }
+
   .roulette-table__surface {
-    padding: 0.75rem;
-    border-radius: 26px;
+    display: grid;
+    grid-template-rows: auto auto auto;
+    gap: 0.75rem;
+    min-height: 0;
+    aspect-ratio: auto;
+    padding: 0.65rem;
+    border: 1px solid rgba(149, 171, 211, 0.12);
+    border-radius: 1.25rem;
+    background:
+      radial-gradient(circle at 50% 16%, rgba(82, 190, 154, 0.16), transparent 28%),
+      linear-gradient(180deg, rgba(13, 31, 35, 0.98), rgba(7, 15, 22, 0.98));
+  }
+
+  .roulette-table--fullscreen .roulette-table__surface {
+    width: 100%;
+    max-height: none;
+    aspect-ratio: auto;
   }
 
   .roulette-table__topline {
@@ -405,12 +439,23 @@ h3 {
   }
 
   .roulette-table__wheel-shell {
-    width: min(100%, 18.5rem);
+    width: min(100%, 14rem);
+  }
+
+  .roulette-table__wheel-bay {
+    position: relative;
+    inset: auto;
+    width: 100%;
+    transform: none;
   }
 
   .roulette-table__board-bay {
-    padding: 0.82rem;
-    border-radius: 24px;
+    position: relative;
+    inset: auto;
+    width: 100%;
+    height: 12rem;
+    padding: 0.45rem;
+    border-radius: 1rem;
   }
 
   .roulette-table__board-head {
@@ -418,20 +463,34 @@ h3 {
   }
 
   .roulette-table__rail-tray {
+    width: 100%;
+    overflow-x: auto;
     gap: 0.65rem;
     padding: 0.75rem;
   }
 
   .roulette-table__chip-row {
+    flex-shrink: 0;
     gap: 0.55rem;
   }
 
+  .roulette-table__rail {
+    position: relative;
+    inset: auto;
+    display: block;
+  }
+
   .roulette-chip {
-    font-size: 0.98rem;
+    width: 3.25rem;
+    height: 3.25rem;
   }
 
   .roulette-highlight__number strong {
     font-size: 2.25rem;
+  }
+
+  .roulette-table__background {
+    display: none;
   }
 }
 

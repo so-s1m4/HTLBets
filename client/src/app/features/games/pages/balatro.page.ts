@@ -339,6 +339,10 @@ export class BalatroPageComponent {
   readonly playedCards = signal<PlayingCard[]>([]);
   readonly playedCardsFlying = signal(false);
   readonly deckViewOpen = signal(false);
+  readonly draggedCardId = signal<string | null>(null);
+  readonly draggedJokerInstanceId = signal<string | null>(null);
+  private suppressCardClickUntil = 0;
+  private suppressJokerClickUntil = 0;
 
   readonly selected = computed(() => this.hand().filter((card) => card.selected));
   readonly visibleJoker = computed(() => this.hoveredJoker() || this.selectedJoker());
@@ -448,6 +452,7 @@ export class BalatroPageComponent {
   }
 
   showJoker(joker: JokerDefinition): void {
+    if (Date.now() < this.suppressJokerClickUntil) return;
     this.selectedConsumable.set(null);
     this.selectedJoker.set(this.selectedJoker()?.id === joker.id ? null : joker);
   }
@@ -652,7 +657,12 @@ export class BalatroPageComponent {
   }
 
   toggleCard(id: string): void {
-    if (this.phase() !== 'playing' || this.gameOver() || this.isChangingHand()) {
+    if (
+      this.phase() !== 'playing' ||
+      this.gameOver() ||
+      this.isChangingHand() ||
+      Date.now() < this.suppressCardClickUntil
+    ) {
       return;
     }
 
@@ -665,6 +675,68 @@ export class BalatroPageComponent {
     });
     this.lastResult.set(null);
     this.resultFading.set(false);
+  }
+
+  startCardDrag(id: string, event: DragEvent): void {
+    if (this.phase() !== 'playing' || this.isScoring() || this.isChangingHand() || this.gameOver()) {
+      event.preventDefault();
+      return;
+    }
+
+    this.draggedCardId.set(id);
+    this.suppressCardClickUntil = Date.now() + 500;
+    if (event.dataTransfer) {
+      event.dataTransfer.effectAllowed = 'move';
+      event.dataTransfer.setData('text/plain', id);
+    }
+  }
+
+  moveCardBefore(targetId: string, event: DragEvent): void {
+    event.preventDefault();
+    const sourceId = this.draggedCardId();
+    if (!sourceId || sourceId === targetId) return;
+    this.hand.update((cards) =>
+      this.moveItem(cards, sourceId, targetId, (card) => card.id, this.shouldInsertAfter(event))
+    );
+  }
+
+  endCardDrag(): void {
+    this.draggedCardId.set(null);
+    this.suppressCardClickUntil = Date.now() + 180;
+  }
+
+  startJokerDrag(instanceId: string, event: DragEvent): void {
+    if (this.isScoring() || this.isChangingHand() || this.gameOver()) {
+      event.preventDefault();
+      return;
+    }
+
+    this.draggedJokerInstanceId.set(instanceId);
+    this.suppressJokerClickUntil = Date.now() + 500;
+    if (event.dataTransfer) {
+      event.dataTransfer.effectAllowed = 'move';
+      event.dataTransfer.setData('text/plain', instanceId);
+    }
+  }
+
+  moveJokerBefore(targetInstanceId: string, event: DragEvent): void {
+    event.preventDefault();
+    const sourceId = this.draggedJokerInstanceId();
+    if (!sourceId || sourceId === targetInstanceId) return;
+    this.ownedJokers.update((jokers) =>
+      this.moveItem(
+        jokers,
+        sourceId,
+        targetInstanceId,
+        (joker) => joker.instanceId,
+        this.shouldInsertAfter(event)
+      )
+    );
+  }
+
+  endJokerDrag(): void {
+    this.draggedJokerInstanceId.set(null);
+    this.suppressJokerClickUntil = Date.now() + 180;
   }
 
   async playHand(): Promise<void> {
@@ -1142,8 +1214,9 @@ export class BalatroPageComponent {
     let chips = baseChips + scoring.reduce((sum, card) => sum + RANK_VALUE[card.rank], 0);
     let xMult = 1;
     let money = 0;
-    const faceCards = scoring.filter((card) => this.isFace(card));
+    let faceCards = scoring.filter((card) => this.isNaturalFace(card));
     const heldCards = this.hand().filter((card) => !cards.some((played) => played.id === card.id));
+    let heldFaceCards = heldCards.filter((card) => this.isNaturalFace(card));
     const ids = new Set(this.ownedJokers().map((joker) => joker.id));
     const hasHand = (hand: HandName): boolean => name === hand || (hand === 'Pair' && ['Two Pair', 'Full House', 'Four of a Kind'].includes(name));
 
@@ -1231,6 +1304,10 @@ export class BalatroPageComponent {
         case 'midas-mask': money += faceCards.length; break;
         case 'mime': mult += heldCards.filter((card) => card.rank === 'Q').length * 13; break;
         case 'onyx-agate': mult += scoring.filter((card) => card.suit === 'clubs').length * 7; break;
+        case 'pareidolia':
+          faceCards = scoring;
+          heldFaceCards = heldCards;
+          break;
         case 'ramen': xMult *= Math.max(1, 2 - this.counter('ramen') * 0.01); break;
         case 'rough-gem': money += scoring.filter((card) => card.suit === 'diamonds').length; break;
         case 'seeing-double': if (scoring.some((card) => card.suit === 'clubs') && scoring.some((card) => card.suit !== 'clubs')) xMult *= 2; break;
@@ -1265,7 +1342,7 @@ export class BalatroPageComponent {
         case 'yorick': xMult *= 1 + this.counter('yorick'); break;
         case 'business-card': if (resolveRandom) money += faceCards.filter(() => Math.random() < 0.5).length * 2; break;
         case 'golden-ticket': if (resolveRandom) money += faceCards.filter(() => Math.random() < 0.25).length * 4; break;
-        case 'reserved-parking': if (resolveRandom) money += heldCards.filter((card) => this.isFace(card) && Math.random() < 0.5).length; break;
+        case 'reserved-parking': if (resolveRandom) money += heldFaceCards.filter(() => Math.random() < 0.5).length; break;
         case '8-ball': if (resolveRandom) money += scoring.filter((card) => card.rank === '8' && Math.random() < 0.25).length * 2; break;
       }
     }
@@ -1324,11 +1401,9 @@ export class BalatroPageComponent {
       await this.delay(300);
     }
 
-    const kept = this.sortHand(
-      this.hand()
-        .filter((card) => !selectedIds.has(card.id))
-        .map((card) => ({ ...card, selected: false }))
-    );
+    const kept = this.hand()
+      .filter((card) => !selectedIds.has(card.id))
+      .map((card) => ({ ...card, selected: false }));
     const deck = [...this.deck()];
     const dealt: PlayingCard[] = [];
     this.hand.set(kept);
@@ -1347,7 +1422,7 @@ export class BalatroPageComponent {
 
       dealt.push({ ...nextCard, selected: false });
       this.dealingCardIds.set(new Set(dealt.map((card) => card.id)));
-      this.hand.set(this.sortHand([...kept, ...dealt]));
+      this.hand.set([...kept, ...dealt]);
       await this.delay(110);
     }
 
@@ -1362,6 +1437,31 @@ export class BalatroPageComponent {
       POKER_VALUE[right.rank] - POKER_VALUE[left.rank] ||
       SUITS.indexOf(left.suit) - SUITS.indexOf(right.suit)
     );
+  }
+
+  private moveItem<T>(
+    items: T[],
+    sourceId: string,
+    targetId: string,
+    identify: (item: T) => string,
+    insertAfter: boolean
+  ): T[] {
+    const sourceIndex = items.findIndex((item) => identify(item) === sourceId);
+    if (sourceIndex < 0) return items;
+
+    const reordered = [...items];
+    const [moved] = reordered.splice(sourceIndex, 1);
+    const targetIndex = reordered.findIndex((item) => identify(item) === targetId);
+    if (targetIndex < 0) return items;
+    reordered.splice(targetIndex + Number(insertAfter), 0, moved);
+    return reordered;
+  }
+
+  private shouldInsertAfter(event: DragEvent): boolean {
+    const target = event.currentTarget as HTMLElement | null;
+    if (!target) return false;
+    const rect = target.getBoundingClientRect();
+    return event.clientX > rect.left + rect.width / 2;
   }
 
   private counter(id: string): number {
@@ -1397,6 +1497,10 @@ export class BalatroPageComponent {
 
   private isFace(card: PlayingCard): boolean {
     return this.hasJoker('pareidolia') || card.rank === 'J' || card.rank === 'Q' || card.rank === 'K';
+  }
+
+  private isNaturalFace(card: PlayingCard): boolean {
+    return card.rank === 'J' || card.rank === 'Q' || card.rank === 'K';
   }
 
   private initialDiscards(): number {

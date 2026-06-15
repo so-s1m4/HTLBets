@@ -8,8 +8,12 @@
       inset: 0;
       z-index: 1000;
       width: 100vw;
-      height: 100vh;
-      padding: clamp(0.75rem, 2vw, 1.5rem);
+      height: 100dvh;
+      padding:
+        max(clamp(0.75rem, 2vw, 1.5rem), env(safe-area-inset-top))
+        max(clamp(0.75rem, 2vw, 1.5rem), env(safe-area-inset-right))
+        max(clamp(0.75rem, 2vw, 1.5rem), env(safe-area-inset-bottom))
+        max(clamp(0.75rem, 2vw, 1.5rem), env(safe-area-inset-left));
       overflow: hidden;
       background: var(--gradient-bg);
     }
@@ -123,6 +127,32 @@
       font-weight: 700;
     }
 
+    .game-shell__exit-fullscreen {
+      position: fixed;
+      top: max(0.7rem, env(safe-area-inset-top));
+      right: max(0.7rem, env(safe-area-inset-right));
+      z-index: 1100;
+      display: grid;
+      place-items: center;
+      width: 2.75rem;
+      height: 2.75rem;
+      padding: 0;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 50%;
+      background: rgba(4, 8, 18, 0.88);
+      color: #fff;
+      box-shadow: 0 12px 28px rgba(0, 0, 0, 0.34);
+      backdrop-filter: blur(14px);
+      cursor: pointer;
+    }
+
+    .game-shell__exit-fullscreen span {
+      font-size: 1.65rem;
+      font-weight: 300;
+      line-height: 1;
+      transform: translateY(-0.06rem);
+    }
+
     .game-shell__fullscreen:disabled {
       opacity: 0.45;
       cursor: not-allowed;
@@ -223,5 +253,44 @@
         align-items: flex-start;
         flex-direction: column;
         gap: 0.55rem;
+      }
+
+      .game-shell--fullscreen:not(.game-shell--edge-to-edge) {
+        padding:
+          max(3.4rem, calc(env(safe-area-inset-top) + 3rem))
+          max(0.55rem, env(safe-area-inset-right))
+          max(0.55rem, env(safe-area-inset-bottom))
+          max(0.55rem, env(safe-area-inset-left));
+        overflow-x: hidden;
+        overflow-y: auto;
+        overscroll-behavior: contain;
+      }
+
+      .game-shell--fullscreen:not(.game-shell--edge-to-edge) .game-shell__grid {
+        min-height: 100%;
+        height: auto;
+      }
+
+      .game-shell__exit-fullscreen {
+        top: max(0.45rem, env(safe-area-inset-top));
+        right: max(0.45rem, env(safe-area-inset-right));
+        width: 2.5rem;
+        height: 2.5rem;
+      }
+
+      .game-shell--fullscreen .game-shell__error {
+        top: max(3.35rem, calc(env(safe-area-inset-top) + 3rem));
+        width: calc(100vw - 1rem);
+      }
+    }
+
+    @media (max-height: 620px) and (orientation: landscape) {
+      .game-shell--fullscreen:not(.game-shell--edge-to-edge) {
+        overflow-y: auto;
+      }
+
+      .game-shell--fullscreen:not(.game-shell--edge-to-edge) .game-shell__grid {
+        height: auto;
+        min-height: 100%;
       }
     }

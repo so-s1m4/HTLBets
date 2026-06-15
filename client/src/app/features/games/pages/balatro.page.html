@@ -136,9 +136,14 @@
                 <article
                   class="shop-owned-card"
                   [class.is-selected]="selectedJoker()?.id === joker.id"
+                  [class.is-dragging]="draggedJokerInstanceId() === joker.instanceId"
                   [style.--joker-accent]="joker.accent"
                   [style.--tilt]="(index - 2) * 1.2 + 'deg'"
+                  [draggable]="!isScoring() && !isChangingHand() && !gameOver()"
                   (click)="showJoker(joker)"
+                  (dragstart)="startJokerDrag(joker.instanceId, $event)"
+                  (dragover)="moveJokerBefore(joker.instanceId, $event)"
+                  (dragend)="endJokerDrag()"
                 >
                   <span>{{ joker.rarity }}</span>
                   <img class="joker-art" [src]="jokerArtUrl(joker)" [alt]="joker.name" />
@@ -321,7 +326,12 @@
                 [style.--tilt]="(index - 1) * 2 + 'deg'"
                 [class.is-triggering]="activeJokerInstanceId() === joker.instanceId"
                 [class.is-selected]="selectedJoker()?.id === joker.id"
+                [class.is-dragging]="draggedJokerInstanceId() === joker.instanceId"
+                [draggable]="!isScoring() && !isChangingHand() && !gameOver()"
                 (click)="showJoker(joker)"
+                (dragstart)="startJokerDrag(joker.instanceId, $event)"
+                (dragover)="moveJokerBefore(joker.instanceId, $event)"
+                (dragend)="endJokerDrag()"
               >
                 <span class="joker__edition">{{ joker.rarity }}</span>
                 <img
@@ -456,9 +466,14 @@
                 [class.is-counting]="activeScoringCardId() === card.id"
                 [class.is-discarding]="discardingCardIds().has(card.id)"
                 [class.is-dealing]="dealingCardIds().has(card.id)"
+                [class.is-dragging]="draggedCardId() === card.id"
                 [style.--card-index]="index"
                 [style.--card-tilt]="(index - 3.5) * 1.2 + 'deg'"
+                [draggable]="!isScoring() && !isChangingHand() && !gameOver()"
                 (click)="toggleCard(card.id)"
+                (dragstart)="startCardDrag(card.id, $event)"
+                (dragover)="moveCardBefore(card.id, $event)"
+                (dragend)="endCardDrag()"
               >
                 <img
                   class="card-face-image"

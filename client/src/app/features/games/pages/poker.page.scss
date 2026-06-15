@@ -2,6 +2,20 @@
   display: block;
 }
 
+.game-lobby {
+  display: grid;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  place-items: center;
+  padding: clamp(1rem, 3vw, 2.5rem);
+  overflow-y: auto;
+}
+
+.game-lobby > .page-stack {
+  width: min(100%, 72rem);
+}
+
 .auth-split-shell {
   display: grid;
   gap: 1rem;
@@ -130,7 +144,7 @@
   display: grid;
   grid-template-rows: auto;
   align-content: stretch;
-  min-height: calc(100vh - 8rem);
+  min-height: calc(100dvh - 8rem);
 }
 
 .poker-table-status-card--hidden {
@@ -489,7 +503,12 @@
   }
 }
 
-@media (max-width: 720px) {
+@media (max-width: 980px) {
+  .game-lobby {
+    place-items: start center;
+    padding: 0.75rem;
+  }
+
   .form-grid {
     grid-template-columns: 1fr;
   }
@@ -505,6 +524,29 @@
 
   .media-toggle-row {
     grid-template-columns: 1fr;
+  }
+
+  .poker-table-shell--fullscreen {
+    min-height: 0;
+  }
+
+  .poker-sidebar-fullscreen {
+    position: relative;
+    inset: auto;
+    width: 100%;
+    max-height: none;
+    overflow: visible;
+    transform: none;
+    padding: 0;
+  }
+
+  .poker-sidebar-fullscreen::before {
+    display: none;
+  }
+
+  .poker-sidebar-fullscreen .glass-stat-grid,
+  .poker-sidebar-fullscreen .media-toggle-row {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 

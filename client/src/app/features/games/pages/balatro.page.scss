@@ -281,6 +281,7 @@
 .joker {
   --joker-accent: #ff4e68;
   position: relative;
+  cursor: grab;
   width: min(10rem, 20%);
   display: flex;
   flex-direction: column;
@@ -501,7 +502,20 @@
   transform: rotate(var(--card-tilt));
   transform-origin: 50% 120%;
   transition: transform 150ms ease, filter 150ms ease, box-shadow 150ms ease;
-  cursor: pointer;
+  cursor: grab;
+}
+
+.playing-card:active,
+.joker:active,
+.shop-owned-card:active {
+  cursor: grabbing;
+}
+
+.playing-card.is-dragging,
+.joker.is-dragging,
+.shop-owned-card.is-dragging {
+  opacity: 0.58;
+  filter: saturate(0.72);
 }
 
 .card-face-image {
@@ -2917,7 +2931,7 @@
 
 .pause-card--collection {
   width: min(72rem, calc(100vw - 2rem));
-  max-height: calc(100vh - 2rem);
+  max-height: calc(100dvh - 2rem);
   padding: clamp(1rem, 2vw, 1.6rem);
   transform: rotate(.15deg);
 }

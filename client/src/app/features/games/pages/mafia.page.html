@@ -9,7 +9,7 @@
   (fullscreenChange)="setFullscreen($event)"
 >
   @if (lobbyState(); as lobby) {
-    <div table [class.fullscreen]="isFullscreen()">
+    <div table class="game-lobby" [class.fullscreen]="isFullscreen()">
       <div class="page-stack">
         <div class="auth-split-shell">
           <app-card tone="muted">

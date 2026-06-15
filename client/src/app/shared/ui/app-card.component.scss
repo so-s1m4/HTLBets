@@ -92,3 +92,30 @@
         box-shadow: var(--shadow-panel-strong);
       }
     }
+
+    @media (max-width: 720px) {
+      :host(.fullscreen) {
+        height: auto;
+        min-height: 100%;
+      }
+
+      :host(.fullscreen) .app-card {
+        height: auto;
+        min-height: 100%;
+        padding: 0.45rem;
+        border-radius: 1rem;
+      }
+    }
+
+    @media (max-height: 620px) and (orientation: landscape) {
+      :host(.fullscreen),
+      :host(.fullscreen) .app-card {
+        height: auto;
+        min-height: 100%;
+      }
+
+      :host(.fullscreen) .app-card {
+        padding: 0.45rem;
+        border-radius: 1rem;
+      }
+    }

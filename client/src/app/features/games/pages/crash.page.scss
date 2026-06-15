@@ -623,8 +623,30 @@
     min-height: 0;
   }
 
+  .crash-desk--fullscreen {
+    height: auto;
+    min-height: 0;
+  }
+
+  .crash-desk--fullscreen .crash-desk__content,
+  .crash-desk--fullscreen .crash-desk__body,
+  .crash-desk--fullscreen .crash-stage {
+    height: auto;
+  }
+
   .crash-desk__content {
-    padding: 0.9rem;
+    gap: 0.7rem;
+    padding: 0.55rem;
+  }
+
+  .crash-desk__topline {
+    align-items: flex-start;
+  }
+
+  .crash-chip {
+    min-width: 0;
+    flex: 1 1 7rem;
+    padding: 0.6rem 0.7rem;
   }
 
   .crash-panel--stats {
@@ -636,12 +658,13 @@
   }
 
   .crash-stage {
-    padding: 0.95rem;
-    min-height: 28rem;
+    gap: 0.7rem;
+    padding: 0.7rem;
+    min-height: 24rem;
   }
 
   .crash-stage__chart {
-    min-height: 19rem;
+    min-height: 13rem;
   }
 
   .crash-stage__chart-head {
@@ -657,5 +680,35 @@
 
   .crash-stage__hud strong {
     font-size: clamp(2.2rem, 10vw, 3.4rem);
+  }
+
+  .crash-stage__message,
+  .crash-stage__round-meta,
+  .crash-panel--stats,
+  .crash-panel--players {
+    display: none;
+  }
+
+  .crash-pit {
+    gap: 0.65rem;
+  }
+
+  .crash-panel {
+    padding: 0.75rem;
+  }
+
+  .crash-panel--action .status-copy {
+    display: none;
+  }
+}
+
+@media (min-width: 1800px) {
+  .crash-desk__body,
+  .crash-desk--fullscreen .crash-desk__body {
+    grid-template-columns: minmax(0, 1.9fr) minmax(22rem, 0.65fr);
+  }
+
+  .crash-stage {
+    min-height: 38rem;
   }
 }

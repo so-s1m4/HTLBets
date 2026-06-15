@@ -1,6 +1,6 @@
     .mobile-shell {
       position: relative;
-      min-height: 100vh;
+      min-height: 100dvh;
       display: grid;
       grid-template-rows: auto 1fr auto;
       isolation: isolate;
@@ -45,6 +45,12 @@
     @media (min-width: 768px) {
       .mobile-shell__content {
         padding-top: 5.6rem;
+      }
+    }
+
+    @media (min-width: 901px) {
+      .mobile-shell__content {
+        padding-bottom: 4rem;
       }
     }
 

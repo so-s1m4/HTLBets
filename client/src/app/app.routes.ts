@@ -1,6 +1,7 @@
 import { Routes } from '@angular/router';
 
 import { adminGuard, authGuard, guestOnlyGuard } from './core/guards/auth.guard';
+import { desktopOnlyGuard } from './core/guards/desktop-only.guard';
 import { gameAvailabilityGuard } from './core/guards/game-availability.guard';
 import { MobileShellComponent } from './layout/mobile-shell/mobile-shell.component';
 
@@ -108,7 +109,7 @@ export const routes: Routes = [
       {
         path: 'games/balatro',
         data: { title: 'Balatro', gameId: 'balatro' },
-        canActivate: [gameAvailabilityGuard],
+        canActivate: [gameAvailabilityGuard, desktopOnlyGuard],
         loadComponent: () =>
           import('./features/games/pages/balatro.page').then((module) => module.BalatroPageComponent)
       },

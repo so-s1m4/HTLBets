@@ -92,7 +92,7 @@
 }
 
 :host-context(.poker-table-shell--fullscreen) .poker-table__arena {
-  min-height: calc(100vh - 16rem);
+  min-height: calc(100dvh - 16rem);
 }
 
 .poker-board,
@@ -473,25 +473,91 @@
 }
 
 @media (max-width: 980px) {
-  .poker-table__arena, .poker-table__background {
-    rotate: 90deg;
+  .poker-table {
+    overflow-x: auto;
+    overscroll-behavior-inline: contain;
   }
 
-  .poker-board,
-  .poker-seat,
-  .poker-seat--self,
-  .poker-seat--orbit {
-    rotate: -90deg;
-    transform: translate(50%);
+  .poker-table__header {
+    position: sticky;
+    left: 0;
+    width: min(calc(100vw - 3rem), 100%);
   }
 
-  .poker-seat__cards--self,
-  .poker-seat__cards {
-    justify-content: center;
+  .poker-table__arena,
+  .poker-table__background {
+    min-width: 48rem;
   }
 
   .poker-card {
     width: 3.2rem;
     height: 4.45rem;
+  }
+}
+
+@media (max-width: 980px) {
+  .poker-table {
+    padding: 0.65rem;
+    overflow: hidden;
+  }
+
+  .poker-table__arena,
+  .poker-table__background {
+    min-width: 0;
+    width: 100%;
+  }
+
+  .poker-table__arena {
+    min-height: 31rem;
+    border-radius: 1.25rem;
+  }
+
+  :host-context(.poker-table-shell--fullscreen) .poker-table__arena {
+    min-height: 31rem;
+  }
+
+  .poker-table__header {
+    position: relative;
+    width: 100%;
+  }
+
+  .poker-table__header-actions {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .poker-table__pot {
+    min-width: 6.5rem;
+    padding: 0.65rem 0.75rem;
+  }
+
+  .poker-board {
+    width: 92%;
+    padding: 0.55rem;
+  }
+
+  .poker-board__cards,
+  .poker-seat__cards {
+    gap: 0.25rem;
+  }
+
+  .poker-card {
+    width: 2.25rem;
+    height: 3.15rem;
+  }
+
+  .poker-seat {
+    gap: 0.25rem;
+    padding: 0.35rem;
+  }
+
+  .poker-seat--orbit {
+    transform: translate(-50%, -50%) scale(0.62);
+  }
+
+  .poker-seat--self {
+    bottom: 0.75rem;
+    transform: translateX(-50%) scale(0.72);
+    transform-origin: bottom center;
   }
 }
