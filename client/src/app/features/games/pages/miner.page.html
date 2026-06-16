@@ -4,9 +4,10 @@
   [connectionState]="socket.connectionState()"
   [currentBet]="currentBet()"
   [error]="socket.lastError() || ''"
+  [hasSidebar]="false"
   (fullscreenChange)="setFullscreen($event)"
 >
-  <app-card table [class.fullscreen]="isFullscreen()">
+  <app-card table class="miner-table-card" [class.fullscreen]="isFullscreen()" [class.miner-table-card--fullscreen]="isFullscreen()">
     <div class="miner-table" [class.miner-table--fullscreen]="isFullscreen()">
       <div class="miner-table__surface"></div>
 
@@ -59,39 +60,39 @@
 
         <p class="status-copy miner-table__message">{{ viewState()?.message || 'Configure the round and start digging.' }}</p>
       </div>
-    </div>
-  </app-card>
 
-  <app-card sidebar class="miner-sidebar" [class.sidebar-fullscreen]="isFullscreen()">
-    <div class="page-stack">
-      @if (isRoundActive()) {
-        <app-button block (click)="cashOut()">Cash out</app-button>
-      } @else {
-        <app-input
-          label="Bet amount"
-          inputMode="numeric"
-          [value]="betAmount()"
-          (valueChange)="betAmount.set($event.replace(/\D/g, ''))"
-        />
-        <app-input
-          label="Mine count"
-          inputMode="numeric"
-          [value]="mineCount()"
-          (valueChange)="mineCount.set($event.replace(/\D/g, ''))"
-        />
-        <app-button block (click)="startRound()">Start round</app-button>
-      }
+      <app-card class="miner-sidebar" [class.sidebar-fullscreen]="isFullscreen()">
+        <div class="page-stack miner-sidebar__controls">
+          @if (isRoundActive()) {
+            <app-button block (click)="cashOut()">Cash out</app-button>
+          } @else {
+            <app-input
+              label="Bet amount"
+              inputMode="numeric"
+              [value]="betAmount()"
+              (valueChange)="betAmount.set($event.replace(/\D/g, ''))"
+            />
+            <app-input
+              label="Mine count"
+              inputMode="numeric"
+              [value]="mineCount()"
+              (valueChange)="mineCount.set($event.replace(/\D/g, ''))"
+            />
+            <app-button block (click)="startRound()">Start round</app-button>
+          }
 
-      <div class="page-stack miner-sidebar__stats">
-        <div class="glass-stat">
-          <span class="glass-stat__label">Current stake</span>
-          <strong class="glass-stat__value">{{ currentBet() | credits }}</strong>
+          <div class="page-stack miner-sidebar__stats">
+            <div class="glass-stat">
+              <span class="glass-stat__label">Current stake</span>
+              <strong class="glass-stat__value">{{ currentBet() | credits }}</strong>
+            </div>
+            <div class="glass-stat">
+              <span class="glass-stat__label">Safe picks</span>
+              <strong class="glass-stat__value">{{ viewState()?.revealedSafeCount || 0 }}</strong>
+            </div>
+          </div>
         </div>
-        <div class="glass-stat">
-          <span class="glass-stat__label">Safe picks</span>
-          <strong class="glass-stat__value">{{ viewState()?.revealedSafeCount || 0 }}</strong>
-        </div>
-      </div>
+      </app-card>
     </div>
   </app-card>
 </app-game-shell>

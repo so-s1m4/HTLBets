@@ -7,7 +7,7 @@
   [hasSidebar]="false"
   (fullscreenChange)="setFullscreen($event)"
 >
-  <app-card table [class.fullscreen]="isFullscreen()">
+  <app-card table class="crash-table-card" [class.fullscreen]="isFullscreen()">
     <div class="crash-desk" [class.crash-desk--fullscreen]="isFullscreen()">
       <div class="crash-desk__surface"></div>
       <div class="crash-desk__noise"></div>

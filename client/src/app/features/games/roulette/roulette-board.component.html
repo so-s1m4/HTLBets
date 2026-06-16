@@ -7,6 +7,7 @@
               [class.active]="selectedType === 'number' && selectedValue === '00'"
               (click)="emitSelection('number', '00')"
             >
+              <span class="roulette-board__label">00</span>
               @if (getAggregate('number', '00'); as aggregate) {
                 <span class="roulette-board__chips">
                   @for (chip of chipsFor('number', '00', aggregate.totalAmount, aggregate.playerCount); track $index) {
@@ -21,6 +22,7 @@
               [class.active]="selectedType === 'number' && selectedValue === 0"
               (click)="emitSelection('number', 0)"
             >
+              <span class="roulette-board__label">0</span>
               @if (getAggregate('number', 0); as aggregate) {
                 <span class="roulette-board__chips">
                   @for (chip of chipsFor('number', 0, aggregate.totalAmount, aggregate.playerCount); track $index) {
@@ -41,6 +43,7 @@
                     [class.red]="isRed(choice.value)"
                     (click)="emitSelection(choice.type, choice.value)"
                   >
+                    <span class="roulette-board__label">{{ choice.value }}</span>
                     @if (getAggregate(choice.type, choice.value); as aggregate) {
                       <span class="roulette-board__chips">
                         @for (chip of chipsFor(choice.type, choice.value, aggregate.totalAmount, aggregate.playerCount); track $index) {
@@ -58,6 +61,7 @@
                               class="roulette-board__number"
                               (click)="emitSelection('column', choice.value)"
                       >
+                          <span class="roulette-board__label">{{ choice.label }}</span>
                           @if (getAggregate('column', choice.value); as aggregate) {
                               <span class="roulette-board__chips">
                         @for (chip of chipsFor('column', choice.value, aggregate.totalAmount, aggregate.playerCount); track $index) {
@@ -78,6 +82,7 @@
                                 [class.active]="selectedType === 'dozen' && selectedValue === bet.value"
                                 (click)="emitSelection('dozen', bet.value)"
                         >
+                            <span class="roulette-board__label">{{ bet.label }}</span>
                             @if (getAggregate('dozen', bet.value); as aggregate) {
                                 <span class="roulette-board__chips">
                             @for (chip of chipsFor('dozen', bet.value, aggregate.totalAmount, aggregate.playerCount); track $index) {
@@ -91,10 +96,11 @@
               <div class="row c3">
                   <div class="row c2">
                       <button
-                              class="roulette-board__choice"
+                              class="roulette-board__choice roulette-board__choice--red"
                               [class.active]="selectedType === 'range' && selectedValue === '1-18'"
                               (click)="emitSelection('range', '1-18')"
                       >
+                          <span class="roulette-board__label">1–18</span>
                           @if (getAggregate('range', '1-18'); as aggregate) {
                               <span class="roulette-board__chips">
                         @for (chip of chipsFor('range', '1-18', aggregate.totalAmount, aggregate.playerCount); track $index) {
@@ -106,10 +112,11 @@
 
 
                       <button
-                              class="roulette-board__choice"
+                              class="roulette-board__choice roulette-board__choice--black"
                               [class.active]="selectedType === 'parity' && selectedValue === 'even'"
                               (click)="emitSelection('parity', 'even')"
                       >
+                          <span class="roulette-board__label">Even</span>
                           @if (getAggregate('parity', 'even'); as aggregate) {
                               <span class="roulette-board__chips">
                         @for (chip of chipsFor('parity', 'even', aggregate.totalAmount, aggregate.playerCount); track $index) {
@@ -125,6 +132,7 @@
                               [class.active]="selectedType === 'color' && selectedValue === 'red'"
                               (click)="emitSelection('color', 'red')"
                       >
+                          <span class="roulette-board__label roulette-board__label--diamond">◆</span>
                           @if (getAggregate('color', 'red'); as aggregate) {
                               <span class="roulette-board__chips">
                         @for (chip of chipsFor('color', 'red', aggregate.totalAmount, aggregate.playerCount); track $index) {
@@ -140,6 +148,7 @@
                               [class.active]="selectedType === 'color' && selectedValue === 'black'"
                               (click)="emitSelection('color', 'black')"
                       >
+                          <span class="roulette-board__label roulette-board__label--diamond">◆</span>
                           @if (getAggregate('color', 'black'); as aggregate) {
                               <span class="roulette-board__chips">
                         @for (chip of chipsFor('color', 'black', aggregate.totalAmount, aggregate.playerCount); track $index) {
@@ -155,6 +164,7 @@
                               [class.active]="selectedType === 'parity' && selectedValue === 'odd'"
                               (click)="emitSelection('parity', 'odd')"
                       >
+                          <span class="roulette-board__label">Odd</span>
                           @if (getAggregate('parity', 'odd'); as aggregate) {
                               <span class="roulette-board__chips">
                         @for (chip of chipsFor('parity', 'odd', aggregate.totalAmount, aggregate.playerCount); track $index) {
@@ -169,6 +179,7 @@
                               [class.active]="selectedType === 'range' && selectedValue === '19-36'"
                               (click)="emitSelection('range', '19-36')"
                       >
+                          <span class="roulette-board__label">19–36</span>
                           @if (getAggregate('range', '19-36'); as aggregate) {
                               <span class="roulette-board__chips">
                         @for (chip of chipsFor('range', '19-36', aggregate.totalAmount, aggregate.playerCount); track $index) {

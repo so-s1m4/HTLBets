@@ -166,10 +166,10 @@ h3 {
 
 .roulette-table__board-bay {
   position: absolute;
-  right: 5.65%;
-  bottom: 25.5%;
-  width: 55.5%;
-  height: 35.2%;
+  right: 7.4%;
+  bottom: 21.7%;
+  width: 53.4%;
+  height: 38.1%;
 }
 
 .roulette-table__board-head {
@@ -397,7 +397,7 @@ h3 {
   }
 }
 
-@media (max-width: 640px) {
+@media (max-width: 1079px) {
   .roulette-table {
     gap: 0.8rem;
     padding: 0;
@@ -405,7 +405,10 @@ h3 {
 
   .roulette-table--fullscreen {
     display: block;
-    height: auto;
+    height: 100%;
+    overflow-x: hidden;
+    overflow-y: auto;
+    overscroll-behavior: contain;
   }
 
   .roulette-table__surface {
@@ -439,7 +442,7 @@ h3 {
   }
 
   .roulette-table__wheel-shell {
-    width: min(100%, 14rem);
+    width: min(100%, clamp(14rem, 28vmin, 20rem));
   }
 
   .roulette-table__wheel-bay {
@@ -453,7 +456,7 @@ h3 {
     position: relative;
     inset: auto;
     width: 100%;
-    height: 12rem;
+    height: clamp(14rem, 32vmin, 22rem);
     padding: 0.45rem;
     border-radius: 1rem;
   }
@@ -464,14 +467,18 @@ h3 {
 
   .roulette-table__rail-tray {
     width: 100%;
-    overflow-x: auto;
-    gap: 0.65rem;
-    padding: 0.75rem;
+    display: grid;
+    grid-template-columns: 1fr;
+    overflow: hidden;
+    gap: 0.55rem;
+    padding: 0.6rem;
   }
 
   .roulette-table__chip-row {
-    flex-shrink: 0;
-    gap: 0.55rem;
+    display: grid;
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    gap: 0.25rem;
+    width: 100%;
   }
 
   .roulette-table__rail {
@@ -481,8 +488,13 @@ h3 {
   }
 
   .roulette-chip {
-    width: 3.25rem;
-    height: 3.25rem;
+    width: min(100%, 3rem);
+    height: auto;
+    justify-self: center;
+  }
+
+  .roulette-table__bet-controls {
+    width: 100%;
   }
 
   .roulette-highlight__number strong {
@@ -494,13 +506,21 @@ h3 {
   }
 }
 
+@media (max-width: 720px) {
+  .roulette-table__board-bay {
+    height: clamp(38rem, 125vw, 48rem);
+    padding: 0.35rem;
+  }
+}
+
 @media (max-width: 420px) {
   .roulette-table__surface {
     padding: 0.65rem;
   }
 
   .roulette-table__board-bay {
-    padding: 0.7rem;
+    height: 38rem;
+    padding: 0.25rem;
   }
 
   .roulette-table__rail-meta {

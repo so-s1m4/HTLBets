@@ -56,6 +56,14 @@
   border: 0;
 }
 
+.roulette-board__label {
+  position: relative;
+  z-index: 1;
+  color: rgba(255, 255, 255, 0);
+  font-weight: 800;
+  line-height: 1;
+}
+
 .roulette-board__chips {
   position: absolute;
   left: 50%;
@@ -127,43 +135,128 @@
   .roulette-board__zero:hover,
   .roulette-board__number:hover,
   .roulette-board__outside:hover {
-    background: rgba(yellow, 0.4);
+    background: rgba(255, 255, 255, 0.08);
+    box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.34);
   }
 }
 
-@media (max-width: 640px) {
+@media (max-width: 1079px) {
   .roulette-board {
-    overflow-x: auto;
-    overflow-y: hidden;
-    scrollbar-width: thin;
-    overscroll-behavior-inline: contain;
+    overflow: hidden;
   }
 
   .roulette-board__surface {
-    min-width: 34rem;
+    min-width: 0;
+    grid-template-rows: minmax(0, 2fr) minmax(4.5rem, 1fr);
+    border-radius: 0.85rem;
+    overflow: hidden;
+    background: rgba(10, 58, 42, 0.72);
   }
 
   .roulette-board__layout {
-    min-width: 34rem;
-    grid-template-columns: 2.9rem minmax(28rem, 1fr);
-    padding: 0.65rem;
+    min-width: 0;
+    grid-template-columns: 2rem minmax(0, 1fr);
+    padding: 0.3rem;
   }
 
   .roulette-board__grid,
   .roulette-board__column {
-    gap: 0.16rem;
+    gap: 1px;
   }
 
   .roulette-board__choice,
   .roulette-board__zero,
   .roulette-board__number,
   .roulette-board__outside {
-    min-height: 2.5rem;
-    border-radius: 10px;
-    font-size: 0.82rem;
+    min-height: 1.8rem;
+    border: 1px solid rgba(255, 255, 255, 0.52);
+    border-radius: 0.18rem;
+    background: rgba(13, 41, 31, 0.46);
+    font-size: clamp(0.48rem, 2vw, 0.7rem);
+  }
+
+  .roulette-board__number.red {
+    background: rgba(190, 48, 52, 0.86);
+  }
+
+  .roulette-board__zero {
+    background: rgba(43, 146, 83, 0.92);
+  }
+
+  .roulette-board__label {
+    color: #fff;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.72);
+  }
+
+  .roulette-board__label--diamond {
+    color: #ef4d55;
+    font-size: 0.9rem;
+  }
+
+  .roulette-board__choice--red {
+    background: rgba(190, 48, 52, 0.86);
+  }
+
+  .roulette-board__choice--black {
+    background: rgba(13, 18, 25, 0.94);
+  }
+
+  .roulette-board__choice--black .roulette-board__label--diamond {
+    color: #dce3ec;
+  }
+
+  .roulette-board__other_choices {
+    padding-right: calc(100% / 13);
+  }
+
+  .roulette-board__other_choices .row {
+    gap: 1px;
   }
 
   .roulette-board__outside-row {
     grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 720px) {
+  .roulette-board__surface {
+    grid-template-rows: minmax(0, 1fr) auto;
+  }
+
+  .roulette-board__layout {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: 2.5rem minmax(0, 1fr);
+    gap: 1px;
+    padding: 0.3rem;
+  }
+
+  .roulette-board__zero-stack {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-rows: minmax(0, 1fr);
+    gap: 1px;
+  }
+
+  .roulette-board__grid {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: repeat(13, minmax(0, 1fr));
+    gap: 1px;
+  }
+
+  .roulette-board__column {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-rows: minmax(0, 1fr);
+    gap: 1px;
+  }
+
+  .roulette-board__choice,
+  .roulette-board__zero,
+  .roulette-board__number {
+    min-height: 2rem;
+    font-size: 0.72rem;
+  }
+
+  .roulette-board__other_choices {
+    min-height: 7rem;
+    padding: 0 0.3rem 0.3rem;
   }
 }

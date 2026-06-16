@@ -258,23 +258,60 @@
   animation: reveal 400ms ease;
 }
 
-@media (max-width: 1180px) {
-  .miner-table--fullscreen .miner-table__content {
-    padding-right: clamp(1.2rem, 3vw, 3rem);
+@media (max-width: 1199px) {
+  .miner-table {
+    min-height: 0;
+    height: calc(100dvh - 3rem);
+  }
+
+  .miner-table__content {
+    min-height: 0;
+    height: 100%;
+    align-content: start;
+    padding:
+      clamp(1rem, 2vh, 1.5rem)
+      clamp(1rem, 3vw, 2.5rem)
+      7.5rem;
   }
 
   .miner-grid {
-    width: min(72vh, 48rem, calc(100vw - 4rem));
+    width: min(42rem, calc(100vw - 3rem), calc(100dvh - 17rem));
   }
 
   .miner-sidebar {
-    position: relative;
+    position: absolute;
+    left: 50%;
     right: auto;
     top: auto;
-    transform: none;
-    width: min(100%, 32rem);
-    justify-self: center;
-    margin-top: 1rem;
+    bottom: clamp(0.75rem, 2vh, 1.25rem);
+    z-index: 5;
+    width: min(44rem, calc(100% - 2rem));
+    margin-top: 0;
+    transform: translateX(-50%);
+    justify-self: auto;
+  }
+
+  .miner-sidebar .miner-sidebar__controls {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    align-items: end;
+    gap: 0.65rem;
+  }
+
+  .miner-sidebar app-input,
+  .miner-sidebar app-button {
+    min-width: 0;
+  }
+
+  .miner-sidebar .miner-sidebar__controls > app-button:first-child {
+    grid-column: 1 / -1;
+  }
+
+  .miner-sidebar .miner-sidebar__stats {
+    display: none;
+  }
+
+  .miner-table__message {
+    display: none;
   }
 }
 
@@ -289,15 +326,20 @@
 }
 
 @media (max-width: 720px) {
-  .miner-table--fullscreen {
+  .miner-table-card--fullscreen {
+    width: 100%;
     min-height: 0;
-    height: auto;
+  }
+
+  .miner-table--fullscreen {
+    min-height: 42rem;
+    height: max(42rem, calc(100dvh - 4.5rem));
   }
 
   .miner-table--fullscreen .miner-table__content {
-    height: auto;
+    height: 100%;
     align-content: start;
-    padding: 3.25rem 0.45rem 0.75rem;
+    padding: 2.75rem 0.45rem 10.5rem;
   }
 
   .miner-grid {
@@ -316,12 +358,23 @@
   }
 
   .miner-sidebar {
-    width: 100%;
-    margin-top: 0;
+    bottom: max(0.6rem, env(safe-area-inset-bottom));
+    width: calc(100% - 1rem);
   }
 
-  .miner-sidebar .page-stack {
-    gap: 0.65rem;
+  .miner-sidebar .miner-sidebar__controls {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: end;
+    gap: 0.55rem;
+  }
+
+  .miner-sidebar .miner-sidebar__controls > app-button {
+    grid-column: 1 / -1;
+  }
+
+  .miner-sidebar app-input,
+  .miner-sidebar app-button {
+    min-width: 0;
   }
 
   .miner-sidebar__stats {

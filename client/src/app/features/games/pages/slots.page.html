@@ -7,8 +7,8 @@
   [splitSidebar]="false"
   (fullscreenChange)="setFullscreen($event)"
 >
-  <app-card table [class.fullscreen]="isFullscreen()">
-    <div class="slots-table">
+  <app-card table class="slots-card" [class.fullscreen]="isFullscreen()">
+    <div class="slots-table" [class.slots-table--fullscreen]="isFullscreen()">
       <div class="slots-machines">
         @for (machine of machines(); track machine.id) {
           <button
@@ -41,38 +41,47 @@
           </div>
         </div>
 
-        <div class="slots-reels" [class.is-spinning]="isSpinning()">
+        <div class="slots-machine-frame">
+          <div class="slots-reels" [class.is-spinning]="isSpinning()">
             <img class="slots--background" src="/SlotMachine.png" alt="">
-            <img class="slots--lever" [class.is-pulled]="isLeverPulled()" src="/lever.png" (click)="spin()" alt="">
+            <button
+              type="button"
+              class="slots--lever"
+              [class.is-pulled]="isLeverPulled()"
+              [disabled]="isSpinning()"
+              (click)="spin()"
+              aria-label="Spin"
+            >
+              <img src="/lever.png" alt="">
+            </button>
             <div class="slots-reels__viewport">
-
-                  @for (row of grid(); track $index; let rowIndex = $index) {
-                    <div class="slots-reels__row" [class.is-winning]="(viewState()?.winLines || []).includes(rowIndex)">
-                      @for (cell of row; track cell.key) {
-                        <div class="slots-reels__cell">{{ cell.symbol }}</div>
-                      }
-                    </div>
+              @for (row of grid(); track $index; let rowIndex = $index) {
+                <div class="slots-reels__row" [class.is-winning]="(viewState()?.winLines || []).includes(rowIndex)">
+                  @for (cell of row; track cell.key) {
+                    <div class="slots-reels__cell">{{ cell.symbol }}</div>
                   }
                 </div>
+              }
+            </div>
 
             @if (resultBanner(); as result) {
-                <div class="slots-table__overlay">
-                    <div class="slots-status-banner" [class.slots-status-banner--loss]="result.tone === 'loss'" [class.slots-status-banner--win]="result.tone === 'win'">
-                        <strong>{{ result.title }}</strong>
-                        <span>{{ result.amount | credits }}</span>
-                    </div>
+              <div class="slots-table__overlay">
+                <div class="slots-status-banner" [class.slots-status-banner--loss]="result.tone === 'loss'" [class.slots-status-banner--win]="result.tone === 'win'">
+                  <strong>{{ result.title }}</strong>
+                  <span>{{ result.amount | credits }}</span>
                 </div>
+              </div>
             }
 
             <app-input
-                    class="slots--bet-input"
-                    label="Bet amount"
-                    inputMode="numeric"
-                    [value]="betAmount()"
-                    (valueChange)="betAmount.set($event.replace(/\D/g, ''))"
+              class="slots--bet-input"
+              label="Bet amount"
+              inputMode="numeric"
+              [value]="betAmount()"
+              (valueChange)="betAmount.set($event.replace(/\D/g, ''))"
             />
+          </div>
         </div>
-
 
         <p class="status-copy">{{ viewState()?.message || 'Choose a machine and spin.' }}</p>
 
@@ -90,18 +99,4 @@
     </div>
   </app-card>
 
-<!--  <app-card sidebar class="slots-sidebar">-->
-<!--    <div class="page-stack">-->
-<!--      <div class="page-stack">-->
-<!--        <div class="glass-stat">-->
-<!--          <span class="glass-stat__label">Current machine</span>-->
-<!--          <strong class="glass-stat__value">{{ selectedMachine() ? selectedMachine()!.name : 'Slots' }}</strong>-->
-<!--        </div>-->
-<!--        <div class="glass-stat">-->
-<!--          <span class="glass-stat__label">Top multiplier</span>-->
-<!--          <strong class="glass-stat__value">x{{ selectedMachine() ? selectedMachine()!.topMultiplier : 0 }}</strong>-->
-<!--        </div>-->
-<!--      </div>-->
-<!--    </div>-->
-<!--  </app-card>-->
 </app-game-shell>

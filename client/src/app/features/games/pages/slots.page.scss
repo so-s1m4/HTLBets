@@ -1,7 +1,10 @@
 .slots-table {
   position: relative;
   display: grid;
+  grid-template-columns: minmax(13rem, 18rem) minmax(0, 1fr);
+  align-items: start;
   gap: 1rem;
+  min-height: 0;
 }
 
 .slots-table__overlay {
@@ -52,15 +55,16 @@
 
 .slots-machines {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0.8rem;
+  gap: 0.55rem;
+  align-content: start;
+  min-height: 0;
 }
 
 .slots-machine {
   --machine-accent: var(--accent);
   display: grid;
-  gap: 0.25rem;
-  padding: 0.9rem 1rem;
+  gap: 0.18rem;
+  padding: 0.68rem 0.8rem;
   border-radius: 1rem;
   border: 1px solid rgba(149, 171, 211, 0.12);
   background:
@@ -82,7 +86,10 @@
 
 .slots-stage {
   display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto auto;
   gap: 1rem;
+  min-width: 0;
+  min-height: 0;
   padding: 1rem;
   border-radius: var(--radius-lg);
   border: 1px solid rgba(149, 171, 211, 0.12);
@@ -109,9 +116,15 @@
   position: relative;
   display: flex;
   justify-content: center;
-  width: min(100%, 38rem);
+  width: min(100%, 28rem);
   aspect-ratio: 920 / 1431;
   margin-inline: auto;
+}
+
+.slots-machine-frame {
+  display: grid;
+  place-items: center;
+  min-height: 0;
 }
 
 .slots-reels.is-spinning .slots-reels__cell {
@@ -124,7 +137,7 @@
   gap: 0.6rem;
   height: 100%;
 
-  &:nth-child(1) > slots-reels__cell {
+  &:nth-child(1) > .slots-reels__cell {
     box-shadow: inset 0 10px 14px -10px rgba(0, 0, 0, 0.22);
   }
 }
@@ -201,13 +214,6 @@
   flex-wrap: wrap;
 }
 
-.slots-sidebar {
-  position: absolute;
-  right: 0;
-  top: 50%;
-  transform: translate(50%, -50%);
-}
-
 .slots--background {
   width: 100%;
   height: 100%;
@@ -227,20 +233,32 @@
   display: flex;
   flex-direction: column;
 
-  background: chocolate ;
-  z-index: 3;
+  z-index: 5;
 }
 
 .slots--lever {
   position: absolute;
-  left: 75%;
-  top: 25%;
-  transform: translate(0, -50%);
-  height: 33.3%;
+  left: 88.2%;
+  top: 23.2%;
+  transform: translate(0, -50%) scaleX(-1);
+  height: 27%;
+  padding: 0;
+  border: 0;
+  background: transparent;
   max-width: 23%;
-  object-fit: contain;
-  z-index: 1;
+  z-index: 4;
   cursor: pointer;
+}
+
+.slots--lever img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.slots--lever:disabled {
+  cursor: wait;
 }
 
 .slots--lever.is-pulled {
@@ -259,22 +277,60 @@
 
 @keyframes pulled_lever {
   0% {
-    transform: translate(0, -50%) rotate(0);
+    transform: translate(0, -50%) scaleX(-1) rotate(0);
   }
   30% {
-    transform: translate(0, -50%) rotateX(-180deg);
+    transform: translate(0, -50%) scaleX(-1) rotateX(-180deg);
     transform-origin: bottom center;
     transform-style: preserve-3d;
 
 
   }
   100% {
-    transform: translate(0, -50%) rotate(0);
+    transform: translate(0, -50%) scaleX(-1) rotate(0);
 
   }
 }
 
+@media (min-width: 721px) {
+  .slots-table--fullscreen {
+    height: 100%;
+  }
+
+  .slots-table--fullscreen .slots-machines {
+    max-height: 100%;
+    overflow-y: auto;
+    padding-right: 0.2rem;
+  }
+
+  .slots-table--fullscreen .slots-stage {
+    height: 100%;
+    overflow: hidden;
+  }
+
+  .slots-table--fullscreen .slots-machine-frame {
+    container-type: size;
+    overflow: hidden;
+  }
+
+  .slots-table--fullscreen .slots-reels {
+    width: min(100%, 28rem, 64.29cqh);
+    max-width: 100%;
+    height: auto;
+    max-height: 100%;
+  }
+}
+
 @media (max-width: 720px) {
+  .slots-card {
+    align-self: start;
+  }
+
+  .slots-table {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0.65rem;
+  }
+
   .slots-machines {
     grid-template-columns: none;
     grid-auto-flow: column;
@@ -297,6 +353,7 @@
   }
 
   .slots-stage {
+    grid-template-rows: auto auto auto auto;
     gap: 0.7rem;
     padding: 0.65rem;
   }
@@ -315,7 +372,7 @@
   }
 
   .slots-reels {
-    width: min(100%, 22rem);
+    width: min(100%, 18rem);
   }
 
   .slots--bet-input {
@@ -336,10 +393,14 @@
   }
 
   .slots-machines {
+    grid-auto-flow: row;
     grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-auto-columns: initial;
+    overflow: visible;
   }
 
   .slots-reels {
-    width: min(48vh, 22rem);
+    width: auto;
+    height: min(68vh, 24rem);
   }
 }
